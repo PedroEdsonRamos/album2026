@@ -1,0 +1,25 @@
+export const C = {
+  bg: "#0c0c1a",
+  panelHi: "rgba(16,16,28,0.95)",
+  surface: "rgba(255,255,255,0.04)",
+  surfaceHi: "rgba(255,255,255,0.07)",
+  border: "rgba(255,255,255,0.07)",
+  borderHi: "rgba(255,255,255,0.11)",
+  amber: "#f59e0b",
+  amberLt: "#fbbf24",
+  amberDim: "rgba(245,158,11,0.2)",
+  amberGlow: "rgba(245,158,11,0.22)",
+  violet: "#a855f7",
+  violetDim: "rgba(168,85,247,0.2)",
+  green: "#22c55e",
+  greenDim: "rgba(34,197,94,0.2)",
+  red: "#f87171",
+  redDim: "rgba(248,113,113,0.12)",
+  cyan: "#38bdf8",
+  t1: "rgba(255,255,255,0.92)",
+  t2: "rgba(255,255,255,0.52)",
+  t3: "rgba(255,255,255,0.35)",
+  t4: "rgba(255,255,255,0.22)",
+};
+
+export const RANK_BAR = `linear-gradient(90deg,${C.amber},${C.amberLt})`;
