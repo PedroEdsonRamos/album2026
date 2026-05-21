@@ -1,0 +1,248 @@
+import { useInView } from "@/hooks/useInView.js";
+import { useCounter } from "@/hooks/useCounter.js";
+import { TEAMS } from "@/data/teams.js";
+import { TOTAL_OFFICIAL } from "@/data/fwc.js";
+import { FIFATrophy } from "@/components/atoms/FIFATrophy.jsx";
+import { CircleProgress } from "@/components/atoms/CircleProgress.jsx";
+import { StatCard } from "@/components/molecules/StatCard.jsx";
+import { StickerCard } from "@/components/molecules/StickerCard.jsx";
+import { RANK_BAR, C } from "@/styles/tokens.js";
+
+export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
+  const total = TOTAL_OFFICIAL;
+  const owned = stickers.filter((s) => s.status === "Tenho").length;
+  const missing = total - owned;
+  const dups = stickers.filter((s) => s.status === "Repetida").length;
+  const specials = stickers.filter(
+    (s) => ["Prata", "Bronze", "Gold", "Ouro", "Lilás"].includes(s.rarity) && s.status === "Tenho"
+  ).length;
+  const pct = Math.round((owned / total) * 100);
+  const [hRef, hVis] = useInView();
+  const pctA = useCounter(hVis ? pct : 0, 1200);
+  const teamStats = TEAMS.map((t) => {
+    const ts = stickers.filter((s) => s.team === t.id);
+    const o = ts.filter((s) => s.status === "Tenho").length;
+    return { ...t, total: ts.length, owned: o, pct: Math.round((o / (ts.length || 1)) * 100) };
+  }).sort((a, b) => b.pct - a.pct);
+  const recent = [...stickers]
+    .filter((s) => s.status === "Tenho")
+    .sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt))
+    .slice(0, 6);
+
+  return (
+    <div>
+      <div
+        ref={hRef}
+        style={{
+          background:
+            "linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(168,85,247,0.05) 50%, rgba(16,16,28,0) 100%)",
+          borderRadius: 20,
+          padding: "26px 22px",
+          marginBottom: 20,
+          position: "relative",
+          overflow: "hidden",
+          opacity: hVis ? 1 : 0,
+          transform: hVis ? "translateY(0)" : "translateY(18px)",
+          transition: "all .6s cubic-bezier(.4,0,.2,1)",
+        }}
+      >
+        <div style={{ position: "absolute", top: -10, right: -6, opacity: 0.07 }}>
+          <FIFATrophy size={120} />
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+          <div style={{ position: "relative" }}>
+            <CircleProgress value={pct} size={92} stroke={7} color={C.amber} />
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <span style={{ fontSize: 19, fontWeight: 900, color: C.amber }}>{pctA}%</span>
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 12, color: C.t2, marginBottom: 4 }}>Álbum Oficial Panini</div>
+            <div style={{ fontSize: 22, fontWeight: 900, color: "#fff", lineHeight: 1.1 }}>
+              Copa do Mundo
+            </div>
+            <div
+              style={{
+                fontSize: 20,
+                fontWeight: 900,
+                background: `linear-gradient(90deg,${C.amber},${C.amberLt})`,
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+              }}
+            >
+              2026
+            </div>
+            <div style={{ fontSize: 12, color: C.t3, marginTop: 6 }}>
+              {owned} de {total} figurinhas
+            </div>
+          </div>
+        </div>
+        <div
+          style={{
+            marginTop: 18,
+            background: "rgba(0,0,0,0.3)",
+            borderRadius: 999,
+            height: 6,
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              height: "100%",
+              width: `${pct}%`,
+              background: RANK_BAR,
+              borderRadius: 999,
+              transition: "width 1.2s cubic-bezier(.4,0,.2,1)",
+            }}
+          />
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
+        <StatCard
+          label="Coletadas"
+          value={owned}
+          sub={`${pct}% do total`}
+          icon="check"
+          color={C.green}
+          onClick={() => goToAlbum({ status: "Tenho" })}
+        />
+        <StatCard
+          label="Faltando"
+          value={missing}
+          sub="para completar"
+          icon="star"
+          color={C.red}
+          onClick={() => goToAlbum({ status: "Faltando" })}
+        />
+        <StatCard
+          label="Repetidas"
+          value={dups}
+          sub="para troca"
+          icon="swap"
+          color={C.violet}
+          onClick={() => setPage("trocas")}
+        />
+        <StatCard
+          label="Legends"
+          value={specials}
+          sub="Lilás · Bronze · Prata · Ouro"
+          icon="trophy"
+          color={C.amber}
+          onClick={() => goToAlbum({ status: "Tenho" })}
+        />
+      </div>
+
+      <div style={{ marginBottom: 20 }}>
+        <div
+          style={{
+            fontSize: 13,
+            fontWeight: 700,
+            color: C.t2,
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            marginBottom: 12,
+          }}
+        >
+          🏆 Ranking das Seleções
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {teamStats.slice(0, 6).map((t, i) => (
+            <div
+              key={t.id}
+              onClick={() => {
+                setTeamFilter(t.id);
+                setPage("stickers");
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = C.surfaceHi;
+                e.currentTarget.style.borderColor = C.amber + "33";
+                e.currentTarget.style.transform = "translateY(-1px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = C.surface;
+                e.currentTarget.style.borderColor = C.border;
+                e.currentTarget.style.transform = "";
+              }}
+              style={{
+                background: C.surface,
+                borderRadius: 12,
+                padding: "10px 14px",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                border: `1px solid ${C.border}`,
+                cursor: "pointer",
+                transition: "all .18s ease",
+                WebkitTapHighlightColor: "transparent",
+              }}
+            >
+              <span style={{ fontSize: 11, fontWeight: 700, color: i < 3 ? C.amber : C.t3, width: 16 }}>
+                #{i + 1}
+              </span>
+              <span style={{ fontSize: 22 }}>{t.flag}</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#fff", flex: 1 }}>{t.name}</span>
+              <div
+                style={{
+                  flex: 2,
+                  background: "rgba(255,255,255,0.06)",
+                  borderRadius: 999,
+                  height: 5,
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    height: "100%",
+                    width: `${t.pct}%`,
+                    background: RANK_BAR,
+                    borderRadius: 999,
+                  }}
+                />
+              </div>
+              <span
+                style={{ fontSize: 12, fontWeight: 700, color: C.amber, width: 36, textAlign: "right" }}
+              >
+                {t.pct}%
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <div
+          style={{
+            fontSize: 13,
+            fontWeight: 700,
+            color: C.t2,
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            marginBottom: 12,
+          }}
+        >
+          ✨ Últimas Adicionadas
+        </div>
+        {recent.length > 0 ? (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            {recent.map((s) => (
+              <StickerCard key={s.id} s={s} onClick={(st) => goToAlbum({ search: st.code })} />
+            ))}
+          </div>
+        ) : (
+          <div style={{ textAlign: "center", padding: "24px", color: C.t3, fontSize: 13 }}>
+            Nenhuma figurinha ainda
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
