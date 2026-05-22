@@ -10,6 +10,12 @@ export function Trades({ stickers, addToast }) {
     items: dups.filter((s) => s.team === t.id),
   })).filter((t) => t.items.length > 0);
 
+  const shareSticker = (s, team) => {
+    const fin = getFinish(s.rarity);
+    const msg = `🎴 *Figurinha para Troca — Álbum Copa 2026*\n\n${team.flag} *${team.name}*\nNº ${s.code} — ${s.name}\nPosição: ${s.position}\nTipo: ${fin.label}\n\n✅ Tenho ${s.duplicates}x para trocar\n📲 Álbum FIFA World Cup 2026 · PTEC Solutions`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+
   const handleShare = () => {
     navigator.clipboard?.writeText(
       `Figurinhas para troca – Copa 2026:\n\n${dups
@@ -131,6 +137,25 @@ export function Trades({ stickers, addToast }) {
                   >
                     ×{s.duplicates}
                   </span>
+                  <button
+                    onClick={() => shareSticker(s, t)}
+                    className="fc-btn"
+                    title="Compartilhar no WhatsApp"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: "rgba(37,211,102,0.15)",
+                      border: "1px solid rgba(37,211,102,0.35)",
+                      color: "#25d366",
+                      borderRadius: 8,
+                      padding: "4px 7px",
+                      cursor: "pointer",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Icon name="share" size={13} />
+                  </button>
                 </div>
               );
             })}
