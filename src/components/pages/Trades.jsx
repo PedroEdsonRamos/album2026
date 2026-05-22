@@ -12,16 +12,21 @@ export function Trades({ stickers, addToast }) {
 
   const shareSticker = (s, team) => {
     const fin = getFinish(s.rarity);
-    const msg = `🎴 *Figurinha para Troca — Álbum Copa 2026*\n\n${team.flag} *${team.name}*\nNº ${s.code} — ${s.name}\nPosição: ${s.position}\nTipo: ${fin.label}\n\n✅ Tenho ${s.duplicates}x para trocar\n📲 Álbum FIFA World Cup 2026 · PTEC Solutions`;
+    const msg = `📒 *Figurinhas Disponíveis para Troca - Álbum Copa do Mundo FIFA 2026*\n\n${team.flag} *${team.name}*\n${s.code} — ${s.name}\nPosição: ${s.position}\nTipo: ${fin.label}\nQuantidade: ${s.duplicates}x\n\n📲 Álbum FIFA World Cup 2026 · PTEC Solutions`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
   const handleShare = () => {
-    navigator.clipboard?.writeText(
-      `Figurinhas para troca – Copa 2026:\n\n${dups
-        .map((s) => `${s.code} - ${s.name} (×${s.duplicates})`)
-        .join("\n")}`
-    );
+    const lines = [`📒 *Figurinhas Disponíveis para Troca - Álbum Copa do Mundo FIFA 2026*`];
+    byTeam.forEach((t) => {
+      lines.push(`\n${t.flag} *${t.name}*`);
+      t.items.forEach((s) => {
+        const fin = getFinish(s.rarity);
+        lines.push(`${s.code} — ${s.name}\nPosição: ${s.position}\nTipo: ${fin.label}\nQuantidade: ${s.duplicates}x`);
+      });
+    });
+    lines.push(`\n📲 Álbum FIFA World Cup 2026 · PTEC Solutions`);
+    navigator.clipboard?.writeText(lines.join("\n"));
     addToast("Lista copiada", "success");
   };
 
