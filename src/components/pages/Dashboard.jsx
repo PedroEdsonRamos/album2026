@@ -28,10 +28,8 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
     return { ...t, total: ts.length, owned: o, pct: Math.round((o / (ts.length || 1)) * 100), legendCount };
   });
   const sortedTeams = [...teamStats].sort((a, b) => {
-    if (rankSort === "pct")    return b.pct - a.pct;
-    if (rankSort === "name")   return a.name.localeCompare(b.name);
-    if (rankSort === "group")  return a.grp.localeCompare(b.grp) || b.pct - a.pct;
-    if (rankSort === "legend") return b.legendCount - a.legendCount;
+    if (rankSort === "pct")  return b.pct - a.pct;
+    if (rankSort === "name") return a.name.localeCompare(b.name, "pt-BR");
     return 0;
   });
   const visibleTeams = rankSort !== "pct" || showAll ? sortedTeams : sortedTeams.slice(0, 6);
@@ -167,10 +165,8 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
         </div>
         <div style={{ display: "flex", gap: 6, marginBottom: 10, overflowX: "auto", paddingBottom: 2, paddingTop: 8, overflow: "visible" }}>
           {[
-            { id: "pct",    label: "% Completo" },
-            { id: "group",  label: "Grupo A-L" },
-            { id: "name",   label: "Nome A-Z" },
-            { id: "legend", label: "Legends" },
+            { id: "pct",  label: "% Completo" },
+            { id: "name", label: "Nome A-Z" },
           ].map((opt) => (
             <button
               key={opt.id}
@@ -230,10 +226,19 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
                 #{i + 1}
               </span>
               <span style={{ fontSize: 22 }}>{t.flag}</span>
-              <span style={{ fontSize: 13, fontWeight: 600, color: "#fff", flex: 1 }}>{t.name}</span>
+              <span style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: "#fff",
+                width: 140,
+                flexShrink: 0,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}>{t.name}</span>
               <div
                 style={{
-                  flex: 2,
+                  flex: 1,
                   background: "rgba(255,255,255,0.06)",
                   borderRadius: 999,
                   height: 5,
