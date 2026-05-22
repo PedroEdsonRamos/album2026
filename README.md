@@ -7,7 +7,18 @@ FIFA World Cup 2026 sticker album tracker — manage your Panini collection digi
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Last commit](https://img.shields.io/github/last-commit/PedroEdsonRamos/album2026)
 
-<!-- TODO: screenshot do dashboard -->
+## Screenshots
+
+<p align="center">
+  <img src="/screenshots/01-dashboard.png" width="180"/>
+  <img src="/screenshots/02-selecoes.png" width="180"/>
+  <img src="/screenshots/03-album.png" width="180"/>
+</p>
+<p align="center">
+  <img src="/screenshots/04-adicionar.png" width="180"/>
+  <img src="/screenshots/05-trocas.png" width="180"/>
+  <img src="/screenshots/06-status.png" width="180"/>
+</p>
 
 ## Features
 
