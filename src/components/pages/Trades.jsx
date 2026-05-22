@@ -10,9 +10,22 @@ export function Trades({ stickers, addToast }) {
     items: dups.filter((s) => s.team === t.id),
   })).filter((t) => t.items.length > 0);
 
-  const shareSticker = (s, team) => {
-    const fin = getFinish(s.rarity);
-    const msg = `📒 *Figurinhas Disponíveis para Troca - Álbum Copa do Mundo FIFA 2026*\n\n${team.flag} *${team.name}*\n${s.code} — ${s.name}\nPosição: ${s.position}\nTipo: ${fin.label}\nQuantidade: ${s.duplicates}x\n\n📲 Álbum FIFA World Cup 2026 · PTEC Solutions`;
+  const expandByType = (s) => {
+    if (s.typeBreakdown && Object.keys(s.typeBreakdown).length > 0) {
+      return Object.entries(s.typeBreakdown)
+        .filter(([, qty]) => qty > 0)
+        .map(([rarityKey, qty]) => ({
+          sticker: { ...s, rarity: rarityKey },
+          qty,
+          fin: getFinish(rarityKey),
+        }));
+    }
+    return [{ sticker: s, qty: s.duplicates, fin: getFinish(s.rarity) }];
+  };
+
+  const shareSticker = (sticker, team, qty) => {
+    const fin = getFinish(sticker.rarity);
+    const msg = `📒 *Figurinhas Disponíveis para Troca - Álbum Copa do Mundo FIFA 2026*\n\n${team.flag} *${team.name}*\n${sticker.code} — ${sticker.name}\nPosição: ${sticker.position}\nTipo: ${fin.label}\nQuantidade: ${qty}x\n\n📲 Álbum FIFA World Cup 2026 · PTEC Solutions`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
@@ -20,9 +33,8 @@ export function Trades({ stickers, addToast }) {
     const lines = [`📒 *Figurinhas Disponíveis para Troca - Álbum Copa do Mundo FIFA 2026*`];
     byTeam.forEach((t) => {
       lines.push(`\n${t.flag} *${t.name}*`);
-      t.items.forEach((s) => {
-        const fin = getFinish(s.rarity);
-        lines.push(`${s.code} — ${s.name}\nPosição: ${s.position}\nTipo: ${fin.label}\nQuantidade: ${s.duplicates}x`);
+      t.items.flatMap((s) => expandByType(s)).forEach(({ sticker, qty, fin }) => {
+        lines.push(`${sticker.code} — ${sticker.name}\nPosição: ${sticker.position}\nTipo: ${fin.label}\nQuantidade: ${qty}x`);
       });
     });
     lines.push(`\n📲 Álbum FIFA World Cup 2026 · PTEC Solutions`);
@@ -97,73 +109,70 @@ export function Trades({ stickers, addToast }) {
             <span style={{ fontSize: 11, color: C.t3 }}>({t.items.length})</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {t.items.map((s) => {
-              const fin = getFinish(s.rarity);
-              return (
-                <div
-                  key={s.id}
+            {t.items.flatMap((s) => expandByType(s)).map(({ sticker, qty, fin }, idx) => (
+              <div
+                key={`${sticker.code}-${sticker.rarity}-${idx}`}
+                style={{
+                  background: fin.bg,
+                  border: `1px solid ${fin.border}`,
+                  borderRadius: 10,
+                  padding: "10px 12px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                }}
+              >
+                <span style={{ fontSize: 18 }}>{t.flag}</span>
+                <div style={{ flex: 1 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>{sticker.name}</span>
+                  <span style={{ fontSize: 11, color: C.t3 }}> · {sticker.code}</span>
+                </div>
+                <span
                   style={{
                     background: fin.bg,
                     border: `1px solid ${fin.border}`,
-                    borderRadius: 10,
-                    padding: "10px 12px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
+                    color: fin.color,
+                    borderRadius: 999,
+                    padding: "1px 7px",
+                    fontSize: 10,
+                    fontWeight: 700,
                   }}
                 >
-                  <span style={{ fontSize: 18 }}>{t.flag}</span>
-                  <div style={{ flex: 1 }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>{s.name}</span>
-                    <span style={{ fontSize: 11, color: C.t3 }}> · {s.code}</span>
-                  </div>
-                  <span
-                    style={{
-                      background: fin.bg,
-                      border: `1px solid ${fin.border}`,
-                      color: fin.color,
-                      borderRadius: 999,
-                      padding: "1px 7px",
-                      fontSize: 10,
-                      fontWeight: 700,
-                    }}
-                  >
-                    {fin.label}
-                  </span>
-                  <span
-                    style={{
-                      background: C.violetDim,
-                      color: C.violet,
-                      borderRadius: 999,
-                      padding: "2px 8px",
-                      fontSize: 12,
-                      fontWeight: 700,
-                    }}
-                  >
-                    ×{s.duplicates}
-                  </span>
-                  <button
-                    onClick={() => shareSticker(s, t)}
-                    className="fc-btn"
-                    title="Compartilhar no WhatsApp"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      background: "rgba(37,211,102,0.15)",
-                      border: "1px solid rgba(37,211,102,0.35)",
-                      color: "#25d366",
-                      borderRadius: 8,
-                      padding: "4px 7px",
-                      cursor: "pointer",
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Icon name="share" size={13} />
-                  </button>
-                </div>
-              );
-            })}
+                  {fin.label}
+                </span>
+                <span
+                  style={{
+                    background: C.violetDim,
+                    color: C.violet,
+                    borderRadius: 999,
+                    padding: "2px 8px",
+                    fontSize: 12,
+                    fontWeight: 700,
+                  }}
+                >
+                  ×{qty}
+                </span>
+                <button
+                  onClick={() => shareSticker(sticker, t, qty)}
+                  className="fc-btn"
+                  title="Compartilhar no WhatsApp"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "rgba(37,211,102,0.15)",
+                    border: "1px solid rgba(37,211,102,0.35)",
+                    color: "#25d366",
+                    borderRadius: 8,
+                    padding: "4px 7px",
+                    cursor: "pointer",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Icon name="share" size={13} />
+                </button>
+              </div>
+            ))}
           </div>
         </div>
       ))}
