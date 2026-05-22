@@ -23,7 +23,7 @@ export function Footer() {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          padding: "5px 80px 7px 16px",
+          padding: "5px 80px 5px 16px",
           gap: 4,
         }}
       >
