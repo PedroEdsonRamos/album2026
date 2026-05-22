@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useInView } from "@/hooks/useInView.js";
 import { useCounter } from "@/hooks/useCounter.js";
 import { TEAMS } from "@/data/teams.js";
@@ -18,11 +19,22 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
   const pct = Math.round((owned / total) * 100);
   const [hRef, hVis] = useInView();
   const pctA = useCounter(hVis ? pct : 0, 1200);
+  const [rankSort, setRankSort] = useState("pct");
+  const [showAll, setShowAll] = useState(false);
   const teamStats = TEAMS.map((t) => {
     const ts = stickers.filter((s) => s.team === t.id);
     const o = ts.filter((s) => s.status === "Tenho").length;
-    return { ...t, total: ts.length, owned: o, pct: Math.round((o / (ts.length || 1)) * 100) };
-  }).sort((a, b) => b.pct - a.pct);
+    const legendCount = ts.filter((s) => s.rarity !== "Normal" && s.status === "Tenho").length;
+    return { ...t, total: ts.length, owned: o, pct: Math.round((o / (ts.length || 1)) * 100), legendCount };
+  });
+  const sortedTeams = [...teamStats].sort((a, b) => {
+    if (rankSort === "pct")    return b.pct - a.pct;
+    if (rankSort === "name")   return a.name.localeCompare(b.name);
+    if (rankSort === "group")  return a.grp.localeCompare(b.grp) || b.pct - a.pct;
+    if (rankSort === "legend") return b.legendCount - a.legendCount;
+    return 0;
+  });
+  const visibleTeams = rankSort !== "pct" || showAll ? sortedTeams : sortedTeams.slice(0, 6);
   const recent = [...stickers]
     .filter((s) => s.status === "Tenho")
     .sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt))
@@ -148,13 +160,43 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
             color: C.t2,
             textTransform: "uppercase",
             letterSpacing: "0.08em",
-            marginBottom: 12,
+            marginBottom: 10,
           }}
         >
           🏆 Ranking das Seleções
         </div>
+        <div style={{ display: "flex", gap: 6, marginBottom: 10, overflowX: "auto", paddingBottom: 2 }}>
+          {[
+            { id: "pct",    label: "% Completo" },
+            { id: "group",  label: "Grupo A-L" },
+            { id: "name",   label: "Nome A-Z" },
+            { id: "legend", label: "Legends" },
+          ].map((opt) => (
+            <button
+              key={opt.id}
+              onClick={() => { setRankSort(opt.id); setShowAll(false); }}
+              className="fc-btn"
+              style={{
+                background: rankSort === opt.id ? C.amberDim : C.surface,
+                border: `1px solid ${rankSort === opt.id ? C.amber + "66" : C.borderHi}`,
+                color: rankSort === opt.id ? C.amber : C.t2,
+                borderRadius: 999,
+                padding: "5px 12px",
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                fontFamily: "inherit",
+                flexShrink: 0,
+                transition: "all .18s ease",
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {teamStats.slice(0, 6).map((t, i) => (
+          {visibleTeams.map((t, i) => (
             <div
               key={t.id}
               onClick={() => {
@@ -215,6 +257,50 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
             </div>
           ))}
         </div>
+        {rankSort === "pct" && !showAll && sortedTeams.length > 6 && (
+          <button
+            onClick={() => setShowAll(true)}
+            className="fc-btn"
+            style={{
+              width: "100%",
+              marginTop: 8,
+              background: C.surface,
+              border: `1px solid ${C.borderHi}`,
+              color: C.t2,
+              borderRadius: 10,
+              padding: "9px",
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "inherit",
+              transition: "all .18s ease",
+            }}
+          >
+            Ver todos os 48 times ↓
+          </button>
+        )}
+        {showAll && rankSort === "pct" && (
+          <button
+            onClick={() => setShowAll(false)}
+            className="fc-btn"
+            style={{
+              width: "100%",
+              marginTop: 8,
+              background: C.surface,
+              border: `1px solid ${C.borderHi}`,
+              color: C.t2,
+              borderRadius: 10,
+              padding: "9px",
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "inherit",
+              transition: "all .18s ease",
+            }}
+          >
+            Ver menos ↑
+          </button>
+        )}
       </div>
 
       <div>
