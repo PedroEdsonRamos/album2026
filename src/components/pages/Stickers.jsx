@@ -62,6 +62,7 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
           ? {
               ...s,
               ...updates,
+              typeBreakdown: editSticker.typeBreakdown,
               addedAt:
                 updates.status !== "Faltando" ? s.addedAt || new Date().toISOString() : null,
             }

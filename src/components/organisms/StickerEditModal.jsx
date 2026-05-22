@@ -10,9 +10,37 @@ const RARITY_MAP = {
   Ouro: "Gold",
 };
 
+const FINISH_TO_RARITY = {
+  Regular: "Normal",
+  "Lilás": "Lilás",
+  Bronze: "Bronze",
+  Prata: "Prata",
+  Ouro: "Gold",
+};
+
 export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
   const et = teamInfo(sticker.team);
   const ef = getFinish(sticker.rarity);
+
+  const updateTypeBreakdown = (rarityKey, delta) => {
+    onChange((prev) => {
+      const current = prev.typeBreakdown ?? {};
+      const newVal = Math.max(0, (current[rarityKey] ?? 0) + delta);
+      const updated = { ...current };
+      if (newVal === 0) {
+        delete updated[rarityKey];
+      } else {
+        updated[rarityKey] = newVal;
+      }
+      const total = Object.values(updated).reduce((a, b) => a + b, 0);
+      return {
+        ...prev,
+        typeBreakdown: Object.keys(updated).length > 0 ? updated : undefined,
+        duplicates: total,
+        rarity: Object.keys(updated).length === 1 ? Object.keys(updated)[0] : prev.rarity,
+      };
+    });
+  };
 
   return (
     <div
@@ -78,6 +106,7 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
                     ...p,
                     status: st,
                     duplicates: st === "Repetida" ? Math.max(p.duplicates || 0, 1) : 0,
+                    typeBreakdown: st === "Repetida" ? p.typeBreakdown : undefined,
                   }))
                 }
                 className="fc-btn"
@@ -100,6 +129,44 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
             );
           })}
         </div>
+
+        {sticker.status === "Repetida" && (
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>
+              Quantidade por tipo
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {Object.entries(FINISH).map(([finishKey, fin]) => {
+                const rarityKey = FINISH_TO_RARITY[finishKey] ?? "Normal";
+                const qty = sticker.typeBreakdown?.[rarityKey] ?? 0;
+                return (
+                  <div key={finishKey} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ background: fin.bg, border: `1px solid ${fin.border}`, color: fin.color, borderRadius: 8, padding: "4px 10px", fontSize: 11, fontWeight: 700, width: 72, textAlign: "center", flexShrink: 0 }}>
+                      {fin.label}
+                    </span>
+                    <button
+                      onClick={() => updateTypeBreakdown(rarityKey, -1)}
+                      style={{ width: 32, height: 32, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, color: "#fff", fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "inherit" }}
+                    >−</button>
+                    <span style={{ width: 28, textAlign: "center", fontSize: 15, fontWeight: 700, color: qty > 0 ? "#fff" : C.t4 }}>
+                      {qty}
+                    </span>
+                    <button
+                      onClick={() => updateTypeBreakdown(rarityKey, +1)}
+                      style={{ width: 32, height: 32, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, color: "#fff", fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "inherit" }}
+                    >+</button>
+                    {qty > 0 && (
+                      <span style={{ fontSize: 11, color: C.t3 }}>{qty === 1 ? "1 cópia" : `${qty} cópias`}</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ fontSize: 11, color: C.t3, marginTop: 10, textAlign: "right" }}>
+              Total: {Object.values(sticker.typeBreakdown ?? {}).reduce((a, b) => a + b, 0)}× repetidas
+            </div>
+          </div>
+        )}
 
         <div
           style={{
