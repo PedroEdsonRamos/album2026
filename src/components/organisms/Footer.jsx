@@ -23,7 +23,7 @@ export function Footer() {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          padding: "5px 80px 5px 16px",
+          padding: "5px 80px 15px 16px",
           gap: 4,
         }}
       >
@@ -52,7 +52,7 @@ export function Footer() {
         </div>
       </div>
       <div
-        style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)" }}
+        style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-60%)" }}
       >
         <PTECLogo height={58} />
       </div>
