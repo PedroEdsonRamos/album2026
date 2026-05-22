@@ -133,43 +133,36 @@ export default function App() {
         }}
         onSearchOpen={() => setSearchOpen(true)}
       />
-      <div style={{ padding: "20px 16px 68px", position: "relative", zIndex: 1 }}>
-        {page === "dashboard" && (
-          <Dashboard
-            stickers={stickers}
-            setPage={setPage}
-            setTeamFilter={setSelectedTeam}
-            goToAlbum={goToAlbum}
-          />
-        )}
-        {page === "teams" && (
-          <Teams stickers={stickers} setPage={setPage} setTeamFilter={setSelectedTeam} />
-        )}
-        {page === "stickers" && (
-          <Stickers
-            stickers={stickers}
-            selectedTeam={selectedTeam}
-            setStickers={setStickers}
-            addToast={addToast}
-            initialFilter={albumInitialFilter}
-          />
-        )}
-        {page === "add" && (
-          <AddPage stickers={stickers} setStickers={setStickers} addToast={addToast} />
-        )}
-        {page === "trocas" && <Trades stickers={stickers} addToast={addToast} />}
-        {page === "status" && <Status stickers={stickers} />}
-      </div>
-      <div style={{ position: "relative", zIndex: 1 }}>
+      <div style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom))" }}>
+        <div style={{ padding: "20px 16px 24px", position: "relative", zIndex: 1 }}>
+          {page === "dashboard" && (
+            <Dashboard
+              stickers={stickers}
+              setPage={setPage}
+              setTeamFilter={setSelectedTeam}
+              goToAlbum={goToAlbum}
+            />
+          )}
+          {page === "teams" && (
+            <Teams stickers={stickers} setPage={setPage} setTeamFilter={setSelectedTeam} />
+          )}
+          {page === "stickers" && (
+            <Stickers
+              stickers={stickers}
+              selectedTeam={selectedTeam}
+              setStickers={setStickers}
+              addToast={addToast}
+              initialFilter={albumInitialFilter}
+            />
+          )}
+          {page === "add" && (
+            <AddPage stickers={stickers} setStickers={setStickers} addToast={addToast} />
+          )}
+          {page === "trocas" && <Trades stickers={stickers} addToast={addToast} />}
+          {page === "status" && <Status stickers={stickers} />}
+        </div>
         <Footer />
       </div>
-      <div
-        style={{
-          height: "calc(64px + env(safe-area-inset-bottom))",
-          position: "relative",
-          zIndex: 1,
-        }}
-      />
       <BottomNav page={page} onNav={handleNav} />
     </div>
   );
