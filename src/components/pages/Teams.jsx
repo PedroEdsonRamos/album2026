@@ -131,6 +131,8 @@ export function Teams({ stickers, setPage, setTeamFilter }) {
           gap: 6,
           overflowX: "auto",
           paddingBottom: 8,
+          paddingTop: 8,
+          overflow: "visible",
           marginBottom: 14,
         }}
       >

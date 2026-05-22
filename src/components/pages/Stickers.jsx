@@ -137,7 +137,7 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
       </div>
 
       <div
-        style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4, marginBottom: 8 }}
+        style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4, paddingTop: 8, overflow: "visible", marginBottom: 8 }}
       >
         {["Todos", "Minhas", "Tenho", "Faltando", "Repetida"].map((f) => (
           <button
@@ -165,7 +165,7 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
       </div>
 
       <div
-        style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4, marginBottom: 14 }}
+        style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4, paddingTop: 8, overflow: "visible", marginBottom: 8 }}
       >
         {["Todos", ...Object.keys(FINISH)].map((f) => {
           const fin = FINISH[f];
@@ -196,7 +196,7 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
       </div>
 
       <div
-        style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4, marginBottom: 14 }}
+        style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4, paddingTop: 8, overflow: "visible", marginBottom: 14 }}
       >
         {["Todos", "Goleiro", "Defensor", "Meio-Campista", "Atacante", "Foto Equipe", "Escudo", "Especial"].map((pos) => (
           <button

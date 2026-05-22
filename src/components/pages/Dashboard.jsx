@@ -165,7 +165,7 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
         >
           🏆 Ranking das Seleções
         </div>
-        <div style={{ display: "flex", gap: 6, marginBottom: 10, overflowX: "auto", paddingBottom: 2 }}>
+        <div style={{ display: "flex", gap: 6, marginBottom: 10, overflowX: "auto", paddingBottom: 2, paddingTop: 8, overflow: "visible" }}>
           {[
             { id: "pct",    label: "% Completo" },
             { id: "group",  label: "Grupo A-L" },
