@@ -159,7 +159,14 @@ export default function App() {
             <AddPage stickers={stickers} setStickers={setStickers} addToast={addToast} />
           )}
           {page === "trocas" && <Trades stickers={stickers} addToast={addToast} />}
-          {page === "status" && <Status stickers={stickers} />}
+          {page === "status" && (
+            <Status
+              stickers={stickers}
+              setStickers={setStickers}
+              addToast={addToast}
+              setPage={setPage}
+            />
+          )}
         </div>
         <Footer />
       </div>

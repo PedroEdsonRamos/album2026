@@ -1,14 +1,18 @@
+import { useState } from "react";
 import { useInView } from "@/hooks/useInView.js";
 import { useCounter } from "@/hooks/useCounter.js";
 import { TEAMS, ALL_TEAMS } from "@/data/teams.js";
 import { TOTAL_OFFICIAL } from "@/data/fwc.js";
+import { FULL_DB } from "@/data/database.js";
 import { CircleProgress } from "@/components/atoms/CircleProgress.jsx";
 import { StatMiniBox } from "@/components/molecules/StatMiniBox.jsx";
 import { CategoryBar } from "@/components/molecules/CategoryBar.jsx";
 import { StatusTeamRow } from "@/components/molecules/StatusTeamRow.jsx";
+import { ResetModal } from "@/components/organisms/ResetModal.jsx";
 import { C } from "@/styles/tokens.js";
 
-export function Status({ stickers }) {
+export function Status({ stickers, setStickers, addToast, setPage }) {
+  const [showReset, setShowReset] = useState(false);
   const total = TOTAL_OFFICIAL;
   const owned = stickers.filter((s) => s.status === "Tenho").length;
   const missing = total - owned;
@@ -223,6 +227,60 @@ export function Status({ stickers }) {
           ))}
         </div>
       </div>
+
+      <div
+        style={{
+          marginTop: 32,
+          padding: "16px",
+          background: "rgba(248,113,113,0.06)",
+          border: "1px solid rgba(248,113,113,0.2)",
+          borderRadius: 14,
+        }}
+      >
+        <div
+          style={{
+            fontSize: 11,
+            color: C.t3,
+            marginBottom: 10,
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+          }}
+        >
+          Zona de Perigo
+        </div>
+        <button
+          onClick={() => setShowReset(true)}
+          style={{
+            width: "100%",
+            background: "rgba(248,113,113,0.12)",
+            border: "1px solid rgba(248,113,113,0.4)",
+            color: C.red,
+            borderRadius: 12,
+            padding: "12px",
+            fontSize: 13,
+            fontWeight: 700,
+            cursor: "pointer",
+            fontFamily: "inherit",
+            transition: "all .2s",
+          }}
+        >
+          🗑️ Resetar Álbum
+        </button>
+      </div>
+
+      {showReset && (
+        <ResetModal
+          ownedCount={owned}
+          onClose={() => setShowReset(false)}
+          onConfirm={() => {
+            setStickers(FULL_DB);
+            localStorage.removeItem("album2026-stickers-v1");
+            setShowReset(false);
+            addToast("Álbum resetado. Todas as figurinhas foram removidas.", "info");
+            setPage("dashboard");
+          }}
+        />
+      )}
     </div>
   );
 }
