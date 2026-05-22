@@ -11,6 +11,7 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
   const [search, setSearch] = useState(initialFilter?.search || "");
   const [fStatus, setFStatus] = useState(initialFilter?.status || "Todos");
   const [fFinish, setFFinish] = useState(initialFilter?.finish || "Todos");
+  const [fPosition, setFPosition] = useState("Todos");
 
   useEffect(() => {
     if (!initialFilter) return;
@@ -37,9 +38,10 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
           if (!MY_CODES.has(s.code)) return false;
         } else if (fStatus !== "Todos" && s.status !== fStatus) return false;
         if (fFinish !== "Todos" && rarToFinish(s.rarity) !== fFinish) return false;
+        if (fPosition !== "Todos" && s.position !== fPosition) return false;
         return true;
       }),
-    [stickers, selectedTeam, search, fStatus, fFinish]
+    [stickers, selectedTeam, search, fStatus, fFinish, fPosition]
   );
 
   const [editSticker, setEditSticker] = useState(null);
@@ -191,6 +193,34 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
             </button>
           );
         })}
+      </div>
+
+      <div
+        style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4, marginBottom: 14 }}
+      >
+        {["Todos", "Goleiro", "Defensor", "Meio-Campista", "Atacante", "Foto Equipe", "Escudo", "Especial"].map((pos) => (
+          <button
+            key={pos}
+            onClick={() => setFPosition(pos)}
+            className="fc-btn"
+            style={{
+              background: fPosition === pos ? C.amberDim : C.surface,
+              border: `1px solid ${fPosition === pos ? C.amber + "66" : C.borderHi}`,
+              color: fPosition === pos ? C.amber : C.t2,
+              borderRadius: 999,
+              padding: "5px 12px",
+              fontSize: 11,
+              fontWeight: 600,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              fontFamily: "inherit",
+              flexShrink: 0,
+              transition: "all .18s ease",
+            }}
+          >
+            {pos}
+          </button>
+        ))}
       </div>
 
       <div style={{ fontSize: 11, color: C.t3, marginBottom: 10 }}>
