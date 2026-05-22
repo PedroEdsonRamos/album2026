@@ -46,6 +46,12 @@ textarea {
   }
 }
 
+@keyframes confettiFall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 0.9; }
+  80%  { opacity: 0.8; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
 .fc-btn:hover {
   filter: brightness(1.18);
   transform: translateY(-1px);

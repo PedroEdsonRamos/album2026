@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 import { C } from "@/styles/tokens.js";
 
-export function Toast({ msg, type, onDone }) {
+export function Toast({ msg, type, duration, onDone }) {
   useEffect(() => {
-    const t = setTimeout(onDone, 2400);
+    const t = setTimeout(onDone, duration || 2400);
     return () => clearTimeout(t);
   }, []);
 
