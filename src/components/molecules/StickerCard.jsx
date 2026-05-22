@@ -109,7 +109,19 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
         >
           {team.name}
         </span>
-        {dup && (
+        {dup && s.typeBreakdown && Object.keys(s.typeBreakdown).length > 1 && (
+          <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+            {Object.entries(s.typeBreakdown).map(([rarityKey, qty]) => {
+              const f = getFinish(rarityKey);
+              return (
+                <span key={rarityKey} style={{ background: f.bg, border: `1px solid ${f.border}`, color: f.color, borderRadius: 6, padding: "1px 5px", fontSize: 9, fontWeight: 700, lineHeight: "14px" }}>
+                  {f.label} ×{qty}
+                </span>
+              );
+            })}
+          </div>
+        )}
+        {dup && !(s.typeBreakdown && Object.keys(s.typeBreakdown).length > 1) && (
           <span
             style={{
               background: fin.bg,
@@ -189,7 +201,7 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
             letterSpacing: "0.04em",
           }}
         >
-          {fin.label}
+          {fin.label}{s.typeBreakdown?.[s.rarity] > 0 ? ` ×${s.typeBreakdown[s.rarity]}` : ""}
         </span>
       </div>
     </div>
