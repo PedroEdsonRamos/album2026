@@ -13,14 +13,22 @@ export function loadStickersFromStorage() {
     return FULL_DB.map((base) => {
       const s = byCode.get(base.code);
       if (!s) return base;
-      return {
+
+      const merged = {
         ...base,
         status: s.status ?? base.status,
         duplicates: s.duplicates ?? base.duplicates,
         rarity: s.rarity ?? base.rarity,
         obs: s.obs ?? base.obs,
         addedAt: s.addedAt ?? base.addedAt,
+        typeBreakdown: s.typeBreakdown,
       };
+
+      if (merged.status === "Repetida" && !merged.typeBreakdown && merged.duplicates > 0) {
+        merged.typeBreakdown = { [merged.rarity]: merged.duplicates };
+      }
+
+      return merged;
     });
   } catch (e) {
     console.warn("Erro ao carregar localStorage:", e);
@@ -38,6 +46,7 @@ export function saveStickersToStorage(stickers) {
       rarity: s.rarity,
       obs: s.obs,
       addedAt: s.addedAt,
+      typeBreakdown: s.typeBreakdown,
     }));
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(minimal));
   } catch (e) {
