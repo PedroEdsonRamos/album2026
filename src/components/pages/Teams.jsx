@@ -1,14 +1,79 @@
 import { useState, useMemo } from "react";
-import { ALL_TEAMS } from "@/data/teams.js";
+import { TEAMS } from "@/data/teams.js";
+import { FWC_LIST } from "@/data/fwc.js";
 import { TeamCard } from "@/components/molecules/TeamCard.jsx";
+import { Icon } from "@/components/atoms/Icon.jsx";
 import { C } from "@/styles/tokens.js";
+
+function FWCExtrasGrid({ stickers }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {FWC_LIST.map((f) => {
+        const code = f.n === "00" ? "00" : `FWC ${f.n}`;
+        const s = stickers.find((x) => x.code === code);
+        const owned = s?.status === "Tenho";
+        const dup = s?.status === "Repetida";
+        return (
+          <div
+            key={code}
+            style={{
+              background: C.surface,
+              border: `1px solid ${owned || dup ? C.amber + "44" : C.border}`,
+              borderRadius: 12,
+              padding: "10px 14px",
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+            }}
+          >
+            <span
+              style={{
+                fontSize: 10,
+                fontFamily: "monospace",
+                color: C.amber,
+                minWidth: 44,
+                fontWeight: 700,
+              }}
+            >
+              {code}
+            </span>
+            <span style={{ fontSize: 13, color: "#fff", flex: 1 }}>{f.name}</span>
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                borderRadius: 999,
+                padding: "2px 8px",
+                background: owned ? C.greenDim : dup ? C.amberDim : C.redDim,
+                color: owned ? C.green : dup ? C.amber : C.red,
+                flexShrink: 0,
+              }}
+            >
+              {owned ? "Tenho" : dup ? "Repetida" : "Falta"}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export function Teams({ stickers, setPage, setTeamFilter }) {
   const [grp, setGrp] = useState("Todos");
-  const groups = ["Todos", ...new Set(ALL_TEAMS.map((t) => t.grp))];
+  const [search, setSearch] = useState("");
+
+  const groups = ["Todos", ...new Set(TEAMS.map((t) => t.grp)), "Extras"];
+
   const filteredTeams = useMemo(
-    () => ALL_TEAMS.filter((t) => grp === "Todos" || t.grp === grp),
-    [grp]
+    () =>
+      TEAMS.filter(
+        (t) =>
+          (grp === "Todos" || t.grp === grp) &&
+          (!search.trim() ||
+            t.name.toLowerCase().includes(search.trim().toLowerCase()) ||
+            t.id.toLowerCase().includes(search.trim().toLowerCase()))
+      ),
+    [grp, search]
   );
 
   return (
@@ -25,6 +90,41 @@ export function Teams({ stickers, setPage, setTeamFilter }) {
       >
         🌍 48 Seleções · Copa 2026
       </div>
+
+      {/* Campo de busca */}
+      <div style={{ position: "relative", marginBottom: 14 }}>
+        <div
+          style={{
+            position: "absolute",
+            left: 12,
+            top: "50%",
+            transform: "translateY(-50%)",
+            color: C.t3,
+            lineHeight: 0,
+          }}
+        >
+          <Icon name="search" size={15} />
+        </div>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar seleção..."
+          style={{
+            width: "100%",
+            background: C.surface,
+            border: `1px solid ${C.border}`,
+            borderRadius: 12,
+            padding: "10px 14px 10px 36px",
+            color: "#fff",
+            fontSize: 13,
+            outline: "none",
+            boxSizing: "border-box",
+            fontFamily: "inherit",
+          }}
+        />
+      </div>
+
+      {/* Chips de grupo */}
       <div
         style={{
           display: "flex",
@@ -59,19 +159,24 @@ export function Teams({ stickers, setPage, setTeamFilter }) {
           </button>
         ))}
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-        {filteredTeams.map((team) => (
-          <TeamCard
-            key={team.id}
-            team={team}
-            stickers={stickers}
-            onSelect={() => {
-              setTeamFilter(team.id);
-              setPage("stickers");
-            }}
-          />
-        ))}
-      </div>
+
+      {grp === "Extras" ? (
+        <FWCExtrasGrid stickers={stickers} />
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          {filteredTeams.map((team) => (
+            <TeamCard
+              key={team.id}
+              team={team}
+              stickers={stickers}
+              onSelect={() => {
+                setTeamFilter(team.id);
+                setPage("stickers");
+              }}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

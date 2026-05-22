@@ -14,18 +14,26 @@ export function QuickSearch({ stickers, onClose, onGoTo }) {
 
   const results = useMemo(() => {
     if (!q.trim()) return [];
-    const query = q.trim().toLowerCase();
+    const raw = q.trim().toUpperCase().replace(/\s+/, " ");
+    const queryNorm = raw.replace(/^([A-Z]{2,4})(\d+)$/, "$1 $2");
+    const queryLower = queryNorm.toLowerCase();
     return stickers
       .filter(
         (s) =>
-          s.code.toLowerCase().includes(query) ||
-          s.name.toLowerCase().includes(query) ||
-          (s.teamName || "").toLowerCase().includes(query)
+          s.code.toLowerCase().includes(queryLower) ||
+          s.name.toLowerCase().includes(queryLower) ||
+          (s.teamName || "").toLowerCase().includes(queryLower)
       )
       .slice(0, 12);
   }, [q, stickers]);
 
-  const exact = q.trim() ? results.find((r) => r.code === q.trim().toUpperCase()) : null;
+  const exact = q.trim()
+    ? (() => {
+        const raw = q.trim().toUpperCase().replace(/\s+/, " ");
+        const queryNorm = raw.replace(/^([A-Z]{2,4})(\d+)$/, "$1 $2");
+        return results.find((r) => r.code === queryNorm);
+      })()
+    : null;
 
   return (
     <div
@@ -206,7 +214,7 @@ export function QuickSearch({ stickers, onClose, onGoTo }) {
           })}
           {q.trim() && results.length === 0 && (
             <div style={{ textAlign: "center", padding: "32px", color: C.t3, fontSize: 13 }}>
-              Nenhuma figurinha encontrada para "{q}"
+              Nenhuma figurinha encontrada para &quot;{q}&quot;
             </div>
           )}
           {!q.trim() && (

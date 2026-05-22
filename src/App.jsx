@@ -87,7 +87,7 @@ export default function App() {
         }}
         onSearchOpen={() => setSearchOpen(true)}
       />
-      <div style={{ padding: "20px 16px 24px", position: "relative", zIndex: 1 }}>
+      <div style={{ padding: "20px 16px 68px", position: "relative", zIndex: 1 }}>
         {page === "dashboard" && (
           <Dashboard
             stickers={stickers}

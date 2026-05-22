@@ -8,7 +8,13 @@ export function Footer() {
         background: "rgba(8,8,18,0.95)",
         backdropFilter: "blur(10px)",
         borderTop: `1px solid rgba(245,197,24,0.2)`,
-        position: "relative",
+        position: "fixed",
+        bottom: 64,
+        left: 0,
+        right: 0,
+        zIndex: 10,
+        maxWidth: 480,
+        margin: "0 auto",
         overflow: "visible",
       }}
     >

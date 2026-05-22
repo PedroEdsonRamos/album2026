@@ -1,5 +1,5 @@
-import { ALL_TEAMS } from "./teams.js";
-import { SQUADS, DEFAULT_SQUAD, POS2TO12, POS14TO20 } from "./squads.js";
+import { TEAMS } from "./teams.js";
+import { SQUADS, DEFAULT_SQUAD, POSITIONS } from "./squads.js";
 import { FWC_LIST } from "./fwc.js";
 import { MY_COUNT } from "./userCollection.js";
 
@@ -24,27 +24,27 @@ export function buildDatabase() {
   FWC_LIST.forEach((f) =>
     db.push(
       mk({
-        code: f.n,
+        code: f.n === "00" ? "00" : `FWC ${f.n}`,
         name: f.name,
         team: "FWC",
         teamName: "FIFA World Cup",
         section: "Especiais FIFA",
         position: "Especial",
-        number: parseInt(f.n.replace("FWC", "")) || 0,
+        number: f.n === "00" ? 0 : parseInt(f.n),
         rarity: f.r,
       })
     )
   );
 
-  // 48 + 6 extras × 20
-  ALL_TEAMS.forEach((team, ti) => {
+  // 48 seleções × 20
+  TEAMS.forEach((team, ti) => {
     const squad = SQUADS[team.id] || DEFAULT_SQUAD;
     const shieldFinish = ti % 7 === 0 ? "Gold" : ti % 3 === 0 ? "Bronze" : "Prata";
 
     // #1 Escudo
     db.push(
       mk({
-        code: `${team.id}1`,
+        code: `${team.id} 1`,
         name: `Escudo – ${team.name}`,
         team: team.id,
         teamName: team.name,
@@ -60,12 +60,12 @@ export function buildDatabase() {
       const num = pi + 2;
       db.push(
         mk({
-          code: `${team.id}${num}`,
+          code: `${team.id} ${num}`,
           name: squad[pi] || `Jogador ${pi + 1}`,
           team: team.id,
           teamName: team.name,
           section: team.name,
-          position: POS2TO12[pi] || "Jogador",
+          position: POSITIONS[pi] || "Jogador",
           number: num,
           rarity: "Normal",
         })
@@ -75,7 +75,7 @@ export function buildDatabase() {
     // #13 Foto da Equipe
     db.push(
       mk({
-        code: `${team.id}13`,
+        code: `${team.id} 13`,
         name: `Foto da Equipe – ${team.name}`,
         team: team.id,
         teamName: team.name,
@@ -91,12 +91,12 @@ export function buildDatabase() {
       const num = pi + 14;
       db.push(
         mk({
-          code: `${team.id}${num}`,
+          code: `${team.id} ${num}`,
           name: squad[pi + 11] || `Jogador ${pi + 12}`,
           team: team.id,
           teamName: team.name,
           section: team.name,
-          position: POS14TO20[pi] || "Jogador",
+          position: POSITIONS[pi + 11] || "Jogador",
           number: num,
           rarity: "Normal",
         })

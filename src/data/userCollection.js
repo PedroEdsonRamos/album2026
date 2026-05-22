@@ -12,6 +12,13 @@ Swe15,Swe14,Swe20,Swe3,Swe1,Swe17,Tur1,Par13,Civ13,Cuw13,Ger13,
 Tur9,Tur5,Tur16,Tur12,Tur2,Usa15,Usa16,Usa19,Sui20,Bih15,Bih10,
 Cze6,Rsa12,Rsa18,Mex13,Kor13,Fwc6,Can13,Usa5`;
 
+function normalizeCode(tok) {
+  if (tok === "00") return "00";
+  const m = tok.match(/^([A-Z]{2,4})\s*(\d+)$/);
+  if (m) return `${m[1]} ${m[2]}`;
+  return tok;
+}
+
 export function parseMyCodes(raw) {
   const tokens = raw
     .replace(/\n/g, ",")
@@ -20,7 +27,8 @@ export function parseMyCodes(raw) {
     .filter(Boolean);
   const countMap = {};
   tokens.forEach((tok) => {
-    countMap[tok] = (countMap[tok] || 0) + 1;
+    const key = normalizeCode(tok);
+    countMap[key] = (countMap[key] || 0) + 1;
   });
   return countMap;
 }

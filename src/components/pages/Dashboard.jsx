@@ -2,7 +2,6 @@ import { useInView } from "@/hooks/useInView.js";
 import { useCounter } from "@/hooks/useCounter.js";
 import { TEAMS } from "@/data/teams.js";
 import { TOTAL_OFFICIAL } from "@/data/fwc.js";
-import { FIFATrophy } from "@/components/atoms/FIFATrophy.jsx";
 import { CircleProgress } from "@/components/atoms/CircleProgress.jsx";
 import { StatCard } from "@/components/molecules/StatCard.jsx";
 import { StickerCard } from "@/components/molecules/StickerCard.jsx";
@@ -47,7 +46,7 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
         }}
       >
         <div style={{ position: "absolute", top: -10, right: -6, opacity: 0.07 }}>
-          <FIFATrophy size={120} />
+          <img src="/trophy_watermark.png" alt="" style={{ height: 168, width: "auto", objectFit: "contain", display: "block" }} />
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
           <div style={{ position: "relative" }}>
