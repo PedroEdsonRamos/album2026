@@ -108,11 +108,60 @@ export function Status({ stickers }) {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
         <StatMiniBox label="Coletadas" value={owned} color={C.green} />
         <StatMiniBox label="Faltando" value={missing} color={C.red} />
         <StatMiniBox label="Repetidas" value={dups} color={C.violet} />
       </div>
+
+      {(() => {
+        if (pct >= 100) {
+          return (
+            <div
+              style={{
+                background: C.surface,
+                border: `1px solid ${C.amber}44`,
+                borderRadius: 16,
+                padding: "16px 20px",
+                marginBottom: 20,
+                textAlign: "center",
+              }}
+            >
+              <div style={{ fontSize: 22, marginBottom: 4 }}>🏆</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: C.amber }}>Álbum completo!</div>
+            </div>
+          );
+        }
+        const collected = owned / total;
+        const factor = 1 / (1 - collected * 0.7);
+        const packsEstimate = Math.ceil((missing * factor) / 5);
+        const cost = (packsEstimate * 4.5).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+        return (
+          <div
+            style={{
+              background: C.surface,
+              border: `1px solid ${C.borderHi}`,
+              borderRadius: 16,
+              padding: "16px 20px",
+              marginBottom: 20,
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
+              📦 Estimativa para completar
+            </div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontSize: 22, fontWeight: 900, color: "#fff" }}>~{packsEstimate.toLocaleString("pt-BR")} pacotes</div>
+                <div style={{ fontSize: 11, color: C.t3, marginTop: 2 }}>Estimativa considerando duplicatas</div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: C.amber }}>{cost}</div>
+                <div style={{ fontSize: 10, color: C.t3 }}>a R$ 4,50/pacote</div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       <div
         style={{
