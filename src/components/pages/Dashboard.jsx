@@ -45,7 +45,7 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
           transition: "all .6s cubic-bezier(.4,0,.2,1)",
         }}
       >
-        <div style={{ position: "absolute", top: -10, right: -6, opacity: 0.07 }}>
+        <div style={{ position: "absolute", top: "50%", transform: "translateY(-50%)", right: -6, opacity: 0.07 }}>
           <img src="/trophy_watermark.png" alt="" style={{ height: 168, width: "auto", objectFit: "contain", display: "block" }} />
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
