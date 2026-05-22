@@ -132,10 +132,12 @@ export function Status({ stickers }) {
             </div>
           );
         }
+        const STICKERS_PER_PACK = 7;
+        const PACK_PRICE = 7.0;
         const collected = owned / total;
-        const factor = 1 / (1 - collected * 0.7);
-        const packsEstimate = Math.ceil((missing * factor) / 5);
-        const cost = (packsEstimate * 4.5).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+        const factor = collected > 0 ? 1 / (1 - collected * 0.7) : 1;
+        const packsEstimate = Math.ceil((missing * factor) / STICKERS_PER_PACK);
+        const cost = (packsEstimate * PACK_PRICE).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
         return (
           <div
             style={{
@@ -156,7 +158,7 @@ export function Status({ stickers }) {
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontSize: 16, fontWeight: 700, color: C.amber }}>{cost}</div>
-                <div style={{ fontSize: 10, color: C.t3 }}>a R$ 4,50/pacote</div>
+                <div style={{ fontSize: 10, color: C.t3 }}>7 figurinhas por pacote · R$ 7,00 cada</div>
               </div>
             </div>
           </div>
