@@ -61,20 +61,28 @@ function FWCExtrasGrid({ stickers }) {
 export function Teams({ stickers, setPage, setTeamFilter }) {
   const [grp, setGrp] = useState("Todos");
   const [search, setSearch] = useState("");
+  const [sortTeams, setSortTeams] = useState("pct");
 
   const groups = ["Todos", ...new Set(TEAMS.map((t) => t.grp)), "Extras"];
 
-  const filteredTeams = useMemo(
-    () =>
-      TEAMS.filter(
-        (t) =>
-          (grp === "Todos" || t.grp === grp) &&
-          (!search.trim() ||
-            t.name.toLowerCase().includes(search.trim().toLowerCase()) ||
-            t.id.toLowerCase().includes(search.trim().toLowerCase()))
-      ),
-    [grp, search]
-  );
+  const sortedFilteredTeams = useMemo(() => {
+    const filtered = TEAMS.filter(
+      (t) =>
+        (grp === "Todos" || t.grp === grp) &&
+        (!search.trim() ||
+          t.name.toLowerCase().includes(search.trim().toLowerCase()) ||
+          t.id.toLowerCase().includes(search.trim().toLowerCase()))
+    );
+    return [...filtered].sort((a, b) => {
+      if (sortTeams === "name") return a.name.localeCompare(b.name, "pt-BR");
+      if (sortTeams === "group") return a.grp.localeCompare(b.grp) || a.name.localeCompare(b.name, "pt-BR");
+      const tsA = stickers.filter((s) => s.team === a.id);
+      const tsB = stickers.filter((s) => s.team === b.id);
+      const pctA = tsA.filter((s) => s.status === "Tenho").length / (tsA.length || 1);
+      const pctB = tsB.filter((s) => s.status === "Tenho").length / (tsB.length || 1);
+      return pctB - pctA;
+    });
+  }, [stickers, grp, search, sortTeams]);
 
   return (
     <div>
@@ -89,6 +97,37 @@ export function Teams({ stickers, setPage, setTeamFilter }) {
         }}
       >
         🌍 48 Seleções · Copa 2026
+      </div>
+
+      {/* Chips de ordenação */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 10, paddingTop: 8, overflow: "visible" }}>
+        {[
+          { id: "pct",   label: "% Completo" },
+          { id: "name",  label: "Nome A-Z" },
+          { id: "group", label: "Grupo" },
+        ].map((opt) => (
+          <button
+            key={opt.id}
+            onClick={() => setSortTeams(opt.id)}
+            className="fc-btn"
+            style={{
+              background: sortTeams === opt.id ? C.amberDim : C.surface,
+              border: `1px solid ${sortTeams === opt.id ? C.amber + "66" : C.border}`,
+              color: sortTeams === opt.id ? C.amber : C.t2,
+              borderRadius: 999,
+              padding: "6px 14px",
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              fontFamily: "inherit",
+              flexShrink: 0,
+              transition: "all .18s ease",
+            }}
+          >
+            {opt.label}
+          </button>
+        ))}
       </div>
 
       {/* Campo de busca */}
@@ -166,7 +205,7 @@ export function Teams({ stickers, setPage, setTeamFilter }) {
         <FWCExtrasGrid stickers={stickers} />
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          {filteredTeams.map((team) => (
+          {sortedFilteredTeams.map((team) => (
             <TeamCard
               key={team.id}
               team={team}
