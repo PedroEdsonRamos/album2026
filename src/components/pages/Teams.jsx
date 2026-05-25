@@ -199,6 +199,51 @@ export function Teams({ stickers, setPage, setTeamFilter }) {
         <div>
           <FWCExtrasGrid stickers={stickers} />
 
+          {/* Seção Extra Stickers */}
+          <div style={{ marginTop: 20 }}>
+            <div style={{
+              fontSize: 12, fontWeight: 700, color: C.t2,
+              textTransform: "uppercase", letterSpacing: "0.08em",
+              marginBottom: 10, display: "flex", alignItems: "center", gap: 8,
+            }}>
+              ⭐ Extra Stickers
+              <span style={{ fontSize: 11, color: C.t3, fontWeight: 400 }}>
+                ({stickers.filter((s) => s.team === "ES" && s.status === "Tenho").length}/20)
+              </span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {stickers.filter((s) => s.team === "ES").map((s) => {
+                const owned = s.status === "Tenho";
+                const dup = s.status === "Repetida";
+                return (
+                  <div
+                    key={s.code}
+                    onClick={() => { setTeamFilter("ES"); setPage("stickers"); }}
+                    style={{
+                      background: C.surface,
+                      border: `1px solid ${owned || dup ? "#6d48a844" : C.border}`,
+                      borderRadius: 12, padding: "10px 14px",
+                      display: "flex", alignItems: "center", gap: 12,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <span style={{ fontSize: 10, fontFamily: "monospace", color: "#6d48a8", minWidth: 44, fontWeight: 700 }}>
+                      {s.code}
+                    </span>
+                    <span style={{ fontSize: 13, color: "#fff", flex: 1 }}>{s.name}</span>
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, borderRadius: 999, padding: "2px 8px",
+                      background: owned ? C.greenDim : dup ? C.amberDim : C.redDim,
+                      color: owned ? C.green : dup ? C.amber : C.red, flexShrink: 0,
+                    }}>
+                      {owned ? "Tenho" : dup ? "Repetida" : "Falta"}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Seção Coca-Cola */}
           <div style={{ marginTop: 20 }}>
             <div style={{

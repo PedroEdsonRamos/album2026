@@ -73,6 +73,12 @@ export function Status({ stickers, setStickers, addToast, setPage }) {
       total: 14,
       owned: stickers.filter((s) => s.team === "CC" && s.status === "Tenho").length,
     },
+    {
+      label: "Extra Stickers",
+      icon: "⭐",
+      total: 20,
+      owned: stickers.filter((s) => s.team === "ES" && s.status === "Tenho").length,
+    },
   ];
 
   const teamDist = ALL_TEAMS.map((t) => {
