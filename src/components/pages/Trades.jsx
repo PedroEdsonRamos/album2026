@@ -23,23 +23,52 @@ export function Trades({ stickers, addToast }) {
     return [{ sticker: s, qty: s.duplicates, fin: getFinish(s.rarity) }];
   };
 
-  const shareSticker = (sticker, team, qty) => {
-    const fin = getFinish(sticker.rarity);
-    const msg = `📒 *Figurinhas Disponíveis para Troca - Álbum Copa do Mundo FIFA 2026*\n\n${team.flag} *${team.name}*\n${sticker.code} — ${sticker.name}\nPosição: ${sticker.position}\nTipo: ${fin.label}\nQuantidade: ${qty}x\n\n📲 Álbum FIFA World Cup 2026 · PTEC Solutions`;
+  const buildStickerTypeLines = (s) => {
+    if (s.typeBreakdown && Object.keys(s.typeBreakdown).length > 0) {
+      return Object.entries(s.typeBreakdown)
+        .filter(([, q]) => q > 0)
+        .map(([rarity, q]) => `Tipo: ${getFinish(rarity).label} (${q}x)`)
+        .join("\n");
+    }
+    return `Tipo: ${getFinish(s.rarity).label} (${s.duplicates}x)`;
+  };
+
+  const shareSticker = (sticker, team) => {
+    const typeLines = buildStickerTypeLines(sticker);
+    const msg = `📒 *Figurinhas Disponíveis para Troca - Álbum Copa do Mundo FIFA 2026*\n\n${team.flag} *${team.name}*\n${sticker.code} — ${sticker.name} | ${sticker.position}\n${typeLines}\n\n📲 Álbum FIFA World Cup 2026 · PTEC Solutions`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
-  const handleShare = () => {
-    const lines = [`📒 *Figurinhas Disponíveis para Troca - Álbum Copa do Mundo FIFA 2026*`];
-    byTeam.forEach((t) => {
-      lines.push(`\n${t.flag} *${t.name}*`);
-      t.items.flatMap((s) => expandByType(s)).forEach(({ sticker, qty, fin }) => {
-        lines.push(`${sticker.code} — ${sticker.name}\nPosição: ${sticker.position}\nTipo: ${fin.label}\nQuantidade: ${qty}x`);
+  const handleShareAll = () => {
+    const byCode = {};
+    byTeam.forEach(({ id, flag, name, items }) => {
+      items.forEach((s) => {
+        const key = `${id}__${s.code}`;
+        if (!byCode[key]) byCode[key] = { teamFlag: flag, teamName: name, sticker: s, types: {} };
+        if (s.typeBreakdown && Object.keys(s.typeBreakdown).length > 0) {
+          Object.entries(s.typeBreakdown).forEach(([rarity, q]) => {
+            byCode[key].types[rarity] = (byCode[key].types[rarity] ?? 0) + q;
+          });
+        } else {
+          byCode[key].types[s.rarity] = s.duplicates;
+        }
       });
     });
-    lines.push(`\n📲 Álbum FIFA World Cup 2026 · PTEC Solutions`);
-    navigator.clipboard?.writeText(lines.join("\n"));
-    addToast("Lista copiada", "success");
+
+    const teamSections = byTeam.map((t) => {
+      const codes = Object.values(byCode).filter((e) => e.teamFlag === t.flag && e.teamName === t.name);
+      const stickerLines = codes.map(({ sticker, types }) => {
+        const typeLines = Object.entries(types)
+          .filter(([, q]) => q > 0)
+          .map(([rarity, q]) => `Tipo: ${getFinish(rarity).label} (${q}x)`)
+          .join("\n");
+        return `${sticker.code} — ${sticker.name} | ${sticker.position}\n${typeLines}`;
+      });
+      return `${t.flag} *${t.name}*\n${stickerLines.join("\n\n")}`;
+    });
+
+    const msg = `📒 *Figurinhas Disponíveis para Troca - Álbum Copa do Mundo FIFA 2026*\n\n${teamSections.join("\n\n")}\n\n📲 Álbum FIFA World Cup 2026 · PTEC Solutions`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
   if (!dups.length)
@@ -81,7 +110,7 @@ export function Trades({ stickers, addToast }) {
           </div>
         </div>
         <button
-          onClick={handleShare}
+          onClick={handleShareAll}
           style={{
             display: "flex",
             alignItems: "center",
@@ -153,7 +182,7 @@ export function Trades({ stickers, addToast }) {
                   ×{qty}
                 </span>
                 <button
-                  onClick={() => shareSticker(sticker, t, qty)}
+                  onClick={() => shareSticker(sticker, t)}
                   className="fc-btn"
                   title="Compartilhar no WhatsApp"
                   style={{
