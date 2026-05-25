@@ -234,20 +234,22 @@ export function AddSinglePanel({ stickers, setStickers, addToast }) {
         </div>
       )}
 
-      <div style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 11, color: C.t2, marginBottom: 6 }}>Quantidade</div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <button
-            onClick={() => setQty((q) => Math.max(1, q - 1))}
-            style={{ width: 38, height: 38, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 9, color: "#fff", fontSize: 18, cursor: "pointer" }}
-          >−</button>
-          <span style={{ fontSize: 16, fontWeight: 700, color: "#fff", width: 30, textAlign: "center" }}>{qty}</span>
-          <button
-            onClick={() => setQty((q) => q + 1)}
-            style={{ width: 38, height: 38, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 9, color: "#fff", fontSize: 18, cursor: "pointer" }}
-          >+</button>
+      {preview && newStatus !== "Repetida" && (
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 11, color: C.t2, marginBottom: 6 }}>Quantidade</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button
+              onClick={() => setQty((q) => Math.max(1, q - 1))}
+              style={{ width: 38, height: 38, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 9, color: "#fff", fontSize: 18, cursor: "pointer" }}
+            >−</button>
+            <span style={{ fontSize: 16, fontWeight: 700, color: "#fff", width: 30, textAlign: "center" }}>{qty}</span>
+            <button
+              onClick={() => setQty((q) => q + 1)}
+              style={{ width: 38, height: 38, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 9, color: "#fff", fontSize: 18, cursor: "pointer" }}
+            >+</button>
+          </div>
         </div>
-      </div>
+      )}
 
       <label style={{ fontSize: 11, fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.08em", display: "block", marginBottom: 8 }}>
         Observações
