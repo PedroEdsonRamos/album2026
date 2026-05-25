@@ -4,6 +4,7 @@ import { useCounter } from "@/hooks/useCounter.js";
 import { TEAMS, ALL_TEAMS } from "@/data/teams.js";
 import { TOTAL_OFFICIAL } from "@/data/fwc.js";
 import { buildDatabase } from "@/data/database.js";
+import { clearStorage } from "@/services/storage.js";
 import { CircleProgress } from "@/components/atoms/CircleProgress.jsx";
 import { StatMiniBox } from "@/components/molecules/StatMiniBox.jsx";
 import { CategoryBar } from "@/components/molecules/CategoryBar.jsx";
@@ -279,15 +280,11 @@ export function Status({ stickers, setStickers, addToast, setPage }) {
           ownedCount={owned}
           onClose={() => setShowReset(false)}
           onConfirm={() => {
-            try {
-              localStorage.removeItem("album2026-stickers-v1");
-            } catch (e) {
-              console.warn("Erro ao limpar localStorage:", e);
-            }
+            clearStorage();
             const freshDB = buildDatabase();
             setStickers(freshDB);
             setShowReset(false);
-            addToast("Álbum resetado. Todas as figurinhas foram removidas.", "info");
+            addToast("Álbum resetado com sucesso.", "info");
             setPage("dashboard");
           }}
         />

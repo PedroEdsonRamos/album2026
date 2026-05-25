@@ -36,6 +36,19 @@ export function loadStickersFromStorage() {
   }
 }
 
+export function clearStorage() {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith("album2026"))
+      .forEach((k) => localStorage.removeItem(k));
+    return true;
+  } catch (e) {
+    console.warn("Erro ao limpar storage:", e);
+    return false;
+  }
+}
+
 export function saveStickersToStorage(stickers) {
   if (typeof window === "undefined" || !window.localStorage) return;
   try {

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { clearStorage } from "@/services/storage.js";
 import { C } from "@/styles/tokens.js";
 
 export function ResetModal({ onClose, onConfirm, ownedCount }) {
@@ -109,6 +110,31 @@ export function ResetModal({ onClose, onConfirm, ownedCount }) {
               <button onClick={() => setStep(1)} style={btnCancel} disabled={resetting}>← Voltar</button>
               <button onClick={handleConfirm} disabled={resetting} style={{ ...btnReset, opacity: resetting ? 0.6 : 1, cursor: resetting ? "default" : "pointer" }}>⚠️ Resetar tudo</button>
             </div>
+
+            <div style={{
+              marginTop: 16, padding: "10px 12px",
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 10, fontSize: 11, color: C.t3, lineHeight: 1.6,
+            }}>
+              <strong style={{ color: C.t2 }}>💡 Se as figurinhas ainda aparecerem após o reset:</strong>
+              <br />1. Feche e reabra o aplicativo
+              <br />2. Se persistir, limpe o cache do navegador:
+              <br /><span style={{ fontFamily: "monospace", fontSize: 10 }}>Chrome/Edge: F12 → Application → Storage → Clear site data</span>
+              <br /><span style={{ fontFamily: "monospace", fontSize: 10 }}>Safari iOS: Ajustes → Safari → Limpar histórico e dados</span>
+            </div>
+
+            <button
+              onClick={() => { clearStorage(); window.location.reload(); }}
+              style={{
+                marginTop: 8, width: "100%", background: "transparent",
+                border: `1px solid ${C.borderHi}`, color: C.t3,
+                borderRadius: 10, padding: "8px", fontSize: 11,
+                cursor: "pointer", fontFamily: "inherit",
+              }}
+            >
+              🔄 Limpar cache e reiniciar app
+            </button>
           </>
         )}
       </div>
