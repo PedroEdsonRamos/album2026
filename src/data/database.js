@@ -40,7 +40,7 @@ export function buildDatabase() {
   // 48 seleções × 20
   TEAMS.forEach((team, ti) => {
     const squad = SQUADS[team.id] || DEFAULT_SQUAD;
-    const shieldFinish = ti % 7 === 0 ? "Gold" : ti % 3 === 0 ? "Bronze" : "Prata";
+    const shieldFinish = "Prata";
 
     // #1 Escudo
     db.push(
