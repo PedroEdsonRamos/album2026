@@ -137,48 +137,17 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
         />
       </div>
 
-      <div
-        style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4, paddingTop: 8, overflow: "visible", marginBottom: 8 }}
-      >
-        {["Todos", "Minhas", "Tenho", "Faltando", "Repetida"].map((f) => (
-          <button
-            key={f}
-            onClick={() => setFStatus(f)}
-            className="fc-btn"
-            style={{
-              background: fStatus === f ? C.amberDim : C.surface,
-              border: `1px solid ${fStatus === f ? C.amber + "66" : C.borderHi}`,
-              color: fStatus === f ? C.amber : C.t2,
-              borderRadius: 999,
-              padding: "5px 12px",
-              fontSize: 11,
-              fontWeight: 600,
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-              fontFamily: "inherit",
-              flexShrink: 0,
-              transition: "all .18s ease",
-            }}
-          >
-            {f}
-          </button>
-        ))}
-      </div>
-
-      <div
-        style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4, paddingTop: 8, overflow: "visible", marginBottom: 8 }}
-      >
-        {["Todos", ...Object.keys(FINISH)].map((f) => {
-          const fin = FINISH[f];
-          return (
+      <div style={{ overflowX: "auto", overflowY: "visible", paddingBottom: 4, marginBottom: 8 }}>
+        <div style={{ display: "flex", gap: 5, paddingTop: 5, width: "max-content", overflow: "visible" }}>
+          {["Todos", "Minhas", "Tenho", "Faltando", "Repetida"].map((f) => (
             <button
               key={f}
-              onClick={() => setFFinish(f)}
+              onClick={() => setFStatus(f)}
               className="fc-btn"
               style={{
-                background: fFinish === f ? (fin ? fin.bg : C.amberDim) : C.surface,
-                border: `1px solid ${fFinish === f ? (fin ? fin.border : C.amber + "66") : C.borderHi}`,
-                color: fFinish === f ? (fin ? fin.color : C.amber) : C.t2,
+                background: fStatus === f ? C.amberDim : C.surface,
+                border: `1px solid ${fStatus === f ? C.amber + "66" : C.borderHi}`,
+                color: fStatus === f ? C.amber : C.t2,
                 borderRadius: 999,
                 padding: "5px 12px",
                 fontSize: 11,
@@ -190,38 +159,69 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
                 transition: "all .18s ease",
               }}
             >
-              {f === "Todos" ? "Todos" : f}
+              {f}
             </button>
-          );
-        })}
+          ))}
+        </div>
       </div>
 
-      <div
-        style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4, paddingTop: 8, overflow: "visible", marginBottom: 14 }}
-      >
-        {["Todos", "Goleiro", "Defensor", "Meio-Campista", "Atacante", "Foto Equipe", "Escudo", "Especial"].map((pos) => (
-          <button
-            key={pos}
-            onClick={() => setFPosition(pos)}
-            className="fc-btn"
-            style={{
-              background: fPosition === pos ? C.amberDim : C.surface,
-              border: `1px solid ${fPosition === pos ? C.amber + "66" : C.borderHi}`,
-              color: fPosition === pos ? C.amber : C.t2,
-              borderRadius: 999,
-              padding: "5px 12px",
-              fontSize: 11,
-              fontWeight: 600,
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-              fontFamily: "inherit",
-              flexShrink: 0,
-              transition: "all .18s ease",
-            }}
-          >
-            {pos}
-          </button>
-        ))}
+      <div style={{ overflowX: "auto", overflowY: "visible", paddingBottom: 4, marginBottom: 8 }}>
+        <div style={{ display: "flex", gap: 5, paddingTop: 5, width: "max-content", overflow: "visible" }}>
+          {["Todos", ...Object.keys(FINISH)].map((f) => {
+            const fin = FINISH[f];
+            return (
+              <button
+                key={f}
+                onClick={() => setFFinish(f)}
+                className="fc-btn"
+                style={{
+                  background: fFinish === f ? (fin ? fin.bg : C.amberDim) : C.surface,
+                  border: `1px solid ${fFinish === f ? (fin ? fin.border : C.amber + "66") : C.borderHi}`,
+                  color: fFinish === f ? (fin ? fin.color : C.amber) : C.t2,
+                  borderRadius: 999,
+                  padding: "5px 12px",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  fontFamily: "inherit",
+                  flexShrink: 0,
+                  transition: "all .18s ease",
+                }}
+              >
+                {f === "Todos" ? "Todos" : f}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div style={{ overflowX: "auto", overflowY: "visible", paddingBottom: 4, marginBottom: 14 }}>
+        <div style={{ display: "flex", gap: 5, paddingTop: 5, width: "max-content", overflow: "visible" }}>
+          {["Todos", "Goleiro", "Defensor", "Meio-Campista", "Atacante", "Foto Equipe", "Escudo", "Especial"].map((pos) => (
+            <button
+              key={pos}
+              onClick={() => setFPosition(pos)}
+              className="fc-btn"
+              style={{
+                background: fPosition === pos ? C.amberDim : C.surface,
+                border: `1px solid ${fPosition === pos ? C.amber + "66" : C.borderHi}`,
+                color: fPosition === pos ? C.amber : C.t2,
+                borderRadius: 999,
+                padding: "5px 12px",
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                fontFamily: "inherit",
+                flexShrink: 0,
+                transition: "all .18s ease",
+              }}
+            >
+              {pos}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div style={{ fontSize: 11, color: C.t3, marginBottom: 10 }}>

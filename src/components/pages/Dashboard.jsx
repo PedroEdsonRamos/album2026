@@ -163,33 +163,35 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
         >
           🏆 Ranking das Seleções
         </div>
-        <div style={{ display: "flex", gap: 6, marginBottom: 10, overflowX: "auto", paddingBottom: 2, paddingTop: 8, overflow: "visible" }}>
-          {[
-            { id: "pct",  label: "% Completo" },
-            { id: "name", label: "Nome A-Z" },
-          ].map((opt) => (
-            <button
-              key={opt.id}
-              onClick={() => { setRankSort(opt.id); setShowAll(false); }}
-              className="fc-btn"
-              style={{
-                background: rankSort === opt.id ? C.amberDim : C.surface,
-                border: `1px solid ${rankSort === opt.id ? C.amber + "66" : C.borderHi}`,
-                color: rankSort === opt.id ? C.amber : C.t2,
-                borderRadius: 999,
-                padding: "5px 12px",
-                fontSize: 11,
-                fontWeight: 600,
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-                fontFamily: "inherit",
-                flexShrink: 0,
-                transition: "all .18s ease",
-              }}
-            >
-              {opt.label}
-            </button>
-          ))}
+        <div style={{ overflowX: "auto", overflowY: "visible", paddingBottom: 4, marginBottom: 10 }}>
+          <div style={{ display: "flex", gap: 5, paddingTop: 5, width: "max-content", overflow: "visible" }}>
+            {[
+              { id: "pct",  label: "% Completo" },
+              { id: "name", label: "Nome A-Z" },
+            ].map((opt) => (
+              <button
+                key={opt.id}
+                onClick={() => { setRankSort(opt.id); setShowAll(false); }}
+                className="fc-btn"
+                style={{
+                  background: rankSort === opt.id ? C.amberDim : C.surface,
+                  border: `1px solid ${rankSort === opt.id ? C.amber + "66" : C.borderHi}`,
+                  color: rankSort === opt.id ? C.amber : C.t2,
+                  borderRadius: 999,
+                  padding: "5px 12px",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  fontFamily: "inherit",
+                  flexShrink: 0,
+                  transition: "all .18s ease",
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {visibleTeams.map((t, i) => (

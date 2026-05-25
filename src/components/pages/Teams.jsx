@@ -100,34 +100,36 @@ export function Teams({ stickers, setPage, setTeamFilter }) {
       </div>
 
       {/* Chips de ordenação */}
-      <div style={{ display: "flex", gap: 6, marginBottom: 10, paddingTop: 8, overflow: "visible" }}>
-        {[
-          { id: "pct",   label: "% Completo" },
-          { id: "name",  label: "Nome A-Z" },
-          { id: "group", label: "Grupo" },
-        ].map((opt) => (
-          <button
-            key={opt.id}
-            onClick={() => setSortTeams(opt.id)}
-            className="fc-btn"
-            style={{
-              background: sortTeams === opt.id ? C.amberDim : C.surface,
-              border: `1px solid ${sortTeams === opt.id ? C.amber + "66" : C.border}`,
-              color: sortTeams === opt.id ? C.amber : C.t2,
-              borderRadius: 999,
-              padding: "6px 14px",
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-              fontFamily: "inherit",
-              flexShrink: 0,
-              transition: "all .18s ease",
-            }}
-          >
-            {opt.label}
-          </button>
-        ))}
+      <div style={{ overflowX: "auto", overflowY: "visible", paddingBottom: 4, marginBottom: 10 }}>
+        <div style={{ display: "flex", gap: 5, paddingTop: 5, width: "max-content", overflow: "visible" }}>
+          {[
+            { id: "pct",   label: "% Completo" },
+            { id: "name",  label: "Nome A-Z" },
+            { id: "group", label: "Grupo" },
+          ].map((opt) => (
+            <button
+              key={opt.id}
+              onClick={() => setSortTeams(opt.id)}
+              className="fc-btn"
+              style={{
+                background: sortTeams === opt.id ? C.amberDim : C.surface,
+                border: `1px solid ${sortTeams === opt.id ? C.amber + "66" : C.border}`,
+                color: sortTeams === opt.id ? C.amber : C.t2,
+                borderRadius: 999,
+                padding: "6px 14px",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                fontFamily: "inherit",
+                flexShrink: 0,
+                transition: "all .18s ease",
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Campo de busca */}
@@ -164,41 +166,33 @@ export function Teams({ stickers, setPage, setTeamFilter }) {
       </div>
 
       {/* Chips de grupo */}
-      <div
-        style={{
-          display: "flex",
-          gap: 6,
-          overflowX: "auto",
-          paddingBottom: 8,
-          paddingTop: 8,
-          overflow: "visible",
-          marginBottom: 14,
-        }}
-      >
-        {groups.map((g) => (
-          <button
-            key={g}
-            onClick={() => setGrp(g)}
-            className="fc-btn"
-            style={{
-              background: grp === g ? C.amberDim : C.surface,
-              border: `1px solid ${grp === g ? C.amber + "66" : C.border}`,
-              color: grp === g ? C.amber : C.t2,
-              borderRadius: 999,
-              padding: "6px 14px",
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-              fontFamily: "inherit",
-              flexShrink: 0,
-              WebkitTapHighlightColor: "transparent",
-              transition: "all .18s ease",
-            }}
-          >
-            {g === "Todos" ? "Todos" : g === "Extras" ? "Extras" : `Grupo ${g}`}
-          </button>
-        ))}
+      <div style={{ overflowX: "auto", overflowY: "visible", paddingBottom: 4, marginBottom: 14 }}>
+        <div style={{ display: "flex", gap: 5, paddingTop: 5, width: "max-content", overflow: "visible" }}>
+          {groups.map((g) => (
+            <button
+              key={g}
+              onClick={() => setGrp(g)}
+              className="fc-btn"
+              style={{
+                background: grp === g ? C.amberDim : C.surface,
+                border: `1px solid ${grp === g ? C.amber + "66" : C.border}`,
+                color: grp === g ? C.amber : C.t2,
+                borderRadius: 999,
+                padding: "6px 14px",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                fontFamily: "inherit",
+                flexShrink: 0,
+                WebkitTapHighlightColor: "transparent",
+                transition: "all .18s ease",
+              }}
+            >
+              {g === "Todos" ? "Todos" : g === "Extras" ? "Extras" : `Grupo ${g}`}
+            </button>
+          ))}
+        </div>
       </div>
 
       {grp === "Extras" ? (
