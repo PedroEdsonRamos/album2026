@@ -1,6 +1,6 @@
 export const FINISH = {
   Regular: {
-    label: "Regular",
+    label: "Comum",
     color: "#1fc8d1",
     dimColor: "rgba(31,200,209,0.55)",
     bg: "rgba(20,160,170,0.14)",
@@ -8,7 +8,7 @@ export const FINISH = {
     glow: "rgba(31,200,209,0.22)",
   },
   Lilás: {
-    label: "Lilás",
+    label: "Regular",
     color: "#6d48a8",
     dimColor: "rgba(109,72,168,0.55)",
     bg: "rgba(90,55,145,0.18)",

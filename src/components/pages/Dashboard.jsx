@@ -141,9 +141,9 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
           onClick={() => setPage("trocas")}
         />
         <StatCard
-          label="Legends"
+          label="Extra Stickers"
           value={specials}
-          sub="Lilás · Bronze · Prata · Ouro"
+          sub="Regular · Bronze · Prata · Ouro"
           icon="trophy"
           color={C.amber}
           onClick={() => goToAlbum({ status: "Tenho" })}

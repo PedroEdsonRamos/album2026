@@ -202,7 +202,7 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
                   transition: "all .18s ease",
                 }}
               >
-                {f === "Todos" ? "Todos" : f}
+                {f === "Todos" ? "Todos" : fin.label}
               </button>
             );
           })}
