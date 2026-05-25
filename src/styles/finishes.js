@@ -39,6 +39,14 @@ export const FINISH = {
     border: "rgba(251,191,36,0.45)",
     glow: "rgba(251,191,36,0.3)",
   },
+  "Coca-Cola": {
+    label: "Coca-Cola",
+    color: "#f40009",
+    dimColor: "rgba(244,0,9,0.55)",
+    bg: "rgba(180,0,10,0.16)",
+    border: "rgba(244,0,9,0.4)",
+    glow: "rgba(244,0,9,0.28)",
+  },
 };
 
 export function rarToFinish(r) {
@@ -47,6 +55,7 @@ export function rarToFinish(r) {
   if (r === "Lilás" || r === "Lilas") return "Lilás";
   if (r === "Gold" || r === "Ouro" || r === "Legend" || r === "Ultra Rara" || r === "Extra")
     return "Ouro";
+  if (r === "Coca-Cola") return "Coca-Cola";
   return "Regular";
 }
 

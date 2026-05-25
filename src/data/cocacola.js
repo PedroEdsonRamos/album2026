@@ -1,0 +1,16 @@
+export const CC_LIST = [
+  { n: "CC1",  name: "Lamine Yamal",      team: "ESP", teamName: "Espanha"    },
+  { n: "CC2",  name: "Joshua Kimmich",    team: "GER", teamName: "Alemanha"   },
+  { n: "CC3",  name: "Harry Kane",        team: "ENG", teamName: "Inglaterra" },
+  { n: "CC4",  name: "Santiago Giménez",  team: "MEX", teamName: "México"     },
+  { n: "CC5",  name: "Joško Gvardiol",    team: "CRO", teamName: "Croácia"    },
+  { n: "CC6",  name: "Federico Valverde", team: "URU", teamName: "Uruguai"    },
+  { n: "CC7",  name: "Jefferson Lerma",   team: "COL", teamName: "Colômbia"   },
+  { n: "CC8",  name: "Enner Valencia",    team: "ECU", teamName: "Equador"    },
+  { n: "CC9",  name: "Gabriel Magalhães", team: "BRA", teamName: "Brasil"     },
+  { n: "CC10", name: "Virgil van Dijk",   team: "NED", teamName: "Holanda"    },
+  { n: "CC11", name: "Alphonso Davies",   team: "CAN", teamName: "Canadá"     },
+  { n: "CC12", name: "Emiliano Martínez", team: "ARG", teamName: "Argentina"  },
+  { n: "CC13", name: "Raúl Jiménez",      team: "MEX", teamName: "México"     },
+  { n: "CC14", name: "Lautaro Martínez",  team: "ARG", teamName: "Argentina"  },
+];

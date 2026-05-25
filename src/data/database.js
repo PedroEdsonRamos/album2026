@@ -1,6 +1,7 @@
 import { TEAMS } from "./teams.js";
 import { SQUADS, DEFAULT_SQUAD, POSITIONS } from "./squads.js";
 import { FWC_LIST } from "./fwc.js";
+import { CC_LIST } from "./cocacola.js";
 import { MY_COUNT } from "./userCollection.js";
 
 export function buildDatabase() {
@@ -103,6 +104,22 @@ export function buildDatabase() {
       );
     }
   });
+
+  // 14 figurinhas Coca-Cola
+  CC_LIST.forEach((cc) =>
+    db.push(
+      mk({
+        code: cc.n,
+        name: cc.name,
+        team: "CC",
+        teamName: cc.teamName,
+        section: "Coca-Cola",
+        position: cc.teamName,
+        number: parseInt(cc.n.replace("CC", "")),
+        rarity: "Coca-Cola",
+      })
+    )
+  );
 
   return db;
 }
