@@ -3,6 +3,14 @@ import { C } from "@/styles/tokens.js";
 
 export function ResetModal({ onClose, onConfirm, ownedCount }) {
   const [step, setStep] = useState(1);
+  const [resetting, setResetting] = useState(false);
+
+  const handleConfirm = () => {
+    setResetting(true);
+    setTimeout(() => {
+      onConfirm();
+    }, 100);
+  };
 
   const btnCancel = {
     flex: 1,
@@ -98,8 +106,8 @@ export function ResetModal({ onClose, onConfirm, ownedCount }) {
               serão perdidas permanentemente.
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => setStep(1)} style={btnCancel}>← Voltar</button>
-              <button onClick={onConfirm} style={btnReset}>⚠️ Resetar tudo</button>
+              <button onClick={() => setStep(1)} style={btnCancel} disabled={resetting}>← Voltar</button>
+              <button onClick={handleConfirm} disabled={resetting} style={{ ...btnReset, opacity: resetting ? 0.6 : 1, cursor: resetting ? "default" : "pointer" }}>⚠️ Resetar tudo</button>
             </div>
           </>
         )}
