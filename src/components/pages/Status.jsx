@@ -162,7 +162,7 @@ export function Status({ stickers, setStickers, addToast, setPage }) {
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontSize: 16, fontWeight: 700, color: C.amber }}>{cost}</div>
-                <div style={{ fontSize: 10, color: C.t3 }}>7 figurinhas por pacote · R$ 7,00 cada</div>
+                <div style={{ fontSize: 10, color: C.t3 }}>a R$ 7,00 por pacote</div>
               </div>
             </div>
           </div>
