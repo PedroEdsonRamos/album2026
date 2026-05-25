@@ -182,15 +182,27 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
         <div style={{ display: "flex", gap: 5, paddingTop: 5, width: "max-content", overflow: "visible" }}>
           {["Todos", ...Object.keys(FINISH)].map((f) => {
             const fin = FINISH[f];
+            const isActive = fFinish === f;
             return (
               <button
                 key={f}
                 onClick={() => setFFinish(f)}
-                className="fc-btn"
+                className={fin ? undefined : "fc-btn"}
+                onMouseEnter={fin ? (e) => {
+                  e.currentTarget.style.filter = "brightness(1.15)";
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow = `0 6px 16px ${fin.glow}`;
+                } : undefined}
+                onMouseLeave={fin ? (e) => {
+                  e.currentTarget.style.filter = "";
+                  e.currentTarget.style.transform = "";
+                  e.currentTarget.style.boxShadow = isActive ? `0 4px 12px ${fin.glow}` : "";
+                } : undefined}
                 style={{
-                  background: fFinish === f ? (fin ? fin.bg : C.amberDim) : C.surface,
-                  border: `1px solid ${fFinish === f ? (fin ? fin.border : C.amber + "66") : C.borderHi}`,
-                  color: fFinish === f ? (fin ? fin.color : C.amber) : C.t2,
+                  background: isActive ? (fin ? fin.bg : C.amberDim) : C.surface,
+                  border: `1px solid ${isActive ? (fin ? fin.border : C.amber + "66") : C.borderHi}`,
+                  color: isActive ? (fin ? fin.color : C.amber) : C.t2,
+                  boxShadow: isActive && fin ? `0 4px 12px ${fin.glow}` : "none",
                   borderRadius: 999,
                   padding: "5px 12px",
                   fontSize: 11,

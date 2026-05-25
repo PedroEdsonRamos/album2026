@@ -173,23 +173,36 @@ export function AddSinglePanel({ stickers, setStickers, addToast }) {
             Tipo da figurinha
           </label>
           <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
-            {Object.entries(FINISH).map(([key, fin]) => (
-              <button
-                key={key}
-                onClick={() => setUserFinish(key)}
-                className="fc-btn"
-                style={{
-                  flex: 1, minWidth: 70,
-                  background: userFinish === key ? fin.bg : C.surface,
-                  border: `1px solid ${userFinish === key ? fin.border : C.borderHi}`,
-                  color: userFinish === key ? fin.color : C.t2,
-                  borderRadius: 10, padding: "8px 4px", fontSize: 11, fontWeight: 700,
-                  cursor: "pointer", fontFamily: "inherit", transition: "all .18s",
-                }}
-              >
-                {fin.label}
-              </button>
-            ))}
+            {Object.entries(FINISH).map(([key, fin]) => {
+              const active = userFinish === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => setUserFinish(key)}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.filter = "brightness(1.15)";
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                    e.currentTarget.style.boxShadow = `0 6px 16px ${fin.glow}`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.filter = "";
+                    e.currentTarget.style.transform = "";
+                    e.currentTarget.style.boxShadow = active ? `0 4px 12px ${fin.glow}` : "";
+                  }}
+                  style={{
+                    flex: 1, minWidth: 70,
+                    background: active ? fin.bg : C.surface,
+                    border: `1px solid ${active ? fin.border : C.borderHi}`,
+                    color: active ? fin.color : C.t2,
+                    boxShadow: active ? `0 4px 12px ${fin.glow}` : "none",
+                    borderRadius: 10, padding: "8px 4px", fontSize: 11, fontWeight: 700,
+                    cursor: "pointer", fontFamily: "inherit", transition: "all .18s",
+                  }}
+                >
+                  {fin.label}
+                </button>
+              );
+            })}
           </div>
         </>
       )}

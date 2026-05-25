@@ -189,13 +189,23 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
                   <button
                     key={key}
                     onClick={() => onChange((p) => ({ ...p, rarity: RARITY_MAP[key] || "Normal" }))}
-                    className="fc-btn"
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.filter = "brightness(1.15)";
+                      e.currentTarget.style.transform = "translateY(-2px)";
+                      e.currentTarget.style.boxShadow = `0 6px 16px ${fin.glow}`;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.filter = "";
+                      e.currentTarget.style.transform = "";
+                      e.currentTarget.style.boxShadow = active ? `0 4px 12px ${fin.glow}` : "";
+                    }}
                     style={{
                       flex: 1,
                       minWidth: 54,
                       background: active ? fin.bg : "transparent",
                       border: `1px solid ${active ? fin.border : C.borderHi}`,
                       color: active ? fin.color : C.t3,
+                      boxShadow: active ? `0 4px 12px ${fin.glow}` : "none",
                       borderRadius: 10,
                       padding: "10px 6px",
                       fontSize: 11,
