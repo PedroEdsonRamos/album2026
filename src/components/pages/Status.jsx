@@ -81,7 +81,7 @@ export function Status({ stickers, setStickers, addToast, setPage }) {
   }).sort((a, b) => b.pct - a.pct);
 
   return (
-    <div>
+    <div style={{ minHeight: "calc(100vh - 160px)" }}>
       <div
         ref={ref}
         style={{
