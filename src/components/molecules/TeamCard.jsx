@@ -1,6 +1,8 @@
 import { useInView } from "@/hooks/useInView.js";
-import { FINISH, rarToFinish } from "@/styles/finishes.js";
+import { FINISH } from "@/styles/finishes.js";
 import { RANK_BAR, C } from "@/styles/tokens.js";
+
+const FINISH_TO_RARITY = { "Lilás": "Lilás", Bronze: "Bronze", Prata: "Prata", Ouro: "Gold" };
 
 export function TeamCard({ team, stickers, onSelect }) {
   const [ref, vis] = useInView();
@@ -9,14 +11,23 @@ export function TeamCard({ team, stickers, onSelect }) {
   const duplicates = ts.filter((s) => s.status === "Repetida").length;
   const missing = ts.length - owned;
   const pct = Math.round((owned / (ts.length || 1)) * 100);
+
+  const rawCounts = {};
+  ts.filter((s) => s.status === "Tenho" || s.status === "Repetida").forEach((s) => {
+    if (s.typeBreakdown && Object.keys(s.typeBreakdown).length > 0) {
+      Object.entries(s.typeBreakdown).forEach(([rarity, qty]) => {
+        if (rarity !== "Normal") rawCounts[rarity] = (rawCounts[rarity] ?? 0) + qty;
+      });
+    } else if (s.rarity !== "Normal") {
+      const total = s.status === "Repetida" ? s.duplicates : 1;
+      rawCounts[s.rarity] = (rawCounts[s.rarity] ?? 0) + total;
+    }
+  });
   const legendCounts = Object.entries(FINISH)
     .filter(([k]) => k !== "Regular")
     .map(([key, fin]) => {
-      const cnt = ts.filter(
-        (s) =>
-          (s.status === "Tenho" || s.status === "Repetida") &&
-          rarToFinish(s.rarity) === key
-      ).length;
+      const rarityKey = FINISH_TO_RARITY[key];
+      const cnt = rawCounts[rarityKey] ?? 0;
       return cnt > 0 ? { key, fin, cnt } : null;
     })
     .filter(Boolean);

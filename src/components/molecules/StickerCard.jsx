@@ -5,12 +5,25 @@ import { MY_CODES } from "@/data/userCollection.js";
 import { Icon } from "@/components/atoms/Icon.jsx";
 import { C } from "@/styles/tokens.js";
 
+const RARITY_PRIORITY = ["Gold", "Prata", "Bronze", "Lilás", "Normal"];
+const getRarestRarity = (breakdown) => {
+  if (!breakdown || Object.keys(breakdown).length === 0) return null;
+  for (const r of RARITY_PRIORITY) {
+    if (breakdown[r] && breakdown[r] > 0) return r;
+  }
+  return null;
+};
+
 export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
   const [ref, vis] = useInView(0.05);
   const team = teamInfo(s.team);
-  const fin = getFinish(s.rarity);
+  const displayRarity = getRarestRarity(s.typeBreakdown) ?? s.rarity;
+  const fin = getFinish(displayRarity);
   const owned = s.status === "Tenho";
   const dup = s.status === "Repetida";
+  const totalCopies = s.typeBreakdown
+    ? Object.values(s.typeBreakdown).reduce((a, b) => a + b, 0)
+    : s.duplicates;
   const isMine = MY_CODES.has(s.code);
   const clickable = !!(onToggle || onClick);
   const handleClick = () => {
@@ -133,7 +146,7 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
               border: `1px solid ${fin.border}`,
             }}
           >
-            ×{s.duplicates}
+            ×{totalCopies}
           </span>
         )}
         {owned && (
@@ -201,7 +214,7 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
             letterSpacing: "0.04em",
           }}
         >
-          {fin.label}{s.typeBreakdown?.[s.rarity] > 0 ? ` ×${s.typeBreakdown[s.rarity]}` : ""}
+          {fin.label}{s.typeBreakdown?.[displayRarity] > 0 ? ` ×${s.typeBreakdown[displayRarity]}` : ""}
         </span>
       </div>
     </div>
