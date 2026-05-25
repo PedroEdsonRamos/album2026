@@ -25,7 +25,7 @@ export function buildDatabase() {
   FWC_LIST.forEach((f) =>
     db.push(
       mk({
-        code: f.n === "00" ? "00" : `FWC ${f.n}`,
+        code: f.n === "00" ? "FWC00" : `FWC${f.n}`,
         name: f.name,
         team: "FWC",
         teamName: "FIFA World Cup",
@@ -45,7 +45,7 @@ export function buildDatabase() {
     // #1 Escudo
     db.push(
       mk({
-        code: `${team.id} 1`,
+        code: `${team.id}1`,
         name: `Escudo – ${team.name}`,
         team: team.id,
         teamName: team.name,
@@ -61,7 +61,7 @@ export function buildDatabase() {
       const num = pi + 2;
       db.push(
         mk({
-          code: `${team.id} ${num}`,
+          code: `${team.id}${num}`,
           name: squad[pi] || `Jogador ${pi + 1}`,
           team: team.id,
           teamName: team.name,
@@ -76,7 +76,7 @@ export function buildDatabase() {
     // #13 Foto da Equipe
     db.push(
       mk({
-        code: `${team.id} 13`,
+        code: `${team.id}13`,
         name: `Foto da Equipe – ${team.name}`,
         team: team.id,
         teamName: team.name,
@@ -92,7 +92,7 @@ export function buildDatabase() {
       const num = pi + 14;
       db.push(
         mk({
-          code: `${team.id} ${num}`,
+          code: `${team.id}${num}`,
           name: squad[pi + 11] || `Jogador ${pi + 12}`,
           team: team.id,
           teamName: team.name,

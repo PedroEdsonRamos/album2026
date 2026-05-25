@@ -14,8 +14,9 @@ Cze6,Rsa12,Rsa18,Mex13,Kor13,Fwc6,Can13,Usa5`;
 
 function normalizeCode(tok) {
   if (tok === "00") return "00";
+  if (tok === "FWC00") return "FWC00";
   const m = tok.match(/^([A-Z]{2,4})\s*(\d+)$/);
-  if (m) return `${m[1]} ${m[2]}`;
+  if (m) return `${m[1]}${m[2]}`; // sem espaço: "BRA10", "FWC10"
   return tok;
 }
 

@@ -14,8 +14,7 @@ export function QuickSearch({ stickers, onClose, onGoTo }) {
 
   const results = useMemo(() => {
     if (!q.trim()) return [];
-    const raw = q.trim().toUpperCase().replace(/\s+/, " ");
-    const queryNorm = raw.replace(/^([A-Z]{2,4})(\d+)$/, "$1 $2");
+    const queryNorm = q.trim().toUpperCase().replace(/\s+/g, "");
     const queryLower = queryNorm.toLowerCase();
     return stickers
       .filter(
@@ -29,8 +28,7 @@ export function QuickSearch({ stickers, onClose, onGoTo }) {
 
   const exact = q.trim()
     ? (() => {
-        const raw = q.trim().toUpperCase().replace(/\s+/, " ");
-        const queryNorm = raw.replace(/^([A-Z]{2,4})(\d+)$/, "$1 $2");
+        const queryNorm = q.trim().toUpperCase().replace(/\s+/g, "");
         return results.find((r) => r.code === queryNorm);
       })()
     : null;
