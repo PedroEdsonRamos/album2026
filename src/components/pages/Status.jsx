@@ -215,6 +215,34 @@ export function Status({ stickers, setStickers, addToast, setPage }) {
       <div
         style={{
           background: C.surface,
+          border: `1px solid ${C.border}`,
+          borderRadius: 18,
+          padding: "18px",
+          marginBottom: 16,
+        }}
+      >
+        <div
+          style={{
+            fontSize: 13,
+            fontWeight: 700,
+            color: C.t2,
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            marginBottom: 14,
+          }}
+        >
+          🌍 Por Seleção
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {teamDist.slice(0, 18).map((t, i) => (
+            <StatusTeamRow key={t.id} team={t} pct={t.pct} index={i} />
+          ))}
+        </div>
+      </div>
+
+      <div
+        style={{
+          background: C.surface,
           border: `1px solid rgba(109,72,168,0.3)`,
           borderRadius: 18,
           padding: "18px",
@@ -258,33 +286,6 @@ export function Status({ stickers, setStickers, addToast, setPage }) {
                 })}
               </div>
             </div>
-          ))}
-        </div>
-      </div>
-
-      <div
-        style={{
-          background: C.surface,
-          border: `1px solid ${C.border}`,
-          borderRadius: 18,
-          padding: "18px",
-        }}
-      >
-        <div
-          style={{
-            fontSize: 13,
-            fontWeight: 700,
-            color: C.t2,
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            marginBottom: 14,
-          }}
-        >
-          🌍 Por Seleção
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          {teamDist.slice(0, 18).map((t, i) => (
-            <StatusTeamRow key={t.id} team={t} pct={t.pct} index={i} />
           ))}
         </div>
       </div>
