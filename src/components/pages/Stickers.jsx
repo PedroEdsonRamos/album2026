@@ -226,7 +226,7 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
 
       <div style={{ overflowX: "auto", overflowY: "visible", paddingBottom: 4, marginBottom: 14 }}>
         <div style={{ display: "flex", gap: 5, paddingTop: 5, width: "max-content", overflow: "visible" }}>
-          {["Todos", "Extra Stickers", "Goleiro", "Defensor", "Meio-Campista", "Atacante", "Foto Equipe", "Escudo", "Especial"].map((pos) => (
+          {["Todos", "Goleiro", "Defensor", "Meio-Campista", "Atacante", "Foto Equipe", "Escudo", "Especial", "Extra Stickers"].map((pos) => (
             <button
               key={pos}
               onClick={() => setFPosition(pos)}
