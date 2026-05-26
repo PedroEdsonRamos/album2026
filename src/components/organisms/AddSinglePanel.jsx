@@ -31,9 +31,10 @@ export function AddSinglePanel({ stickers, setStickers, addToast }) {
   const defaultRarity = preview ? getDefaultRarity(preview) : "Comum";
   const defaultFin = FINISH[defaultRarity] ?? FINISH.Comum;
 
-  const newStatus = preview ? determineStatus(preview.status, qty) : null;
   const addTotal = Object.values(addTypeBreakdown).reduce((a, b) => a + b, 0);
-  const canAdd = !!preview;
+  const effectiveQty = isES ? addTotal : qty;
+  const newStatus = preview ? determineStatus(preview.status, effectiveQty) : null;
+  const canAdd = !!preview && (!isES || addTotal > 0);
 
   const updateAddTypeBreakdown = (rarityKey, delta) => {
     setAddTypeBreakdown((prev) => {
@@ -77,8 +78,8 @@ export function AddSinglePanel({ stickers, setStickers, addToast }) {
               : qty;
 
           const rarestRarity =
-            isES && typeBreakdown && Object.keys(typeBreakdown).length > 0
-              ? RARITY_PRIORITY.find((r) => (typeBreakdown[r] ?? 0) > 0) ?? "Comum"
+            isES && Object.keys(addTypeBreakdown).length > 0
+              ? RARITY_PRIORITY.find((r) => (addTypeBreakdown[r] ?? 0) > 0) ?? "Comum"
               : (userFinish !== "Comum" ? userFinish : defaultRarity);
 
           return {
@@ -196,7 +197,7 @@ export function AddSinglePanel({ stickers, setStickers, addToast }) {
       )}
 
       {/* Tipo da figurinha */}
-      {preview && (() => {
+      {preview && !isES && (() => {
         if (fixedType) {
           return (
             <div style={{ marginBottom: 14 }}>
@@ -212,60 +213,26 @@ export function AddSinglePanel({ stickers, setStickers, addToast }) {
             </div>
           );
         }
-
-        if (!isES) {
-          return (
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>
-                Tipo da figurinha
-              </div>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: FINISH.Comum.bg, border: `1px solid ${FINISH.Comum.border}`, borderRadius: 999, padding: "4px 14px" }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: FINISH.Comum.color }}>Comum</span>
-              </div>
-            </div>
-          );
-        }
-
         return (
           <div style={{ marginBottom: 14 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>
               Tipo da figurinha
             </div>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {["Comum", "Lilás", "Bronze", "Prata", "Ouro"].map((key) => {
-                const fin = FINISH[key];
-                const isSelected = userFinish === key;
-                return (
-                  <button
-                    key={key}
-                    onClick={() => setUserFinish(key)}
-                    style={{
-                      background: isSelected ? fin.bg : C.surface,
-                      border: `1px solid ${isSelected ? fin.border : C.borderHi}`,
-                      color: isSelected ? fin.color : C.t2,
-                      boxShadow: isSelected ? `0 4px 12px ${fin.glow}` : "none",
-                      borderRadius: 999, padding: "5px 14px",
-                      fontSize: 11, fontWeight: 600, cursor: "pointer",
-                      fontFamily: "inherit", transition: "all .18s",
-                    }}
-                  >
-                    {fin.label}
-                  </button>
-                );
-              })}
-            </div>
-            <div style={{ fontSize: 10, color: "#a855f7", marginTop: 6 }}>
-              ⭐ Jogador Extra Sticker — selecione o tipo da sua figurinha.
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: FINISH.Comum.bg, border: `1px solid ${FINISH.Comum.border}`, borderRadius: 999, padding: "4px 14px" }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: FINISH.Comum.color }}>Comum</span>
             </div>
           </div>
         );
       })()}
 
-      {/* Quantidade por tipo — somente ES em Repetida */}
-      {preview && isES && newStatus === "Repetida" && (
+      {/* Quantidade por tipo — ES sempre */}
+      {preview && isES && (
         <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>
             Quantidade por tipo
+          </div>
+          <div style={{ fontSize: 10, color: "#a855f7", marginBottom: 10 }}>
+            ⭐ Jogador Extra Sticker — selecione quantas tem de cada tipo.
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {["Comum", "Lilás", "Bronze", "Prata", "Ouro"].map((key) => {
@@ -291,8 +258,8 @@ export function AddSinglePanel({ stickers, setStickers, addToast }) {
         </div>
       )}
 
-      {/* Quantidade simples — não-ES em Repetida, ou não-Repetida */}
-      {preview && !(isES && newStatus === "Repetida") && (
+      {/* Quantidade simples — somente não-ES */}
+      {preview && !isES && (
         <div style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 11, color: C.t2, marginBottom: 6 }}>Quantidade</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
