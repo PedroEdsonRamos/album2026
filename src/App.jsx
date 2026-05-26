@@ -28,7 +28,14 @@ export default function App() {
 
   const goToAlbum = (filter = {}) => {
     setSelectedTeam(null);
-    setAlbumInitialFilter({ ...filter, _ts: Date.now() });
+    setAlbumInitialFilter({
+      search: "",
+      status: "Todos",
+      finish: "Todos",
+      position: "Todos",
+      ...filter,
+      _ts: Date.now(),
+    });
     setPage("stickers");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -144,7 +151,7 @@ export default function App() {
             />
           )}
           {page === "teams" && (
-            <Teams stickers={stickers} setPage={setPage} setTeamFilter={setSelectedTeam} />
+            <Teams stickers={stickers} setPage={setPage} setTeamFilter={setSelectedTeam} goToAlbum={goToAlbum} />
           )}
           {page === "stickers" && (
             <Stickers

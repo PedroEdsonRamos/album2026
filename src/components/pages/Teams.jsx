@@ -8,13 +8,16 @@ import { getFinish } from "@/styles/finishes.js";
 import { getESCollection, countESCollected } from "@/utils/esCollection.js";
 import { C } from "@/styles/tokens.js";
 
-function ESPlayersGrid({ stickers }) {
+function ESPlayersGrid({ stickers, goToAlbum }) {
   const esCollection = getESCollection(stickers);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       {esCollection.map(({ player, collectedTypes }) => (
         <div
           key={player.id}
+          onClick={() => goToAlbum?.({ position: "Extra Stickers", search: player.linkedCode })}
+          onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.82"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
           style={{
             background: C.surface,
             border: `1px solid ${Object.keys(collectedTypes).length > 0 ? "#6d48a844" : C.border}`,
@@ -23,6 +26,7 @@ function ESPlayersGrid({ stickers }) {
             display: "flex",
             alignItems: "center",
             gap: 10,
+            cursor: "pointer",
           }}
         >
           <span style={{ fontSize: 18 }}>{player.flag}</span>
@@ -70,7 +74,7 @@ function ESPlayersGrid({ stickers }) {
   );
 }
 
-export function Teams({ stickers, setPage, setTeamFilter }) {
+export function Teams({ stickers, setPage, setTeamFilter, goToAlbum }) {
   const [grp, setGrp] = useState("Todos");
   const [search, setSearch] = useState("");
   const [sortTeams, setSortTeams] = useState("pct");
@@ -296,7 +300,7 @@ export function Teams({ stickers, setPage, setTeamFilter }) {
           {extrasTab === "ES" && (
             <div>
               {sectionHeader("⭐", "Extra Stickers", `${esCount}/80`)}
-              <ESPlayersGrid stickers={stickers} />
+              <ESPlayersGrid stickers={stickers} goToAlbum={goToAlbum} />
             </div>
           )}
         </div>

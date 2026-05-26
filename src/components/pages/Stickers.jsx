@@ -16,10 +16,10 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
 
   useEffect(() => {
     if (!initialFilter) return;
-    if (initialFilter.search !== undefined) setSearch(initialFilter.search);
-    if (initialFilter.status !== undefined) setFStatus(initialFilter.status || "Todos");
-    if (initialFilter.finish !== undefined) setFFinish(initialFilter.finish || "Todos");
-    if (initialFilter.position !== undefined) setFPosition(initialFilter.position || "Todos");
+    setSearch(initialFilter.search ?? "");
+    setFStatus(initialFilter.status || "Todos");
+    setFFinish(initialFilter.finish || "Todos");
+    setFPosition(initialFilter.position || "Todos");
   }, [initialFilter?._ts]);
 
   const team = selectedTeam ? teamInfo(selectedTeam) : null;
