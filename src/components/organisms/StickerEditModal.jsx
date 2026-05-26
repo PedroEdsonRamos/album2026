@@ -1,6 +1,7 @@
 import { FINISH, rarToFinish, getFinish } from "@/styles/finishes.js";
 import { teamInfo } from "@/utils/teamInfo.js";
 import { C } from "@/styles/tokens.js";
+import { getStickerCategory, isFixedType, isTypeAllowed, CATEGORY_LABEL } from "@/utils/stickerTypes.js";
 
 const RARITY_MAP = {
   Comum: "Comum",
@@ -25,6 +26,8 @@ const FINISH_TO_RARITY = {
 export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
   const et = teamInfo(sticker.team);
   const ef = getFinish(sticker.rarity);
+  const category = getStickerCategory(sticker);
+  const fixed = isFixedType(sticker);
 
   const updateTypeBreakdown = (rarityKey, delta) => {
     onChange((prev) => {
@@ -140,7 +143,7 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
               Quantidade por tipo
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {Object.entries(FINISH).map(([finishKey, fin]) => {
+              {Object.entries(FINISH).filter(([finishKey]) => isTypeAllowed(sticker, finishKey)).map(([finishKey, fin]) => {
                 const rarityKey = FINISH_TO_RARITY[finishKey] ?? "Comum";
                 const qty = sticker.typeBreakdown?.[rarityKey] ?? 0;
                 return (
@@ -185,45 +188,61 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
               }}
             >
               Tipo
+              <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 600, color: C.t3, textTransform: "none", letterSpacing: 0 }}>
+                {CATEGORY_LABEL[category]}
+              </span>
             </div>
-            <div style={{ display: "flex", gap: 6, marginBottom: 20, flexWrap: "wrap" }}>
-              {Object.entries(FINISH).map(([key, fin]) => {
-                const active = rarToFinish(sticker.rarity) === key;
-                return (
-                  <button
-                    key={key}
-                    onClick={() => onChange((p) => ({ ...p, rarity: RARITY_MAP[key] || "Comum" }))}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.filter = "brightness(1.15)";
-                      e.currentTarget.style.transform = "translateY(-2px)";
-                      e.currentTarget.style.boxShadow = `0 6px 16px ${fin.glow}`;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.filter = "";
-                      e.currentTarget.style.transform = "";
-                      e.currentTarget.style.boxShadow = active ? `0 4px 12px ${fin.glow}` : "";
-                    }}
-                    style={{
-                      flex: 1,
-                      minWidth: 54,
-                      background: active ? fin.bg : "transparent",
-                      border: `1px solid ${active ? fin.border : C.borderHi}`,
-                      color: active ? fin.color : C.t3,
-                      boxShadow: active ? `0 4px 12px ${fin.glow}` : "none",
-                      borderRadius: 10,
-                      padding: "10px 6px",
-                      fontSize: 11,
-                      fontWeight: 700,
-                      cursor: "pointer",
-                      fontFamily: "inherit",
-                      transition: "all .18s",
-                    }}
-                  >
-                    {fin.label}
-                  </button>
-                );
-              })}
-            </div>
+            {fixed ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
+                <span style={{ background: ef.bg, border: `1px solid ${ef.border}`, color: ef.color, borderRadius: 10, padding: "10px 14px", fontSize: 12, fontWeight: 700 }}>
+                  {ef.label}
+                </span>
+                <span style={{ fontSize: 11, color: C.t3 }}>🔒 automático para {CATEGORY_LABEL[category]}</span>
+              </div>
+            ) : (
+              <div style={{ display: "flex", gap: 6, marginBottom: 20, flexWrap: "wrap" }}>
+                {Object.entries(FINISH).map(([key, fin]) => {
+                  const active = rarToFinish(sticker.rarity) === key;
+                  const allowed = isTypeAllowed(sticker, key);
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => allowed && onChange((p) => ({ ...p, rarity: RARITY_MAP[key] || "Comum" }))}
+                      title={!allowed ? `Tipo não permitido para ${CATEGORY_LABEL[category]}` : undefined}
+                      onMouseEnter={(e) => {
+                        if (!allowed) return;
+                        e.currentTarget.style.filter = "brightness(1.15)";
+                        e.currentTarget.style.transform = "translateY(-2px)";
+                        e.currentTarget.style.boxShadow = `0 6px 16px ${fin.glow}`;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.filter = "";
+                        e.currentTarget.style.transform = "";
+                        e.currentTarget.style.boxShadow = active ? `0 4px 12px ${fin.glow}` : "";
+                      }}
+                      style={{
+                        flex: 1,
+                        minWidth: 54,
+                        background: active ? fin.bg : "transparent",
+                        border: `1px solid ${active ? fin.border : C.borderHi}`,
+                        color: active ? fin.color : C.t3,
+                        boxShadow: active ? `0 4px 12px ${fin.glow}` : "none",
+                        borderRadius: 10,
+                        padding: "10px 6px",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: allowed ? "pointer" : "not-allowed",
+                        fontFamily: "inherit",
+                        transition: "all .18s",
+                        opacity: allowed ? 1 : 0.35,
+                      }}
+                    >
+                      {fin.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </>
         )}
 
