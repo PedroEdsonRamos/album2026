@@ -5,7 +5,7 @@ import { getFinish } from "@/styles/finishes.js";
 import { Icon } from "@/components/atoms/Icon.jsx";
 import { C } from "@/styles/tokens.js";
 
-export function Trades({ stickers, addToast }) {
+export function Trades({ stickers, addToast, goToAlbum, setPage }) {
   const [collapsed, setCollapsed] = useState({});
 
   const dups = stickers.filter((s) => s.status === "Repetida");
@@ -133,8 +133,14 @@ export function Trades({ stickers, addToast }) {
       {byTeam.map((t) => (
         <div key={t.id} style={{ marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-            <span style={{ fontSize: 20 }}>{t.flag}</span>
-            <span style={{ fontSize: 13, fontWeight: 700, color: "#fff", flex: 1 }}>{t.name}</span>
+            <span
+              style={{ fontSize: 20, cursor: "pointer" }}
+              onClick={() => setPage("teams")}
+            >{t.flag}</span>
+            <span
+              onClick={() => setPage("teams")}
+              style={{ fontSize: 13, fontWeight: 700, color: "#fff", flex: 1, cursor: "pointer" }}
+            >{t.name}</span>
             <span style={{ fontSize: 11, color: C.t3 }}>({t.items.length})</span>
             <button
               onClick={() => shareTeam(t, t.items)}
@@ -169,10 +175,12 @@ export function Trades({ stickers, addToast }) {
               {t.items.flatMap((s) => expandByType(s)).map(({ sticker, qty, fin }, idx) => (
                 <div
                   key={`${sticker.code}-${sticker.rarity}-${idx}`}
+                  onClick={() => goToAlbum({ search: sticker.code })}
                   style={{
                     background: fin.bg, border: `1px solid ${fin.border}`,
                     borderRadius: 10, padding: "10px 12px",
                     display: "flex", alignItems: "center", gap: 10,
+                    cursor: "pointer", WebkitTapHighlightColor: "transparent",
                   }}
                 >
                   <span style={{ fontSize: 18 }}>{t.flag}</span>
@@ -199,7 +207,7 @@ export function Trades({ stickers, addToast }) {
                     ×{qty}
                   </span>
                   <button
-                    onClick={() => shareSticker(sticker, t)}
+                    onClick={(e) => { e.stopPropagation(); shareSticker(sticker, t); }}
                     className="fc-btn"
                     title="Compartilhar no WhatsApp"
                     style={{
