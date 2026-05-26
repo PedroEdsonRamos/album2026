@@ -14,16 +14,18 @@ export function QuickSearch({ stickers, onClose, onGoTo }) {
 
   const results = useMemo(() => {
     if (!q.trim()) return [];
-    const queryNorm = q.trim().toUpperCase().replace(/\s+/g, "");
-    const queryLower = queryNorm.toLowerCase();
+    const queryNorm = q.trim().toUpperCase().replace(/\s/g, "");
+    const queryUp = q.trim().toUpperCase();
     return stickers
-      .filter(
-        (s) =>
-          s.code.toLowerCase().includes(queryLower) ||
-          s.name.toLowerCase().includes(queryLower) ||
-          (s.teamName || "").toLowerCase().includes(queryLower)
-      )
-      .slice(0, 12);
+      .filter((s) => {
+        const codeMatch = s.code.replace(/\s/g, "").includes(queryNorm);
+        const nameMatch = s.name.toUpperCase().includes(queryUp);
+        const teamMatch =
+          (s.teamName || "").toUpperCase().includes(queryUp) ||
+          s.team.toUpperCase().includes(queryNorm);
+        return codeMatch || nameMatch || teamMatch;
+      })
+      .slice(0, 50);
   }, [q, stickers]);
 
   const exact = q.trim()
@@ -65,7 +67,7 @@ export function QuickSearch({ stickers, onClose, onGoTo }) {
               ref={inputRef}
               value={q}
               onChange={(e) => setQ(e.target.value.toUpperCase())}
-              placeholder="Código (ex: BRA10, FWC6)..."
+              placeholder="Buscar por código (BRA10), seleção (Brasil) ou jogador (Messi)..."
               style={{
                 width: "100%",
                 background: C.panelHi,
@@ -148,11 +150,12 @@ export function QuickSearch({ stickers, onClose, onGoTo }) {
 
         <div
           style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 6,
             maxHeight: "62vh",
             overflowY: "auto",
+            overflowX: "hidden",
+            borderRadius: 12,
+            border: q.trim() ? `1px solid ${C.border}` : "none",
+            background: q.trim() ? C.panelHi : "transparent",
           }}
         >
           {results.map((s) => {
@@ -167,15 +170,16 @@ export function QuickSearch({ stickers, onClose, onGoTo }) {
                   onGoTo(s);
                   onClose();
                 }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = C.surfaceHi; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                 style={{
-                  background: C.surface,
-                  border: `1px solid ${C.border}`,
-                  borderRadius: 12,
-                  padding: "10px 12px",
+                  padding: "10px 14px",
                   display: "flex",
                   alignItems: "center",
                   gap: 10,
                   cursor: "pointer",
+                  borderBottom: `1px solid ${C.border}`,
+                  transition: "background .15s",
                 }}
               >
                 <span style={{ fontSize: 18 }}>{team.flag}</span>
@@ -211,13 +215,13 @@ export function QuickSearch({ stickers, onClose, onGoTo }) {
             );
           })}
           {q.trim() && results.length === 0 && (
-            <div style={{ textAlign: "center", padding: "32px", color: C.t3, fontSize: 13 }}>
+            <div style={{ fontSize: 12, color: C.t3, padding: "12px 14px", textAlign: "center" }}>
               Nenhuma figurinha encontrada para &quot;{q}&quot;
             </div>
           )}
           {!q.trim() && (
             <div style={{ textAlign: "center", padding: "32px", color: C.t3, fontSize: 13 }}>
-              Digite um código para verificar se você tem a figurinha
+              Digite um código, seleção ou nome para buscar
             </div>
           )}
         </div>
