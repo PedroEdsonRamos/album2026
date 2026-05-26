@@ -74,6 +74,7 @@ export function Teams({ stickers, setPage, setTeamFilter }) {
   const [grp, setGrp] = useState("Todos");
   const [search, setSearch] = useState("");
   const [sortTeams, setSortTeams] = useState("pct");
+  const [extrasTab, setExtrasTab] = useState("FWC");
 
   const groups = ["Todos", ...new Set(TEAMS.map((t) => t.grp)), "Extras"];
 
@@ -223,46 +224,81 @@ export function Teams({ stickers, setPage, setTeamFilter }) {
       </div>
 
       {grp === "Extras" ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-          {/* FWC */}
-          <div>
-            {sectionHeader("🌐", "Especiais FWC", `${fwcOwned}/20`)}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              {stickers
-                .filter((s) => s.team === "FWC")
-                .map((s, i) => (
-                  <StickerCard
-                    key={s.id}
-                    s={s}
-                    delay={i * 0.03}
-                    onClick={() => { setTeamFilter("FWC"); setPage("stickers"); }}
-                  />
-                ))}
-            </div>
+        <div>
+          <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
+            {[
+              { id: "FWC", label: "🌐 FWC", count: `${fwcOwned}/20` },
+              { id: "CC",  label: "🥤 Coca-Cola", count: `${ccOwned}/14` },
+              { id: "ES",  label: "⭐ Extra Stickers", count: `${esCount}/80` },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setExtrasTab(tab.id)}
+                className="fc-btn"
+                style={{
+                  flex: 1,
+                  background: extrasTab === tab.id ? C.amberDim : C.surface,
+                  border: `1px solid ${extrasTab === tab.id ? C.amber + "66" : C.border}`,
+                  color: extrasTab === tab.id ? C.amber : C.t2,
+                  borderRadius: 10,
+                  padding: "8px 6px",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  flexShrink: 0,
+                  transition: "all .18s ease",
+                  textAlign: "center",
+                }}
+              >
+                <div>{tab.label}</div>
+                <div style={{ fontSize: 10, color: extrasTab === tab.id ? C.amber : C.t3, fontWeight: 400, marginTop: 2 }}>{tab.count}</div>
+              </button>
+            ))}
           </div>
 
-          {/* CC */}
-          <div>
-            {sectionHeader("🥤", "Coca-Cola", `${ccOwned}/14`)}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              {stickers
-                .filter((s) => s.team === "CC")
-                .map((s, i) => (
-                  <StickerCard
-                    key={s.id}
-                    s={s}
-                    delay={i * 0.03}
-                    onClick={() => { setTeamFilter("CC"); setPage("stickers"); }}
-                  />
-                ))}
+          {extrasTab === "FWC" && (
+            <div>
+              {sectionHeader("🌐", "Especiais FWC", `${fwcOwned}/20`)}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                {stickers
+                  .filter((s) => s.team === "FWC")
+                  .map((s, i) => (
+                    <StickerCard
+                      key={s.id}
+                      s={s}
+                      delay={i * 0.03}
+                      onClick={() => { setTeamFilter("FWC"); setPage("stickers"); }}
+                    />
+                  ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* ES */}
-          <div>
-            {sectionHeader("⭐", "Extra Stickers", `${esCount}/80`)}
-            <ESPlayersGrid stickers={stickers} />
-          </div>
+          {extrasTab === "CC" && (
+            <div>
+              {sectionHeader("🥤", "Coca-Cola", `${ccOwned}/14`)}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                {stickers
+                  .filter((s) => s.team === "CC")
+                  .map((s, i) => (
+                    <StickerCard
+                      key={s.id}
+                      s={s}
+                      delay={i * 0.03}
+                      onClick={() => { setTeamFilter("CC"); setPage("stickers"); }}
+                    />
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {extrasTab === "ES" && (
+            <div>
+              {sectionHeader("⭐", "Extra Stickers", `${esCount}/80`)}
+              <ESPlayersGrid stickers={stickers} />
+            </div>
+          )}
         </div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
