@@ -148,13 +148,13 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
           />
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 10 }}>
-          <StatCard label="Jogadores" value={jogadoresOwned} sub="incl. ES"
+          <StatCard label="Jogadores" value={jogadoresOwned} sub="incluídos Extra Stickers"
             icon={null} color="#1fc8d1" noGlow
             onClick={() => goToAlbum({ status: "Tenho" })} />
           <StatCard label="Seleções" value={selecoesOwned} sub="fotos equipe"
             icon={null} color={C.amber} noGlow
             onClick={() => goToAlbum({ position: "Foto Equipe" })} />
-          <StatCard label="Especiais" value={especiaisOwned} sub="FWC + CC + ES"
+          <StatCard label="Especiais" value={especiaisOwned} sub="FWC + Coca-Cola"
             icon={null} color="#94a3b8" noGlow
             onClick={() => setPage("times")} />
         </div>
@@ -175,18 +175,32 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
           </span>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6, marginBottom: 20 }}>
-          <StatCard label="Lilás" value={esLilas} sub="/20"
-            icon={null} color={FINISH["Lilás"].color} noGlow
-            onClick={() => goToAlbum({ position: "Extra Stickers", finish: "Lilás" })} />
-          <StatCard label="Bronze" value={esBronze} sub="/20"
-            icon={null} color={FINISH.Bronze.color} noGlow
-            onClick={() => goToAlbum({ position: "Extra Stickers", finish: "Bronze" })} />
-          <StatCard label="Prata" value={esPrata} sub="/20"
-            icon={null} color={FINISH.Prata.color} noGlow
-            onClick={() => goToAlbum({ position: "Extra Stickers", finish: "Prata" })} />
-          <StatCard label="Ouro" value={esOuro} sub="/20"
-            icon={null} color={FINISH.Ouro.color} noGlow
-            onClick={() => goToAlbum({ position: "Extra Stickers", finish: "Ouro" })} />
+          {[
+            { key: "Lilás",  count: esLilas },
+            { key: "Bronze", count: esBronze },
+            { key: "Prata",  count: esPrata },
+            { key: "Ouro",   count: esOuro },
+          ].map(({ key, count }) => {
+            const fin = FINISH[key];
+            return (
+              <div
+                key={key}
+                onClick={() => goToAlbum({ position: "Extra Stickers", finish: key })}
+                style={{
+                  background: fin.bg,
+                  border: `1px solid ${fin.border}`,
+                  borderRadius: 14,
+                  padding: "10px 12px",
+                  cursor: "pointer",
+                  transition: "all .2s",
+                }}
+              >
+                <div style={{ fontSize: 11, color: fin.dimColor, marginBottom: 4, fontWeight: 600 }}>{fin.label}</div>
+                <div style={{ fontSize: 22, fontWeight: 900, color: fin.color }}>{count}</div>
+                <div style={{ fontSize: 10, color: fin.dimColor, marginTop: 2 }}>/20</div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
