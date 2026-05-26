@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { teamInfo } from "@/utils/teamInfo.js";
 import { FINISH, getFinish } from "@/styles/finishes.js";
+import { ES_BY_CODE, ES_RARITY_TYPES } from "@/data/extraStickers.js";
 import { C } from "@/styles/tokens.js";
 
 const finishToRarity = {
@@ -44,6 +45,13 @@ export function AddSinglePanel({ stickers, setStickers, addToast }) {
       return updated;
     });
   };
+
+  const esPlayer = preview ? ES_BY_CODE[codeNorm] : null;
+  const finishIsESEligible = ES_RARITY_TYPES.includes(finishToRarity[userFinish]);
+  const breakdownHasES = Object.keys(addTypeBreakdown).some(
+    (r) => ES_RARITY_TYPES.includes(r) && addTypeBreakdown[r] > 0
+  );
+  const showESNotice = !!esPlayer && (finishIsESEligible || breakdownHasES);
 
   const newStatus = preview ? determineStatus(preview.status, qty) : null;
   const addTotal = Object.values(addTypeBreakdown).reduce((a, b) => a + b, 0);
@@ -162,6 +170,25 @@ export function AddSinglePanel({ stickers, setStickers, addToast }) {
             >
               {preview.status}
             </span>
+          </div>
+        </div>
+      )}
+
+      {showESNotice && (
+        <div style={{
+          background: "rgba(109,72,168,0.14)",
+          border: "1px solid rgba(109,72,168,0.4)",
+          borderRadius: 12,
+          padding: "10px 14px",
+          marginBottom: 12,
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+        }}>
+          <span style={{ fontSize: 20 }}>⭐</span>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#a78bfa" }}>Extra Sticker detectado</div>
+            <div style={{ fontSize: 11, color: C.t3 }}>{esPlayer.name} · {esPlayer.teamName}</div>
           </div>
         </div>
       )}
