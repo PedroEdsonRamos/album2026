@@ -107,9 +107,19 @@ export function AddTeamPanel({ stickers, setStickers }) {
           Adicionando para <span style={{ color: "#fff", fontWeight: 700 }}>{selectedName}</span>. Digite só os números.
         </div>
       </div>
-      <label style={{ fontSize: 11, fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.08em", display: "block", marginBottom: 8 }}>
-        Números das figurinhas
-      </label>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+        <label style={{ fontSize: 11, fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+          Números das figurinhas
+        </label>
+        {teamNums.trim() && (
+          <button
+            onClick={() => { setTeamNums(""); setResult(null); }}
+            style={{ background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.3)", color: "#f87171", borderRadius: 8, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
+          >
+            ✕ Limpar
+          </button>
+        )}
+      </div>
       <textarea value={teamNums} onChange={(e) => setTeamNums(e.target.value)} rows={4} placeholder={"Ex: 1, 2, 3, 5\nou intervalos: 7-12"}
         style={{ width: "100%", background: C.surfaceHi, border: `1px solid ${C.borderHi}`, borderRadius: 12,
           padding: "14px 16px", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box", fontFamily: "monospace", resize: "vertical", lineHeight: 1.6 }} />
