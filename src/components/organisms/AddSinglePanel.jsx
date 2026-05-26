@@ -18,6 +18,7 @@ export function AddSinglePanel({ stickers, setStickers, addToast }) {
   const [addTypeBreakdown, setAddTypeBreakdown] = useState({});
   const [obs, setObs] = useState("");
   const [adding, setAdding] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
 
   const codeNorm = code.trim().toUpperCase().replace(/\s+/g, "");
   const preview = stickers.find((s) => s.code === codeNorm);
@@ -110,56 +111,66 @@ export function AddSinglePanel({ stickers, setStickers, addToast }) {
       <label style={{ fontSize: 11, fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.08em", display: "block", marginBottom: 8 }}>
         Código da Figurinha
       </label>
-      <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>
-        <input
-          value={code}
-          onChange={(e) => setCode(e.target.value.toUpperCase())}
-          placeholder="Ex: BRA10, FWC6, CC1..."
-          style={{
-            flex: 1, background: C.surfaceHi, border: `1px solid ${C.borderHi}`,
-            borderRadius: 12, padding: "14px 16px", color: "#fff", fontSize: 15,
-            outline: "none", boxSizing: "border-box", fontFamily: "monospace",
-            letterSpacing: "0.05em",
-          }}
-        />
-        {(code || qty > 1 || obs) && (
-          <button
-            onClick={handleClear}
+      <div style={{ position: "relative", marginBottom: 12 }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <input
+            value={code}
+            onChange={(e) => setCode(e.target.value.toUpperCase())}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
+            placeholder="Ex: BRA10, FWC6, CC1..."
             style={{
-              background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.3)",
-              color: "#f87171", borderRadius: 10, padding: "8px 14px",
-              fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-              whiteSpace: "nowrap",
+              flex: 1, background: C.surfaceHi, border: `1px solid ${C.borderHi}`,
+              borderRadius: 12, padding: "14px 16px", color: "#fff", fontSize: 15,
+              outline: "none", boxSizing: "border-box", fontFamily: "monospace",
+              letterSpacing: "0.05em",
             }}
-          >
-            ✕ Limpar
-          </button>
+          />
+          {(code || qty > 1 || obs) && (
+            <button
+              onClick={handleClear}
+              style={{
+                background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.3)",
+                color: "#f87171", borderRadius: 10, padding: "8px 14px",
+                fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+                whiteSpace: "nowrap",
+              }}
+            >
+              ✕ Limpar
+            </button>
+          )}
+        </div>
+
+        {code.length >= 2 && !preview && searchFocused && (
+          <div style={{
+            position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0,
+            zIndex: 100, maxHeight: 280, overflowY: "auto", overflowX: "hidden",
+            borderRadius: 12, border: `1px solid ${C.borderHi}`,
+            background: C.panelHi, boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+          }}>
+            {stickers
+              .filter((s) => s.code.startsWith(codeNorm))
+              .slice(0, 20)
+              .map((s) => {
+                const t = teamInfo(s.team);
+                const fin = getFinish(s.rarity);
+                return (
+                  <div
+                    key={s.id}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => { setCode(s.code); setSearchFocused(false); }}
+                    style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", cursor: "pointer", borderBottom: `1px solid ${C.border}` }}
+                  >
+                    <span style={{ fontSize: 18 }}>{t.flag}</span>
+                    <span style={{ fontSize: 12, fontFamily: "monospace", color: C.t3 }}>{s.code}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "#fff", flex: 1 }}>{s.name}</span>
+                    <span style={{ background: fin.bg, border: `1px solid ${fin.border}`, color: fin.color, borderRadius: 999, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>{fin.label}</span>
+                  </div>
+                );
+              })}
+          </div>
         )}
       </div>
-
-      {code.length >= 2 && !preview && (
-        <div style={{ background: C.panelHi, border: `1px solid ${C.borderHi}`, borderRadius: 12, overflow: "hidden", marginBottom: 12 }}>
-          {stickers
-            .filter((s) => s.code.startsWith(codeNorm))
-            .slice(0, 5)
-            .map((s) => {
-              const t = teamInfo(s.team);
-              const fin = getFinish(s.rarity);
-              return (
-                <div
-                  key={s.id}
-                  onClick={() => setCode(s.code)}
-                  style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", cursor: "pointer", borderBottom: `1px solid ${C.border}` }}
-                >
-                  <span style={{ fontSize: 18 }}>{t.flag}</span>
-                  <span style={{ fontSize: 12, fontFamily: "monospace", color: C.t3 }}>{s.code}</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: "#fff", flex: 1 }}>{s.name}</span>
-                  <span style={{ background: fin.bg, border: `1px solid ${fin.border}`, color: fin.color, borderRadius: 999, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>{fin.label}</span>
-                </div>
-              );
-            })}
-        </div>
-      )}
 
       {preview && (
         <div
