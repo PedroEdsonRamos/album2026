@@ -3,21 +3,29 @@ import { useInView } from "@/hooks/useInView.js";
 import { useCounter } from "@/hooks/useCounter.js";
 import { TEAMS } from "@/data/teams.js";
 import { TOTAL_OFFICIAL } from "@/data/fwc.js";
-import { countESCollected } from "@/utils/esCollection.js";
+import { getESCollection } from "@/utils/esCollection.js";
 import { CircleProgress } from "@/components/atoms/CircleProgress.jsx";
 import { StatCard } from "@/components/molecules/StatCard.jsx";
+import { StatMiniBox } from "@/components/molecules/StatMiniBox.jsx";
 import { StickerCard } from "@/components/molecules/StickerCard.jsx";
 import { RANK_BAR, C } from "@/styles/tokens.js";
 
 export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
   const total = TOTAL_OFFICIAL;
   const owned = stickers.filter((s) => s.status === "Tenho").length;
-  const missing = total - owned;
   const dups = stickers.filter((s) => s.status === "Repetida").length;
-  const bronzeCount = stickers.filter((s) => s.rarity === "Bronze" && s.status === "Tenho").length;
-  const prataCount = stickers.filter((s) => s.rarity === "Prata" && s.status === "Tenho").length;
-  const ouroCount = stickers.filter((s) => s.rarity === "Gold" && s.status === "Tenho").length;
-  const esCount = countESCollected(stickers);
+  const jogadoresOwned = stickers.filter((s) =>
+    s.status === "Tenho" && s.team !== "FWC" && s.team !== "CC" &&
+    s.position !== "Escudo" && s.position !== "Foto Equipe"
+  ).length;
+  const especiaisOwned = stickers.filter((s) =>
+    s.status === "Tenho" && (s.team === "FWC" || s.team === "CC")
+  ).length;
+  const esCollection = getESCollection(stickers);
+  const esLilas = esCollection.filter((e) => (e.collectedTypes["Lilás"] ?? 0) > 0).length;
+  const esBronze = esCollection.filter((e) => (e.collectedTypes["Bronze"] ?? 0) > 0).length;
+  const esPrata = esCollection.filter((e) => (e.collectedTypes["Prata"] ?? 0) > 0).length;
+  const esOuro = esCollection.filter((e) => (e.collectedTypes["Ouro"] ?? 0) > 0).length;
   const pct = Math.round((owned / total) * 100);
   const [hRef, hVis] = useInView();
   const pctA = useCounter(hVis ? pct : 0, 1200);
@@ -26,9 +34,10 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
   const teamStats = TEAMS.map((t) => {
     const ts = stickers.filter((s) => s.team === t.id);
     const o = ts.filter((s) => s.status === "Tenho").length;
-    const legendCount = ts.filter((s) => s.rarity !== "Normal" && s.status === "Tenho").length;
+    const legendCount = ts.filter((s) => s.rarity !== "Comum" && s.status === "Tenho").length;
     return { ...t, total: ts.length, owned: o, pct: Math.round((o / (ts.length || 1)) * 100), legendCount };
   });
+  const selecoesCompletas = teamStats.filter((t) => t.pct === 100).length;
   const sortedTeams = [...teamStats].sort((a, b) => {
     if (rankSort === "pct")  return b.pct - a.pct;
     if (rankSort === "name") return a.name.localeCompare(b.name, "pt-BR");
@@ -122,47 +131,11 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
           <StatCard
             label="Coletadas"
             value={owned}
-            sub={`${pct}% do total`}
+            sub={`${pct}% do álbum`}
             icon="check"
             color={C.green}
             onClick={() => goToAlbum({ status: "Tenho" })}
           />
-          <StatCard
-            label="Faltando"
-            value={missing}
-            sub="para completar"
-            icon="star"
-            color={C.red}
-            onClick={() => goToAlbum({ status: "Faltando" })}
-          />
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-          <StatCard
-            label="Bronze"
-            value={bronzeCount}
-            sub="coletadas"
-            icon="star"
-            color="#b8621b"
-            onClick={() => goToAlbum({ finish: "Bronze" })}
-          />
-          <StatCard
-            label="Prata"
-            value={prataCount}
-            sub="coletadas"
-            icon="star"
-            color="#cbd5e1"
-            onClick={() => goToAlbum({ finish: "Prata" })}
-          />
-          <StatCard
-            label="Ouro"
-            value={ouroCount}
-            sub="coletadas"
-            icon="trophy"
-            color={C.amber}
-            onClick={() => goToAlbum({ finish: "Ouro" })}
-          />
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           <StatCard
             label="Repetidas"
             value={dups}
@@ -171,14 +144,38 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
             color={C.violet}
             onClick={() => setPage("trocas")}
           />
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
           <StatCard
-            label="Extra Stickers"
-            value={esCount}
-            sub="de 80 possíveis"
-            icon="trophy"
-            color="#6d48a8"
+            label="Jogadores"
+            value={jogadoresOwned}
+            sub="coletados"
+            icon="check"
+            color={C.amber}
+            onClick={() => goToAlbum({ status: "Tenho" })}
+          />
+          <StatCard
+            label="Seleções"
+            value={selecoesCompletas}
+            sub="completas"
+            icon="star"
+            color={C.green}
             onClick={() => setPage("times")}
           />
+          <StatCard
+            label="Especiais"
+            value={especiaisOwned}
+            sub="FWC + CC"
+            icon="trophy"
+            color="#cbd5e1"
+            onClick={() => setPage("times")}
+          />
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
+          <StatMiniBox label={`Lilás /20`} value={esLilas} color="#a855f7" />
+          <StatMiniBox label={`Bronze /20`} value={esBronze} color="#d97706" />
+          <StatMiniBox label={`Prata /20`} value={esPrata} color="#cbd5e1" />
+          <StatMiniBox label={`Ouro /20`} value={esOuro} color="#fbbf24" />
         </div>
       </div>
 
