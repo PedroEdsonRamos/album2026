@@ -62,6 +62,17 @@ export function AddTeamPanel({ stickers, setStickers }) {
 
   return (
     <div>
+      <div style={{ background: C.amberDim, border: `1px solid ${C.amber}44`, borderRadius: 14, padding: "14px 16px", marginBottom: 16 }}>
+        <div style={{ fontSize: 12, fontWeight: 800, color: C.amber, marginBottom: 8 }}>📋 Como lançar por seleção</div>
+        <ol style={{ margin: 0, paddingLeft: 18, fontSize: 11, color: C.t2, lineHeight: 1.7 }}>
+          <li>Selecione a seleção no filtro abaixo</li>
+          <li>Digite os números separados por vírgula ou em intervalos (ex: 7-12)</li>
+          <li>Figurinhas de jogadores comuns são lançadas como <strong style={{ color: C.t1 }}>Comum</strong> automaticamente</li>
+        </ol>
+        <div style={{ marginTop: 8, fontSize: 11, color: C.amber }}>
+          ⭐ Para Extra Stickers, use o modo <strong>Individual</strong> e escolha o tipo (Lilás, Bronze, Prata ou Ouro).
+        </div>
+      </div>
       <label style={{ fontSize: 11, fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.08em", display: "block", marginBottom: 8 }}>
         Seleção
       </label>
