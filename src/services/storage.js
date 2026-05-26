@@ -28,6 +28,20 @@ export function loadStickersFromStorage() {
         merged.typeBreakdown = { [merged.rarity]: merged.duplicates };
       }
 
+      // Migrate legacy rarity values
+      if (merged.rarity === "Normal") merged.rarity = "Comum";
+      if (merged.rarity === "Prata" && (merged.team === "FWC" || merged.position === "Escudo")) {
+        merged.rarity = "Metalizado";
+      }
+      if (merged.typeBreakdown) {
+        const migrated = {};
+        Object.entries(merged.typeBreakdown).forEach(([k, v]) => {
+          const key = k === "Normal" ? "Comum" : k;
+          migrated[key] = (migrated[key] ?? 0) + v;
+        });
+        merged.typeBreakdown = Object.keys(migrated).length > 0 ? migrated : undefined;
+      }
+
       return merged;
     });
   } catch (e) {

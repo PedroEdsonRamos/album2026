@@ -83,7 +83,7 @@ export function buildDatabase() {
         section: team.name,
         position: "Foto Equipe",
         number: 13,
-        rarity: "Normal",
+        rarity: "Comum",
       })
     );
 
