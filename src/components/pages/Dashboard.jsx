@@ -4,9 +4,9 @@ import { useCounter } from "@/hooks/useCounter.js";
 import { TEAMS } from "@/data/teams.js";
 import { TOTAL_OFFICIAL } from "@/data/fwc.js";
 import { getESCollection } from "@/utils/esCollection.js";
+import { FINISH } from "@/styles/finishes.js";
 import { CircleProgress } from "@/components/atoms/CircleProgress.jsx";
 import { StatCard } from "@/components/molecules/StatCard.jsx";
-import { StatMiniBox } from "@/components/molecules/StatMiniBox.jsx";
 import { StickerCard } from "@/components/molecules/StickerCard.jsx";
 import { RANK_BAR, C } from "@/styles/tokens.js";
 
@@ -20,6 +20,9 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
   ).length;
   const especiaisOwned = stickers.filter((s) =>
     s.status === "Tenho" && (s.team === "FWC" || s.team === "CC")
+  ).length;
+  const selecoesOwned = stickers.filter((s) =>
+    s.status === "Tenho" && s.position === "Foto Equipe"
   ).length;
   const esCollection = getESCollection(stickers);
   const esLilas = esCollection.filter((e) => (e.collectedTypes["Lilás"] ?? 0) > 0).length;
@@ -37,7 +40,6 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
     const legendCount = ts.filter((s) => s.rarity !== "Comum" && s.status === "Tenho").length;
     return { ...t, total: ts.length, owned: o, pct: Math.round((o / (ts.length || 1)) * 100), legendCount };
   });
-  const selecoesCompletas = teamStats.filter((t) => t.pct === 100).length;
   const sortedTeams = [...teamStats].sort((a, b) => {
     if (rankSort === "pct")  return b.pct - a.pct;
     if (rankSort === "name") return a.name.localeCompare(b.name, "pt-BR");
@@ -145,37 +147,46 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
             onClick={() => setPage("trocas")}
           />
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-          <StatCard
-            label="Jogadores"
-            value={jogadoresOwned}
-            sub="coletados"
-            icon="check"
-            color={C.amber}
-            onClick={() => goToAlbum({ status: "Tenho" })}
-          />
-          <StatCard
-            label="Seleções"
-            value={selecoesCompletas}
-            sub="completas"
-            icon="star"
-            color={C.green}
-            onClick={() => setPage("times")}
-          />
-          <StatCard
-            label="Especiais"
-            value={especiaisOwned}
-            sub="FWC + CC"
-            icon="trophy"
-            color="#cbd5e1"
-            onClick={() => setPage("times")}
-          />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 10 }}>
+          <StatCard label="Jogadores" value={jogadoresOwned} sub="incl. ES"
+            icon={null} color="#1fc8d1" noGlow
+            onClick={() => goToAlbum({ status: "Tenho" })} />
+          <StatCard label="Seleções" value={selecoesOwned} sub="fotos equipe"
+            icon={null} color={C.amber} noGlow
+            onClick={() => goToAlbum({ position: "Foto Equipe" })} />
+          <StatCard label="Especiais" value={especiaisOwned} sub="FWC + CC + ES"
+            icon={null} color="#94a3b8" noGlow
+            onClick={() => setPage("times")} />
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
-          <StatMiniBox label={`Lilás /20`} value={esLilas} color="#a855f7" />
-          <StatMiniBox label={`Bronze /20`} value={esBronze} color="#d97706" />
-          <StatMiniBox label={`Prata /20`} value={esPrata} color="#cbd5e1" />
-          <StatMiniBox label={`Ouro /20`} value={esOuro} color="#fbbf24" />
+        <div style={{
+          display: "flex", alignItems: "center", gap: 8,
+          marginBottom: 8, marginTop: 4,
+          padding: "6px 12px",
+          background: "rgba(168,85,247,0.08)",
+          border: "1px solid rgba(168,85,247,0.2)",
+          borderRadius: 10,
+        }}>
+          <span style={{ fontSize: 14 }}>⭐</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: "#a855f7", flex: 1 }}>
+            Extra Stickers — por tipo
+          </span>
+          <span style={{ fontSize: 10, color: C.t3 }}>
+            {esLilas + esBronze + esPrata + esOuro} de 80 coletados
+          </span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6, marginBottom: 20 }}>
+          <StatCard label="Lilás" value={esLilas} sub="/20"
+            icon={null} color={FINISH["Lilás"].color} noGlow
+            onClick={() => goToAlbum({ position: "Extra Stickers", finish: "Lilás" })} />
+          <StatCard label="Bronze" value={esBronze} sub="/20"
+            icon={null} color={FINISH.Bronze.color} noGlow
+            onClick={() => goToAlbum({ position: "Extra Stickers", finish: "Bronze" })} />
+          <StatCard label="Prata" value={esPrata} sub="/20"
+            icon={null} color={FINISH.Prata.color} noGlow
+            onClick={() => goToAlbum({ position: "Extra Stickers", finish: "Prata" })} />
+          <StatCard label="Ouro" value={esOuro} sub="/20"
+            icon={null} color={FINISH.Ouro.color} noGlow
+            onClick={() => goToAlbum({ position: "Extra Stickers", finish: "Ouro" })} />
         </div>
       </div>
 
