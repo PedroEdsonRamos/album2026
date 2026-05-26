@@ -192,11 +192,15 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
             border: `1px solid ${fin.border}`,
             color: fin.color,
             borderRadius: 999,
-            padding: "3px 10px",
+            padding: "4px 12px",
             fontSize: 10,
             fontWeight: 700,
             letterSpacing: "0.04em",
             whiteSpace: "nowrap",
+            flexShrink: 0,
+            lineHeight: "16px",
+            minWidth: 60,
+            textAlign: "center",
           }}
         >
           {fin.label}{s.typeBreakdown?.[displayRarity] > 0 ? ` ×${s.typeBreakdown[displayRarity]}` : ""}
