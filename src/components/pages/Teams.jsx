@@ -1,59 +1,71 @@
 import { useState, useMemo } from "react";
 import { TEAMS } from "@/data/teams.js";
-import { FWC_LIST } from "@/data/fwc.js";
+import { ES_PLAYERS, ES_RARITY_TYPES } from "@/data/extraStickers.js";
 import { TeamCard } from "@/components/molecules/TeamCard.jsx";
+import { StickerCard } from "@/components/molecules/StickerCard.jsx";
 import { Icon } from "@/components/atoms/Icon.jsx";
+import { getFinish } from "@/styles/finishes.js";
+import { getESCollection, countESCollected } from "@/utils/esCollection.js";
 import { C } from "@/styles/tokens.js";
 
-function FWCExtrasGrid({ stickers }) {
+function ESPlayersGrid({ stickers }) {
+  const esCollection = getESCollection(stickers);
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      {FWC_LIST.map((f) => {
-        const code = f.n === "00" ? "FWC00" : `FWC${f.n}`;
-        const s = stickers.find((x) => x.code === code);
-        const owned = s?.status === "Tenho";
-        const dup = s?.status === "Repetida";
-        return (
-          <div
-            key={code}
-            style={{
-              background: C.surface,
-              border: `1px solid ${owned || dup ? C.amber + "44" : C.border}`,
-              borderRadius: 12,
-              padding: "10px 14px",
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-            }}
-          >
-            <span
-              style={{
-                fontSize: 10,
-                fontFamily: "monospace",
-                color: C.amber,
-                minWidth: 44,
-                fontWeight: 700,
-              }}
-            >
-              {code}
-            </span>
-            <span style={{ fontSize: 13, color: "#fff", flex: 1 }}>{f.name}</span>
-            <span
-              style={{
-                fontSize: 10,
-                fontWeight: 700,
-                borderRadius: 999,
-                padding: "2px 8px",
-                background: owned ? C.greenDim : dup ? C.amberDim : C.redDim,
-                color: owned ? C.green : dup ? C.amber : C.red,
-                flexShrink: 0,
-              }}
-            >
-              {owned ? "Tenho" : dup ? "Repetida" : "Falta"}
-            </span>
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      {esCollection.map(({ player, collectedTypes }) => (
+        <div
+          key={player.id}
+          style={{
+            background: C.surface,
+            border: `1px solid ${Object.keys(collectedTypes).length > 0 ? "#6d48a844" : C.border}`,
+            borderRadius: 12,
+            padding: "10px 14px",
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+          }}
+        >
+          <span style={{ fontSize: 18 }}>{player.flag}</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 13, color: "#fff", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              {player.name}
+            </div>
+            <div style={{ fontSize: 10, color: C.t3 }}>{player.id} · {player.teamName}</div>
           </div>
-        );
-      })}
+          <div style={{ display: "flex", gap: 5, flexShrink: 0 }}>
+            {ES_RARITY_TYPES.map((rarity) => {
+              const fin = getFinish(rarity);
+              const collected = (collectedTypes[rarity] ?? 0) > 0;
+              return (
+                <div
+                  key={rarity}
+                  title={fin.label}
+                  style={{
+                    width: 14,
+                    height: 14,
+                    borderRadius: "50%",
+                    background: collected ? fin.color : C.borderHi,
+                    border: `1px solid ${collected ? fin.border : C.border}`,
+                    boxShadow: collected ? `0 0 6px ${fin.glow}` : "none",
+                    transition: "all .2s",
+                  }}
+                />
+              );
+            })}
+          </div>
+        </div>
+      ))}
+      <div style={{ display: "flex", gap: 10, marginTop: 4, paddingLeft: 2 }}>
+        {ES_RARITY_TYPES.map((rarity) => {
+          const fin = getFinish(rarity);
+          return (
+            <div key={rarity} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: fin.color, border: `1px solid ${fin.border}` }} />
+              <span style={{ fontSize: 9, color: C.t3 }}>{fin.label}</span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -83,6 +95,21 @@ export function Teams({ stickers, setPage, setTeamFilter }) {
       return pctB - pctA;
     });
   }, [stickers, grp, search, sortTeams]);
+
+  const fwcOwned = stickers.filter((s) => s.team === "FWC" && s.status === "Tenho").length;
+  const ccOwned = stickers.filter((s) => s.team === "CC" && s.status === "Tenho").length;
+  const esCount = countESCollected(stickers);
+
+  const sectionHeader = (icon, label, count) => (
+    <div style={{
+      fontSize: 12, fontWeight: 700, color: C.t2,
+      textTransform: "uppercase", letterSpacing: "0.08em",
+      marginBottom: 10, display: "flex", alignItems: "center", gap: 8,
+    }}>
+      {icon} {label}
+      <span style={{ fontSize: 11, color: C.t3, fontWeight: 400 }}>({count})</span>
+    </div>
+  );
 
   return (
     <div>
@@ -196,97 +223,45 @@ export function Teams({ stickers, setPage, setTeamFilter }) {
       </div>
 
       {grp === "Extras" ? (
-        <div>
-          <FWCExtrasGrid stickers={stickers} />
-
-          {/* Seção Extra Stickers */}
-          <div style={{ marginTop: 20 }}>
-            <div style={{
-              fontSize: 12, fontWeight: 700, color: C.t2,
-              textTransform: "uppercase", letterSpacing: "0.08em",
-              marginBottom: 10, display: "flex", alignItems: "center", gap: 8,
-            }}>
-              ⭐ Extra Stickers
-              <span style={{ fontSize: 11, color: C.t3, fontWeight: 400 }}>
-                ({stickers.filter((s) => s.team === "ES" && s.status === "Tenho").length}/20)
-              </span>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {stickers.filter((s) => s.team === "ES").map((s) => {
-                const owned = s.status === "Tenho";
-                const dup = s.status === "Repetida";
-                return (
-                  <div
-                    key={s.code}
-                    onClick={() => { setTeamFilter("ES"); setPage("stickers"); }}
-                    style={{
-                      background: C.surface,
-                      border: `1px solid ${owned || dup ? "#6d48a844" : C.border}`,
-                      borderRadius: 12, padding: "10px 14px",
-                      display: "flex", alignItems: "center", gap: 12,
-                      cursor: "pointer",
-                    }}
-                  >
-                    <span style={{ fontSize: 10, fontFamily: "monospace", color: "#6d48a8", minWidth: 44, fontWeight: 700 }}>
-                      {s.code}
-                    </span>
-                    <span style={{ fontSize: 13, color: "#fff", flex: 1 }}>{s.name}</span>
-                    <span style={{
-                      fontSize: 10, fontWeight: 700, borderRadius: 999, padding: "2px 8px",
-                      background: owned ? C.greenDim : dup ? C.amberDim : C.redDim,
-                      color: owned ? C.green : dup ? C.amber : C.red, flexShrink: 0,
-                    }}>
-                      {owned ? "Tenho" : dup ? "Repetida" : "Falta"}
-                    </span>
-                  </div>
-                );
-              })}
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          {/* FWC */}
+          <div>
+            {sectionHeader("🌐", "Especiais FWC", `${fwcOwned}/20`)}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              {stickers
+                .filter((s) => s.team === "FWC")
+                .map((s, i) => (
+                  <StickerCard
+                    key={s.id}
+                    s={s}
+                    delay={i * 0.03}
+                    onClick={() => { setTeamFilter("FWC"); setPage("stickers"); }}
+                  />
+                ))}
             </div>
           </div>
 
-          {/* Seção Coca-Cola */}
-          <div style={{ marginTop: 20 }}>
-            <div style={{
-              fontSize: 12, fontWeight: 700, color: C.t2,
-              textTransform: "uppercase", letterSpacing: "0.08em",
-              marginBottom: 10, display: "flex", alignItems: "center", gap: 8,
-            }}>
-              🥤 Coca-Cola
-              <span style={{ fontSize: 11, color: C.t3, fontWeight: 400 }}>
-                ({stickers.filter((s) => s.team === "CC" && s.status === "Tenho").length}/14)
-              </span>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {stickers.filter((s) => s.team === "CC").map((s) => {
-                const owned = s.status === "Tenho";
-                const dup = s.status === "Repetida";
-                return (
-                  <div
-                    key={s.code}
+          {/* CC */}
+          <div>
+            {sectionHeader("🥤", "Coca-Cola", `${ccOwned}/14`)}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              {stickers
+                .filter((s) => s.team === "CC")
+                .map((s, i) => (
+                  <StickerCard
+                    key={s.id}
+                    s={s}
+                    delay={i * 0.03}
                     onClick={() => { setTeamFilter("CC"); setPage("stickers"); }}
-                    style={{
-                      background: C.surface,
-                      border: `1px solid ${owned || dup ? "#f4000944" : C.border}`,
-                      borderRadius: 12, padding: "10px 14px",
-                      display: "flex", alignItems: "center", gap: 12,
-                      cursor: "pointer",
-                    }}
-                  >
-                    <span style={{ fontSize: 10, fontFamily: "monospace", color: "#f40009", minWidth: 44, fontWeight: 700 }}>
-                      {s.code}
-                    </span>
-                    <span style={{ fontSize: 13, color: "#fff", flex: 1 }}>{s.name}</span>
-                    <span style={{
-                      fontSize: 10, fontWeight: 700, borderRadius: 999, padding: "2px 8px",
-                      background: owned ? C.greenDim : dup ? C.amberDim : C.redDim,
-                      color: owned ? C.green : dup ? C.amber : C.red, flexShrink: 0,
-                    }}>
-                      {owned ? "Tenho" : dup ? "Repetida" : "Falta"}
-                    </span>
-                  </div>
-                );
-              })}
+                  />
+                ))}
             </div>
+          </div>
+
+          {/* ES */}
+          <div>
+            {sectionHeader("⭐", "Extra Stickers", `${esCount}/80`)}
+            <ESPlayersGrid stickers={stickers} />
           </div>
         </div>
       ) : (
