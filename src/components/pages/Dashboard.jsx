@@ -3,6 +3,7 @@ import { useInView } from "@/hooks/useInView.js";
 import { useCounter } from "@/hooks/useCounter.js";
 import { TEAMS } from "@/data/teams.js";
 import { TOTAL_OFFICIAL } from "@/data/fwc.js";
+import { countESCollected } from "@/utils/esCollection.js";
 import { CircleProgress } from "@/components/atoms/CircleProgress.jsx";
 import { StatCard } from "@/components/molecules/StatCard.jsx";
 import { StickerCard } from "@/components/molecules/StickerCard.jsx";
@@ -13,9 +14,10 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
   const owned = stickers.filter((s) => s.status === "Tenho").length;
   const missing = total - owned;
   const dups = stickers.filter((s) => s.status === "Repetida").length;
-  const specials = stickers.filter(
-    (s) => ["Prata", "Bronze", "Gold", "Ouro", "Lilás"].includes(s.rarity) && s.status === "Tenho"
-  ).length;
+  const bronzeCount = stickers.filter((s) => s.rarity === "Bronze" && s.status === "Tenho").length;
+  const prataCount = stickers.filter((s) => s.rarity === "Prata" && s.status === "Tenho").length;
+  const ouroCount = stickers.filter((s) => s.rarity === "Gold" && s.status === "Tenho").length;
+  const esCount = countESCollected(stickers);
   const pct = Math.round((owned / total) * 100);
   const [hRef, hVis] = useInView();
   const pctA = useCounter(hVis ? pct : 0, 1200);
@@ -115,39 +117,69 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
-        <StatCard
-          label="Coletadas"
-          value={owned}
-          sub={`${pct}% do total`}
-          icon="check"
-          color={C.green}
-          onClick={() => goToAlbum({ status: "Tenho" })}
-        />
-        <StatCard
-          label="Faltando"
-          value={missing}
-          sub="para completar"
-          icon="star"
-          color={C.red}
-          onClick={() => goToAlbum({ status: "Faltando" })}
-        />
-        <StatCard
-          label="Repetidas"
-          value={dups}
-          sub="para troca"
-          icon="swap"
-          color={C.violet}
-          onClick={() => setPage("trocas")}
-        />
-        <StatCard
-          label="Extra Stickers"
-          value={specials}
-          sub="Regular · Bronze · Prata · Ouro"
-          icon="trophy"
-          color={C.amber}
-          onClick={() => goToAlbum({ status: "Tenho" })}
-        />
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <StatCard
+            label="Coletadas"
+            value={owned}
+            sub={`${pct}% do total`}
+            icon="check"
+            color={C.green}
+            onClick={() => goToAlbum({ status: "Tenho" })}
+          />
+          <StatCard
+            label="Faltando"
+            value={missing}
+            sub="para completar"
+            icon="star"
+            color={C.red}
+            onClick={() => goToAlbum({ status: "Faltando" })}
+          />
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+          <StatCard
+            label="Bronze"
+            value={bronzeCount}
+            sub="coletadas"
+            icon="star"
+            color="#b8621b"
+            onClick={() => goToAlbum({ finish: "Bronze" })}
+          />
+          <StatCard
+            label="Prata"
+            value={prataCount}
+            sub="coletadas"
+            icon="star"
+            color="#cbd5e1"
+            onClick={() => goToAlbum({ finish: "Prata" })}
+          />
+          <StatCard
+            label="Ouro"
+            value={ouroCount}
+            sub="coletadas"
+            icon="trophy"
+            color={C.amber}
+            onClick={() => goToAlbum({ finish: "Ouro" })}
+          />
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <StatCard
+            label="Repetidas"
+            value={dups}
+            sub="para troca"
+            icon="swap"
+            color={C.violet}
+            onClick={() => setPage("trocas")}
+          />
+          <StatCard
+            label="Extra Stickers"
+            value={esCount}
+            sub="de 80 possíveis"
+            icon="trophy"
+            color="#6d48a8"
+            onClick={() => setPage("times")}
+          />
+        </div>
       </div>
 
       <div style={{ marginBottom: 20 }}>
