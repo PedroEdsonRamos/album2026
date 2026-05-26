@@ -5,7 +5,7 @@ import { getFinish } from "@/styles/finishes.js";
 import { Icon } from "@/components/atoms/Icon.jsx";
 import { C } from "@/styles/tokens.js";
 
-export function Trades({ stickers, addToast, goToAlbum, setPage }) {
+export function Trades({ stickers, addToast, goToAlbum, setPage, setTeamFilter }) {
   const [collapsed, setCollapsed] = useState({});
 
   const dups = stickers.filter((s) => s.status === "Repetida");
@@ -135,10 +135,10 @@ export function Trades({ stickers, addToast, goToAlbum, setPage }) {
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
             <span
               style={{ fontSize: 20, cursor: "pointer" }}
-              onClick={() => setPage("teams")}
+              onClick={() => { setTeamFilter(t.id); setPage("stickers"); }}
             >{t.flag}</span>
             <span
-              onClick={() => setPage("teams")}
+              onClick={() => { setTeamFilter(t.id); setPage("stickers"); }}
               style={{ fontSize: 13, fontWeight: 700, color: "#fff", flex: 1, cursor: "pointer" }}
             >{t.name}</span>
             <span style={{ fontSize: 11, color: C.t3 }}>({t.items.length})</span>
