@@ -170,11 +170,10 @@ export function Status({ stickers, setStickers, addToast, setPage }) {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div>
                 <div style={{ fontSize: 22, fontWeight: 900, color: "#fff" }}>~{packsEstimate.toLocaleString("pt-BR")} pacotes</div>
-                <div style={{ fontSize: 11, color: C.t3, marginTop: 2 }}>Estimativa considerando duplicatas</div>
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontSize: 16, fontWeight: 700, color: C.amber }}>{cost}</div>
-                <div style={{ fontSize: 10, color: C.t3 }}>a R$ 7,00 por pacote</div>
+                <div style={{ fontSize: 10, color: C.t3 }}>R$ 7,00/ pacote</div>
               </div>
             </div>
           </div>
