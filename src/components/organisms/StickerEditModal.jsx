@@ -3,19 +3,23 @@ import { teamInfo } from "@/utils/teamInfo.js";
 import { C } from "@/styles/tokens.js";
 
 const RARITY_MAP = {
-  Regular: "Normal",
+  Comum: "Comum",
   "Lilás": "Lilás",
   Bronze: "Bronze",
   Prata: "Prata",
-  Ouro: "Gold",
+  Ouro: "Ouro",
+  Metalizado: "Metalizado",
+  "Coca-Cola": "Coca-Cola",
 };
 
 const FINISH_TO_RARITY = {
-  Regular: "Normal",
+  Comum: "Comum",
   "Lilás": "Lilás",
   Bronze: "Bronze",
   Prata: "Prata",
-  Ouro: "Gold",
+  Ouro: "Ouro",
+  Metalizado: "Metalizado",
+  "Coca-Cola": "Coca-Cola",
 };
 
 export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
@@ -137,7 +141,7 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {Object.entries(FINISH).map(([finishKey, fin]) => {
-                const rarityKey = FINISH_TO_RARITY[finishKey] ?? "Normal";
+                const rarityKey = FINISH_TO_RARITY[finishKey] ?? "Comum";
                 const qty = sticker.typeBreakdown?.[rarityKey] ?? 0;
                 return (
                   <div key={finishKey} style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -188,7 +192,7 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
                 return (
                   <button
                     key={key}
-                    onClick={() => onChange((p) => ({ ...p, rarity: RARITY_MAP[key] || "Normal" }))}
+                    onClick={() => onChange((p) => ({ ...p, rarity: RARITY_MAP[key] || "Comum" }))}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.filter = "brightness(1.15)";
                       e.currentTarget.style.transform = "translateY(-2px)";

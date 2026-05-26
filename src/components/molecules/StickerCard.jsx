@@ -5,7 +5,7 @@ import { MY_CODES } from "@/data/userCollection.js";
 import { Icon } from "@/components/atoms/Icon.jsx";
 import { C } from "@/styles/tokens.js";
 
-const RARITY_PRIORITY = ["Gold", "Prata", "Bronze", "Lilás", "Normal"];
+const RARITY_PRIORITY = ["Ouro", "Prata", "Bronze", "Lilás", "Metalizado", "Comum", "Coca-Cola"];
 const getRarestRarity = (breakdown) => {
   if (!breakdown || Object.keys(breakdown).length === 0) return null;
   for (const r of RARITY_PRIORITY) {

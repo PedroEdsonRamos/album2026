@@ -32,7 +32,7 @@ export function buildDatabase() {
         section: "Especiais FIFA",
         position: "Especial",
         number: f.n === "00" ? 0 : parseInt(f.n),
-        rarity: f.r,
+        rarity: "Metalizado",
       })
     )
   );
@@ -40,7 +40,7 @@ export function buildDatabase() {
   // 48 seleções × 20
   TEAMS.forEach((team, ti) => {
     const squad = SQUADS[team.id] || DEFAULT_SQUAD;
-    const shieldFinish = "Prata";
+    const shieldFinish = "Metalizado";
 
     // #1 Escudo
     db.push(
@@ -68,7 +68,7 @@ export function buildDatabase() {
           section: team.name,
           position: POSITIONS[pi] || "Jogador",
           number: num,
-          rarity: "Normal",
+          rarity: "Comum",
         })
       );
     }
@@ -99,7 +99,7 @@ export function buildDatabase() {
           section: team.name,
           position: POSITIONS[pi + 11] || "Jogador",
           number: num,
-          rarity: "Normal",
+          rarity: "Comum",
         })
       );
     }

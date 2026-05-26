@@ -54,13 +54,13 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
     [stickers]
   );
 
-  const RARITY_PRIORITY = ["Gold", "Prata", "Bronze", "Lilás", "Normal"];
+  const RARITY_PRIORITY = ["Ouro", "Prata", "Bronze", "Lilás", "Metalizado", "Comum", "Coca-Cola"];
   const getRarestRarity = (breakdown) => {
-    if (!breakdown || Object.keys(breakdown).length === 0) return "Normal";
+    if (!breakdown || Object.keys(breakdown).length === 0) return "Comum";
     for (const r of RARITY_PRIORITY) {
       if (breakdown[r] && breakdown[r] > 0) return r;
     }
-    return "Normal";
+    return "Comum";
   };
 
   const saveEdit = (updates) => {

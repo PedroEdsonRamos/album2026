@@ -5,15 +5,16 @@ import { ES_BY_CODE, ES_RARITY_TYPES } from "@/data/extraStickers.js";
 import { C } from "@/styles/tokens.js";
 
 const finishToRarity = {
-  Regular: "Normal",
+  Comum: "Comum",
   "Lilás": "Lilás",
   Bronze: "Bronze",
   Prata: "Prata",
-  Ouro: "Gold",
+  Ouro: "Ouro",
+  Metalizado: "Metalizado",
   "Coca-Cola": "Coca-Cola",
 };
 
-const RARITY_PRIORITY = ["Gold", "Prata", "Bronze", "Lilás", "Normal", "Coca-Cola"];
+const RARITY_PRIORITY = ["Ouro", "Prata", "Bronze", "Lilás", "Metalizado", "Comum", "Coca-Cola"];
 
 const determineStatus = (currentStatus, qty) => {
   if (currentStatus === "Faltando" && qty === 1) return "Tenho";
@@ -23,7 +24,7 @@ const determineStatus = (currentStatus, qty) => {
 export function AddSinglePanel({ stickers, setStickers, addToast }) {
   const [code, setCode] = useState("");
   const [qty, setQty] = useState(1);
-  const [userFinish, setUserFinish] = useState("Regular");
+  const [userFinish, setUserFinish] = useState("Comum");
   const [addTypeBreakdown, setAddTypeBreakdown] = useState({});
   const [obs, setObs] = useState("");
   const [adding, setAdding] = useState(false);
@@ -79,8 +80,8 @@ export function AddSinglePanel({ stickers, setStickers, addToast }) {
             : 0;
 
           const rarestRarity = typeBreakdown
-            ? RARITY_PRIORITY.find((r) => (typeBreakdown[r] ?? 0) > 0) ?? "Normal"
-            : (finishToRarity[userFinish] ?? "Normal");
+            ? RARITY_PRIORITY.find((r) => (typeBreakdown[r] ?? 0) > 0) ?? "Comum"
+            : (finishToRarity[userFinish] ?? "Comum");
 
           return {
             ...s,
@@ -242,7 +243,7 @@ export function AddSinglePanel({ stickers, setStickers, addToast }) {
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {Object.entries(FINISH).map(([finishKey, fin]) => {
-              const rarityKey = finishToRarity[finishKey] ?? "Normal";
+              const rarityKey = finishToRarity[finishKey] ?? "Comum";
               const existingQty = preview.typeBreakdown?.[rarityKey] ?? 0;
               const addingQty = addTypeBreakdown[rarityKey] ?? 0;
               return (

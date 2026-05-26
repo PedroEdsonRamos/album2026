@@ -21,6 +21,6 @@ export const ES_PLAYERS = [
   { id: "ES20", name: "Jefferson Lerma",   linkedCode: "COL10", team: "COL", teamName: "Colômbia",      flag: "🇨🇴", position: "Meio-Campista" },
 ];
 
-export const ES_RARITY_TYPES = ["Lilás", "Bronze", "Prata", "Gold"];
+export const ES_RARITY_TYPES = ["Lilás", "Bronze", "Prata", "Ouro"];
 
 export const ES_BY_CODE = Object.fromEntries(ES_PLAYERS.map((p) => [p.linkedCode, p]));
