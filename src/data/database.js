@@ -125,3 +125,16 @@ export function buildDatabase() {
 }
 
 export const FULL_DB = buildDatabase();
+
+// Gera uma cópia do DB com todos os status zerados (ignora MY_COUNT)
+// Usar no reset para garantir álbum 100% em branco
+export function buildEmptyDatabase() {
+  return FULL_DB.map((s) => ({
+    ...s,
+    status: "Faltando",
+    duplicates: 0,
+    addedAt: null,
+    typeBreakdown: undefined,
+    obs: undefined,
+  }));
+}

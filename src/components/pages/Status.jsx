@@ -6,8 +6,8 @@ import { TOTAL_OFFICIAL } from "@/data/fwc.js";
 import { ES_RARITY_TYPES } from "@/data/extraStickers.js";
 import { getESCollection, countESCollected } from "@/utils/esCollection.js";
 import { getFinish } from "@/styles/finishes.js";
-import { buildDatabase } from "@/data/database.js";
-import { clearStorage } from "@/services/storage.js";
+import { buildEmptyDatabase } from "@/data/database.js";
+import { clearStorage, clearServiceWorkerCache } from "@/services/storage.js";
 import { CircleProgress } from "@/components/atoms/CircleProgress.jsx";
 import { StatMiniBox } from "@/components/molecules/StatMiniBox.jsx";
 import { CategoryBar } from "@/components/molecules/CategoryBar.jsx";
@@ -17,8 +17,11 @@ import { C } from "@/styles/tokens.js";
 
 export function Status({ stickers, setStickers, addToast, setPage }) {
   const [showReset, setShowReset] = useState(false);
+  const [displayOwned, setDisplayOwned] = useState(null);
   const total = TOTAL_OFFICIAL;
   const owned = stickers.filter((s) => s.status === "Tenho").length;
+  const effectiveOwned = displayOwned ?? owned;
+  const effectivePct = Math.round((effectiveOwned / total) * 100);
   const missing = total - owned;
   const dups = stickers.filter((s) => s.status === "Repetida").length;
   const pct = Math.round((owned / total) * 100);
@@ -86,6 +89,31 @@ export function Status({ stickers, setStickers, addToast, setPage }) {
     return { ...t, pct: Math.round((o / (ts.length || 1)) * 100) };
   }).sort((a, b) => b.pct - a.pct);
 
+  const handleReset = async () => {
+    setShowReset(false);
+    const startOwned = owned;
+    const STEPS = 30, DURATION = 800;
+    await new Promise((resolve) => {
+      let step = 0;
+      const id = setInterval(() => {
+        step++;
+        const eased = 1 - Math.pow(1 - step / STEPS, 3);
+        setDisplayOwned(Math.round(startOwned * (1 - eased)));
+        if (step >= STEPS) {
+          clearInterval(id);
+          setDisplayOwned(0);
+          resolve();
+        }
+      }, DURATION / STEPS);
+    });
+    clearStorage();
+    await clearServiceWorkerCache();
+    setStickers(buildEmptyDatabase());
+    setDisplayOwned(null);
+    addToast("Álbum resetado. Todas as figurinhas foram removidas.", "info");
+    setPage("dashboard");
+  };
+
   return (
     <div style={{ minHeight: "calc(100vh - 160px)" }}>
       <div
@@ -103,7 +131,7 @@ export function Status({ stickers, setStickers, addToast, setPage }) {
         }}
       >
         <div style={{ display: "inline-flex", position: "relative", marginBottom: 8 }}>
-          <CircleProgress value={pct} size={130} stroke={10} color={C.amber} />
+          <CircleProgress value={displayOwned !== null ? 0 : pct} size={130} stroke={10} color={C.amber} />
           <div
             style={{
               position: "absolute",
@@ -114,18 +142,20 @@ export function Status({ stickers, setStickers, addToast, setPage }) {
               justifyContent: "center",
             }}
           >
-            <span style={{ fontSize: 28, fontWeight: 900, color: C.amber }}>{pctA}%</span>
+            <span style={{ fontSize: 28, fontWeight: 900, color: C.amber }}>
+              {displayOwned !== null ? effectivePct : pctA}%
+            </span>
             <span style={{ fontSize: 10, color: C.t3 }}>Completo</span>
           </div>
         </div>
         <div style={{ fontSize: 14, fontWeight: 700, color: C.amber, marginTop: 4 }}>{level}</div>
         <div style={{ fontSize: 12, color: C.t3, marginTop: 2 }}>
-          {owned.toLocaleString("pt-BR")} de {total.toLocaleString("pt-BR")} figurinhas oficiais
+          {effectiveOwned.toLocaleString("pt-BR")} de {total.toLocaleString("pt-BR")} figurinhas oficiais
         </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
-        <StatMiniBox label="Coletadas" value={owned} color={C.green} />
+        <StatMiniBox label="Coletadas" value={effectiveOwned} color={C.green} />
         <StatMiniBox label="Faltando" value={missing} color={C.red} />
         <StatMiniBox label="Repetidas" value={dups} color={C.violet} />
       </div>
@@ -334,14 +364,7 @@ export function Status({ stickers, setStickers, addToast, setPage }) {
         <ResetModal
           ownedCount={owned}
           onClose={() => setShowReset(false)}
-          onConfirm={() => {
-            clearStorage();
-            const freshDB = buildDatabase();
-            setStickers(freshDB);
-            setShowReset(false);
-            addToast("Álbum resetado com sucesso.", "info");
-            setPage("dashboard");
-          }}
+          onConfirm={handleReset}
         />
       )}
     </div>

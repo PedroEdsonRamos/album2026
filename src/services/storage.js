@@ -2,13 +2,58 @@ import { FULL_DB } from "@/data/database.js";
 
 export const STORAGE_KEY = "album2026-stickers-v1";
 
+// Prefixos de chaves que pertencem ao app (em qualquer versão)
+const APP_KEY_PATTERNS = ["album2026", "vite-pwa", "workbox"];
+
+export function clearStorage() {
+  try {
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && APP_KEY_PATTERNS.some((p) => key.includes(p))) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
+    return true;
+  } catch (e) {
+    console.warn("[clearStorage] Erro:", e);
+    return false;
+  }
+}
+
+export async function clearServiceWorkerCache() {
+  if (!("caches" in window)) return;
+  try {
+    const names = await caches.keys();
+    const appCaches = names.filter((n) => n.includes("album2026") || n.includes("workbox"));
+    await Promise.all(appCaches.map((n) => caches.delete(n)));
+  } catch (e) {
+    console.warn("[clearServiceWorkerCache] Erro:", e);
+  }
+}
+
 export function loadStickersFromStorage() {
   if (typeof window === "undefined" || !window.localStorage) return FULL_DB;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    let raw = localStorage.getItem(STORAGE_KEY);
+
+    // Migra chaves legadas para a chave atual
+    if (!raw) {
+      for (const lk of ["album2026-stickers", "album2026"]) {
+        raw = localStorage.getItem(lk);
+        if (raw) {
+          localStorage.setItem(STORAGE_KEY, raw);
+          localStorage.removeItem(lk);
+          break;
+        }
+      }
+    }
+
     if (!raw) return FULL_DB;
     const saved = JSON.parse(raw);
     if (!Array.isArray(saved) || saved.length !== FULL_DB.length) return FULL_DB;
+
     const byCode = new Map(saved.map((s) => [s.code, s]));
     return FULL_DB.map((base) => {
       const s = byCode.get(base.code);
@@ -28,7 +73,7 @@ export function loadStickersFromStorage() {
         merged.typeBreakdown = { [merged.rarity]: merged.duplicates };
       }
 
-      // Migrate legacy rarity values
+      // Migra valores de rarity legados
       if (merged.rarity === "Normal") merged.rarity = "Comum";
       if (merged.rarity === "Prata" && (merged.team === "FWC" || merged.position === "Escudo")) {
         merged.rarity = "Metalizado";
@@ -45,21 +90,8 @@ export function loadStickersFromStorage() {
       return merged;
     });
   } catch (e) {
-    console.warn("Erro ao carregar localStorage:", e);
+    console.warn("[loadStickersFromStorage] Erro ao carregar:", e);
     return FULL_DB;
-  }
-}
-
-export function clearStorage() {
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-    Object.keys(localStorage)
-      .filter((k) => k.startsWith("album2026"))
-      .forEach((k) => localStorage.removeItem(k));
-    return true;
-  } catch (e) {
-    console.warn("Erro ao limpar storage:", e);
-    return false;
   }
 }
 
@@ -75,8 +107,8 @@ export function saveStickersToStorage(stickers) {
       addedAt: s.addedAt,
       typeBreakdown: s.typeBreakdown,
     }));
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(minimal));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(minimal));
   } catch (e) {
-    console.warn("Erro ao salvar localStorage:", e);
+    console.warn("[saveStickersToStorage] Erro:", e);
   }
 }

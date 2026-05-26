@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { clearStorage } from "@/services/storage.js";
+import { clearStorage, clearServiceWorkerCache } from "@/services/storage.js";
 import { C } from "@/styles/tokens.js";
 
 export function ResetModal({ onClose, onConfirm, ownedCount }) {
@@ -125,7 +125,15 @@ export function ResetModal({ onClose, onConfirm, ownedCount }) {
             </div>
 
             <button
-              onClick={() => { clearStorage(); window.location.reload(); }}
+              onClick={async () => {
+                clearStorage();
+                await clearServiceWorkerCache();
+                if ("serviceWorker" in navigator) {
+                  const regs = await navigator.serviceWorker.getRegistrations();
+                  await Promise.all(regs.map((r) => r.unregister()));
+                }
+                window.location.reload();
+              }}
               style={{
                 marginTop: 8, width: "100%", background: "transparent",
                 border: `1px solid ${C.borderHi}`, color: C.t3,
