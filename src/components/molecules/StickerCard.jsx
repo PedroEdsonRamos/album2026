@@ -166,22 +166,6 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
       </div>
       <div
         style={{
-          fontSize: 32,
-          fontWeight: 900,
-          lineHeight: 1,
-          marginBottom: 4,
-          position: "relative",
-          color: owned || dup ? fin.color : C.t4,
-          textShadow:
-            (owned || dup) && fin.label !== "Regular"
-              ? `0 0 12px ${fin.glow}`
-              : "none",
-        }}
-      >
-        {s.number ?? "-"}
-      </div>
-      <div
-        style={{
           fontSize: 11,
           fontWeight: 700,
           color: owned || dup ? C.t1 : C.t4,

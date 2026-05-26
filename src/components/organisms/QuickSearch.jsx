@@ -123,7 +123,7 @@ export function QuickSearch({ stickers, onClose, onGoTo }) {
               <span style={{ fontSize: 36 }}>{team.flag}</span>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 11, fontFamily: "monospace", color: C.t3 }}>
-                  {exact.code} · {exact.number}
+                  {exact.code}
                 </div>
                 <div style={{ fontSize: 16, fontWeight: 800, color: "#fff" }}>{exact.name}</div>
                 <div style={{ fontSize: 11, color: C.t2 }}>
