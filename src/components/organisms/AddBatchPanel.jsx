@@ -120,11 +120,13 @@ export function AddBatchPanel({ stickers, setStickers }) {
       {hasInput && hasErrors && (
         <div style={{ background: "rgba(244,0,9,0.1)", border: `1px solid ${C.red}44`, borderRadius: 12, padding: "10px 14px", marginBottom: 12 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: C.red, marginBottom: 6 }}>⚠️ Erros encontrados — corrija antes de importar</div>
-          {parsed.errors.map((e, i) => (
-            <div key={i} style={{ fontSize: 11, color: C.t2, marginBottom: 2 }}>
-              <span style={{ fontFamily: "monospace", color: C.red }}>{e.token}</span> — {e.reason}
-            </div>
-          ))}
+          <div style={{ maxHeight: 120, overflowY: "auto" }}>
+            {parsed.errors.map((e, i) => (
+              <div key={i} style={{ fontSize: 11, color: C.t2, marginBottom: 2 }}>
+                <span style={{ fontFamily: "monospace", color: C.red }}>{e.token}</span> — {e.reason}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

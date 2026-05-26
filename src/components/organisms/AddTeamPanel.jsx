@@ -90,12 +90,12 @@ export function AddTeamPanel({ stickers, setStickers }) {
           </button>
         )}
       </div>
-      <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 6, marginBottom: 14 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 200, overflowY: "auto", paddingBottom: 4, marginBottom: 14 }}>
         {visibleTeams.map((t) => (
           <button key={t.id} onClick={() => setTeamSel(t.id)} className="fc-btn"
             style={{ background: teamSel===t.id?`${t.color}33`:C.surface, border: `1px solid ${teamSel===t.id?t.color:C.border}`,
-              borderRadius: 10, padding: "8px 10px", cursor: "pointer", fontFamily: "inherit", flexShrink: 0,
-              display: "flex", alignItems: "center", gap: 6, transition: "all .18s ease" }}>
+              borderRadius: 10, padding: "8px 12px", cursor: "pointer", fontFamily: "inherit", flexShrink: 0,
+              display: "flex", alignItems: "center", gap: 8, transition: "all .18s ease", width: "100%", textAlign: "left" }}>
             <span style={{ fontSize: 18 }}>{t.flag}</span>
             <span style={{ fontSize: 11, fontWeight: 700, color: teamSel===t.id?"#fff":C.t2 }}>{t.name}</span>
           </button>
