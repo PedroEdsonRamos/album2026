@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { MY_CODES } from "@/data/userCollection.js";
+import { ES_BY_CODE } from "@/data/extraStickers.js";
 import { teamInfo } from "@/utils/teamInfo.js";
 import { FINISH, rarToFinish } from "@/styles/finishes.js";
 import { Icon } from "@/components/atoms/Icon.jsx";
@@ -18,6 +19,7 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
     if (initialFilter.search !== undefined) setSearch(initialFilter.search);
     if (initialFilter.status !== undefined) setFStatus(initialFilter.status || "Todos");
     if (initialFilter.finish !== undefined) setFFinish(initialFilter.finish || "Todos");
+    if (initialFilter.position !== undefined) setFPosition(initialFilter.position || "Todos");
   }, [initialFilter?._ts]);
 
   const team = selectedTeam ? teamInfo(selectedTeam) : null;
@@ -38,7 +40,8 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
           if (!MY_CODES.has(s.code)) return false;
         } else if (fStatus !== "Todos" && s.status !== fStatus) return false;
         if (fFinish !== "Todos" && rarToFinish(s.rarity) !== fFinish) return false;
-        if (fPosition !== "Todos" && s.position !== fPosition) return false;
+        if (fPosition === "Extra Stickers") { if (!ES_BY_CODE[s.code]) return false; }
+        else if (fPosition !== "Todos" && s.position !== fPosition) return false;
         return true;
       }),
     [stickers, selectedTeam, search, fStatus, fFinish, fPosition]
@@ -223,7 +226,7 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
 
       <div style={{ overflowX: "auto", overflowY: "visible", paddingBottom: 4, marginBottom: 14 }}>
         <div style={{ display: "flex", gap: 5, paddingTop: 5, width: "max-content", overflow: "visible" }}>
-          {["Todos", "Goleiro", "Defensor", "Meio-Campista", "Atacante", "Foto Equipe", "Escudo", "Especial"].map((pos) => (
+          {["Todos", "Extra Stickers", "Goleiro", "Defensor", "Meio-Campista", "Atacante", "Foto Equipe", "Escudo", "Especial"].map((pos) => (
             <button
               key={pos}
               onClick={() => setFPosition(pos)}
