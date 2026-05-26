@@ -171,7 +171,7 @@ export function AddSinglePanel({ stickers, setStickers, addToast }) {
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <span style={{ fontSize: 36 }}>{previewTeam?.flag || "🏆"}</span>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 9, fontFamily: "monospace", color: C.t3 }}>{preview.code} · nº {preview.number}</div>
+              <div style={{ fontSize: 9, fontFamily: "monospace", color: C.t3 }}>{preview.code} · {preview.number}</div>
               <div style={{ fontSize: 16, fontWeight: 900, color: "#fff" }}>{preview.name}</div>
               <div style={{ fontSize: 11, color: C.t2 }}>{preview.teamName} · {preview.position}</div>
             </div>
