@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { FINISH, rarToFinish, getFinish } from "@/styles/finishes.js";
 import { teamInfo } from "@/utils/teamInfo.js";
 import { C } from "@/styles/tokens.js";
@@ -24,10 +25,14 @@ const FINISH_TO_RARITY = {
 };
 
 export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
+  const originalStatus = useRef(sticker.status).current;
   const et = teamInfo(sticker.team);
   const ef = getFinish(sticker.rarity);
   const category = getStickerCategory(sticker);
   const fixed = isFixedType(sticker);
+  const totalBreakdown = Object.values(sticker.typeBreakdown ?? {}).reduce((a, b) => a + b, 0);
+  const requiresMinTwo = originalStatus === "Faltando" && sticker.status === "Repetida";
+  const canSave = !requiresMinTwo || totalBreakdown >= 2;
 
   const updateTypeBreakdown = (rarityKey, delta) => {
     onChange((prev) => {
@@ -265,22 +270,25 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
             Cancelar
           </button>
           <button
-            onClick={() => onSave({ status: sticker.status, rarity: sticker.rarity, duplicates: sticker.duplicates })}
+            onClick={() => canSave && onSave({ status: sticker.status, rarity: sticker.rarity, duplicates: sticker.duplicates })}
+            disabled={!canSave}
+            title={!canSave ? "Mínimo 2 cópias para marcar como Repetida" : undefined}
             style={{
               flex: 2,
-              background: `linear-gradient(135deg,${C.amber},${C.amberLt})`,
-              border: "none",
+              background: canSave ? `linear-gradient(135deg,${C.amber},${C.amberLt})` : C.surface,
+              border: canSave ? "none" : `1px solid ${C.borderHi}`,
               borderRadius: 12,
               padding: "12px",
               fontSize: 13,
               fontWeight: 800,
-              color: "#000",
-              cursor: "pointer",
+              color: canSave ? "#000" : C.t4,
+              cursor: canSave ? "pointer" : "not-allowed",
               fontFamily: "inherit",
               transition: "all .2s",
+              opacity: canSave ? 1 : 0.5,
             }}
           >
-            Salvar
+            {!canSave ? "Mínimo 2×" : "Salvar"}
           </button>
         </div>
       </div>

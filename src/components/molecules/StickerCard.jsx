@@ -208,7 +208,7 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
             border: `1px solid ${fin.border}`,
             color: fin.color,
             borderRadius: 999,
-            padding: "2px 10px",
+            padding: "3px 10px",
             fontSize: 10,
             fontWeight: 700,
             letterSpacing: "0.04em",
