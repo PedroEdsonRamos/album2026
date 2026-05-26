@@ -97,7 +97,10 @@ export function AddBatchPanel({ stickers, setStickers }) {
         </label>
         {batch.trim() && (
           <button
-            onClick={() => { setBatch(""); setResult(null); }}
+            onClick={() => {
+              if (!window.confirm("Deseja limpar o lote atual? Os códigos digitados serão perdidos.")) return;
+              setBatch(""); setResult(null);
+            }}
             style={{ background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.3)", color: "#f87171", borderRadius: 8, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
           >
             ✕ Limpar
