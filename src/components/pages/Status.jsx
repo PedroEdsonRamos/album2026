@@ -3,6 +3,9 @@ import { useInView } from "@/hooks/useInView.js";
 import { useCounter } from "@/hooks/useCounter.js";
 import { TEAMS, ALL_TEAMS } from "@/data/teams.js";
 import { TOTAL_OFFICIAL } from "@/data/fwc.js";
+import { ES_RARITY_TYPES } from "@/data/extraStickers.js";
+import { getESCollection, countESCollected } from "@/utils/esCollection.js";
+import { getFinish } from "@/styles/finishes.js";
 import { buildDatabase } from "@/data/database.js";
 import { clearStorage } from "@/services/storage.js";
 import { CircleProgress } from "@/components/atoms/CircleProgress.jsx";
@@ -35,6 +38,8 @@ export function Status({ stickers, setStickers, addToast, setPage }) {
       : "Campeão";
 
   const mainIds = new Set(TEAMS.map((t) => t.id));
+  const esCollection = getESCollection(stickers);
+  const esCount = countESCollected(stickers);
   const catData = [
     {
       label: "Jogadores",
@@ -72,12 +77,6 @@ export function Status({ stickers, setStickers, addToast, setPage }) {
       icon: "🥤",
       total: 14,
       owned: stickers.filter((s) => s.team === "CC" && s.status === "Tenho").length,
-    },
-    {
-      label: "Extra Stickers",
-      icon: "⭐",
-      total: 20,
-      owned: stickers.filter((s) => s.team === "ES" && s.status === "Tenho").length,
     },
   ];
 
@@ -212,6 +211,56 @@ export function Status({ stickers, setStickers, addToast, setPage }) {
             total={cat.total}
           />
         ))}
+      </div>
+
+      <div
+        style={{
+          background: C.surface,
+          border: `1px solid rgba(109,72,168,0.3)`,
+          borderRadius: 18,
+          padding: "18px",
+          marginBottom: 16,
+        }}
+      >
+        <div style={{ fontSize: 13, fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
+          ⭐ Extra Stickers
+        </div>
+        <div style={{ fontSize: 11, color: C.t3, marginBottom: 12 }}>
+          {esCount} de 80 versões coletadas
+        </div>
+        <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+          {ES_RARITY_TYPES.map((rarity) => {
+            const fin = getFinish(rarity);
+            return (
+              <div key={rarity} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: fin.color, border: `1px solid ${fin.border}` }} />
+                <span style={{ fontSize: 10, color: C.t3 }}>{fin.label}</span>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ background: "rgba(0,0,0,0.3)", borderRadius: 999, height: 5, overflow: "hidden", marginBottom: 14 }}>
+          <div style={{ height: "100%", width: `${Math.round((esCount / 80) * 100)}%`, background: "linear-gradient(90deg,#6d48a8,#a78bfa)", borderRadius: 999, transition: "width 1s" }} />
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {esCollection.map(({ player, collectedTypes }) => (
+            <div key={player.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 14 }}>{player.flag}</span>
+              <span style={{ fontSize: 12, color: Object.keys(collectedTypes).length > 0 ? "#fff" : C.t3, flex: 1, fontWeight: Object.keys(collectedTypes).length > 0 ? 600 : 400 }}>
+                {player.name}
+              </span>
+              <div style={{ display: "flex", gap: 4 }}>
+                {ES_RARITY_TYPES.map((rarity) => {
+                  const fin = getFinish(rarity);
+                  const collected = (collectedTypes[rarity] ?? 0) > 0;
+                  return (
+                    <div key={rarity} style={{ width: 12, height: 12, borderRadius: "50%", background: collected ? fin.color : C.borderHi, border: `1px solid ${collected ? fin.border : C.border}`, boxShadow: collected ? `0 0 5px ${fin.glow}` : "none" }} />
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div
