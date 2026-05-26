@@ -105,22 +105,6 @@ export function buildDatabase() {
     }
   });
 
-  // 20 Extra Stickers (ES1–ES20) — nomes a confirmar com álbum físico
-  for (let i = 1; i <= 20; i++) {
-    db.push(
-      mk({
-        code: `ES${i}`,
-        name: `Extra Sticker ${i}`,
-        team: "ES",
-        teamName: "Extra Stickers",
-        section: "Extra Stickers",
-        position: "Extra",
-        number: i,
-        rarity: "Lilás",
-      })
-    );
-  }
-
   // 14 figurinhas Coca-Cola
   CC_LIST.forEach((cc) =>
     db.push(

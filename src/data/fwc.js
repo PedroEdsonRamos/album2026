@@ -21,4 +21,4 @@ export const FWC_LIST = [
   { n: "19", name: "Momento Histórico – 2022", r: "Prata" },
 ];
 
-export const TOTAL_OFFICIAL = 1014; // 980 + 14 CC + 20 ES
+export const TOTAL_OFFICIAL = 994; // 980 + 14 CC (ES não entram no total)

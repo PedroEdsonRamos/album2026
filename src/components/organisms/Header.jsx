@@ -70,7 +70,7 @@ export function Header({ page, selectedTeam, stickers, onBack, onSearchOpen }) {
             lineHeight: 1.2,
           }}
         >
-          COLEÇÃO VIRTUAL · 980 FIGURINHAS
+          COLEÇÃO VIRTUAL · 994 FIGURINHAS
         </div>
       </div>
       <button
