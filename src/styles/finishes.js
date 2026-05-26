@@ -4,7 +4,7 @@ export const FINISH = {
   Bronze:      { label: "Bronze",     color: "#d97706", dimColor: "rgba(184,98,27,0.55)",   bg: "rgba(184,98,27,0.16)",   border: "rgba(184,98,27,0.4)",   glow: "rgba(184,98,27,0.28)"   },
   Prata:       { label: "Prata",      color: "#cbd5e1", dimColor: "rgba(203,213,225,0.55)", bg: "rgba(148,163,184,0.14)", border: "rgba(203,213,225,0.4)", glow: "rgba(203,213,225,0.28)" },
   Ouro:        { label: "Ouro",       color: "#fbbf24", dimColor: "rgba(251,191,36,0.55)",  bg: "rgba(251,191,36,0.14)",  border: "rgba(251,191,36,0.4)",  glow: "rgba(251,191,36,0.28)"  },
-  Metalizado:  { label: "Metalizado", color: "#94a3b8", dimColor: "rgba(148,163,184,0.55)", bg: "rgba(100,116,139,0.14)", border: "rgba(148,163,184,0.4)", glow: "rgba(148,163,184,0.18)" },
+  Metalizado:  { label: "Metalizada", color: "#94a3b8", dimColor: "rgba(148,163,184,0.55)", bg: "rgba(100,116,139,0.14)", border: "rgba(148,163,184,0.4)", glow: "rgba(148,163,184,0.18)" },
   "Coca-Cola": { label: "Coca-Cola",  color: "#f40009", dimColor: "rgba(244,0,9,0.55)",     bg: "rgba(180,0,10,0.16)",   border: "rgba(244,0,9,0.4)",    glow: "rgba(244,0,9,0.28)"     },
 };
 

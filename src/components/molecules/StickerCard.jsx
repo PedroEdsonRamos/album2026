@@ -208,10 +208,11 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
             border: `1px solid ${fin.border}`,
             color: fin.color,
             borderRadius: 999,
-            padding: "1px 7px",
+            padding: "2px 10px",
             fontSize: 10,
             fontWeight: 700,
             letterSpacing: "0.04em",
+            whiteSpace: "nowrap",
           }}
         >
           {fin.label}{s.typeBreakdown?.[displayRarity] > 0 ? ` ×${s.typeBreakdown[displayRarity]}` : ""}
