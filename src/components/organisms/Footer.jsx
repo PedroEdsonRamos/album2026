@@ -5,7 +5,7 @@ export function Footer() {
   return (
     <div
       style={{
-        background: "#0c0c1a",
+        background: "transparent",
         backdropFilter: "blur(10px)",
         borderTop: "1px solid rgba(255,255,255,0.08)",
         overflow: "visible",
