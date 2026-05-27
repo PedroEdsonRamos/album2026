@@ -45,7 +45,7 @@ export function Footer() {
         </div>
       </div>
       <div
-        style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-51%)" }}
+        style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-55%)" }}
       >
         <PTECLogo height={58} />
       </div>
