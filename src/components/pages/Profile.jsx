@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Icon } from "@/components/atoms/Icon.jsx";
+import { sanitizeName } from "@/utils/sanitize";
 
 export function Profile({ auth, setPage }) {
   const [displayName, setDisplayName] = useState(
@@ -11,15 +12,16 @@ export function Profile({ auth, setPage }) {
   const [error, setError] = useState(null);
 
   const handleSave = async () => {
-    if (!displayName.trim()) {
-      setError("Nome não pode ser vazio");
+    const cleanName = sanitizeName(displayName);
+    if (!cleanName) {
+      setError("Nome inválido");
       return;
     }
     setSaving(true);
     setError(null);
 
     const { error: saveError } = await supabase.auth.updateUser({
-      data: { full_name: displayName.trim() },
+      data: { full_name: cleanName },
     });
 
     if (saveError) {

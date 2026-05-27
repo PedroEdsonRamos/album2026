@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { sanitizeEmail, sanitizeName } from "@/utils/sanitize";
 
 export function useAuth() {
   const [user, setUser] = useState(null);
@@ -26,7 +27,7 @@ export function useAuth() {
 
   const signInWithEmail = async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
+      email: sanitizeEmail(email),
       password,
     });
     return { data, error };
@@ -44,10 +45,10 @@ export function useAuth() {
 
 const signUp = async (email, password, displayName) => {
   const { data, error } = await supabase.auth.signUp({
-    email: email.trim().toLowerCase(),
+    email: sanitizeEmail(email),
     password,
     options: {
-      data: { full_name: displayName },
+      data: { full_name: sanitizeName(displayName) },
       emailRedirectTo: "https://fifa-world-cup-2026-virtual-collection.vercel.app",
     },
   });
@@ -66,7 +67,7 @@ const signUp = async (email, password, displayName) => {
 
   const resetPassword = async (email) => {
     const { data, error } = await supabase.auth.resetPasswordForEmail(
-      email.trim().toLowerCase(),
+      sanitizeEmail(email),
       { redirectTo: `${window.location.origin}/reset-password` }
     );
     return { data, error };

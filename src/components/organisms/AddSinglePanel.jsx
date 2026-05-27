@@ -3,6 +3,7 @@ import { teamInfo } from "@/utils/teamInfo.js";
 import { FINISH, getFinish } from "@/styles/finishes.js";
 import { getStickerCategory, CATEGORY_LABEL, isFixedType, getDefaultRarity, STICKER_CATEGORY } from "@/utils/stickerTypes.js";
 import { C } from "@/styles/tokens.js";
+import { sanitizeCode, sanitizeObs } from "@/utils/sanitize.js";
 
 const RARITY_PRIORITY = ["Ouro", "Prata", "Bronze", "Lilás", "Metalizado", "Comum", "Coca-Cola"];
 
@@ -115,7 +116,7 @@ export function AddSinglePanel({ stickers, setStickers, addToast }) {
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <input
             value={code}
-            onChange={(e) => setCode(e.target.value.toUpperCase())}
+            onChange={(e) => setCode(sanitizeCode(e.target.value))}
             onFocus={() => setSearchFocused(true)}
             onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
             placeholder="Ex: BRA10, FWC6, CC1..."
@@ -286,7 +287,7 @@ export function AddSinglePanel({ stickers, setStickers, addToast }) {
       </label>
       <input
         value={obs}
-        onChange={(e) => setObs(e.target.value)}
+        onChange={(e) => setObs(sanitizeObs(e.target.value))}
         placeholder="Opcional..."
         style={{
           width: "100%", background: C.surfaceHi, border: `1px solid ${C.borderHi}`,
