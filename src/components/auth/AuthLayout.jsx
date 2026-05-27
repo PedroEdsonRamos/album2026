@@ -1,3 +1,5 @@
+import { PTECLogo } from "@/components/atoms/PTECLogo";
+
 export function AuthLayout({ children, footerLink }) {
   return (
     <div
@@ -59,37 +61,60 @@ export function AuthLayout({ children, footerLink }) {
           <div style={{ textAlign: "center", marginTop: 20 }}>{footerLink}</div>
         )}
 
-        {/* Rodapé PTEC */}
+        {/* Rodapé — igual ao Footer do app */}
         <div
           style={{
-            textAlign: "center",
+            background: "rgba(8,8,18,0.95)",
+            backdropFilter: "blur(10px)",
+            borderTop: "1px solid rgba(245,197,24,0.2)",
             marginTop: 32,
-            paddingTop: 20,
-            borderTop: "1px solid rgba(255,255,255,0.06)",
+            width: "100%",
+            position: "relative",
+            overflow: "visible",
           }}
         >
-          <img
-            src="/ptec-logo.png"
-            alt="PTEC Solutions"
-            style={{
-              height: 18,
-              opacity: 0.45,
-              display: "block",
-              margin: "0 auto 6px",
-              objectFit: "contain",
-            }}
-            onError={(e) => {
-              e.target.style.display = "none";
-            }}
-          />
           <div
             style={{
-              fontSize: 10,
-              color: "rgba(255,255,255,0.18)",
-              letterSpacing: "0.04em",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              padding: "5px 80px 13px 16px",
+              gap: 4,
             }}
           >
-            © 2026 PTEC Solutions · Direitos reservados
+            <div
+              style={{
+                fontSize: 8.5,
+                color: "rgba(255,255,255,0.35)",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                lineHeight: 1,
+                whiteSpace: "nowrap",
+              }}
+            >
+              Desenvolvido por
+            </div>
+            <div
+              style={{
+                fontSize: 8.5,
+                color: "rgba(255,255,255,0.35)",
+                letterSpacing: "0.06em",
+                lineHeight: 1,
+                whiteSpace: "nowrap",
+              }}
+            >
+              © 2026 PTEC SOLUTIONS · DIREITOS RESERVADOS
+            </div>
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              right: 14,
+              top: "50%",
+              transform: "translateY(-57%)",
+            }}
+          >
+            <PTECLogo height={58} />
           </div>
         </div>
       </div>
