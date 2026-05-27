@@ -61,14 +61,14 @@ export function AuthLayout({ children, footerLink }) {
           <div style={{ textAlign: "center", marginTop: 20 }}>{footerLink}</div>
         )}
 
-        {/* Rodapé — igual ao Footer do app */}
+        {/* Rodapé */}
         <div
           style={{
-            background: "rgba(8,8,18,0.95)",
-            backdropFilter: "blur(10px)",
-            borderTop: "1px solid rgba(245,197,24,0.2)",
+            background: "#0c0c1a",
+            borderTop: "1px solid rgba(255,255,255,0.08)",
             marginTop: 32,
             width: "100%",
+            maxWidth: 480,
             position: "relative",
             overflow: "visible",
           }}
@@ -78,27 +78,28 @@ export function AuthLayout({ children, footerLink }) {
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              padding: "5px 80px 13px 16px",
+              padding: "10px 80px 10px 16px",
               gap: 4,
             }}
           >
             <div
               style={{
                 fontSize: 8.5,
-                color: "rgba(255,255,255,0.35)",
+                color: "rgba(255,255,255,0.3)",
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
                 lineHeight: 1,
                 whiteSpace: "nowrap",
               }}
             >
-              Desenvolvido por
+              DESENVOLVIDO POR
             </div>
             <div
               style={{
                 fontSize: 8.5,
-                color: "rgba(255,255,255,0.35)",
+                color: "rgba(255,255,255,0.3)",
                 letterSpacing: "0.06em",
+                textTransform: "uppercase",
                 lineHeight: 1,
                 whiteSpace: "nowrap",
               }}
@@ -111,7 +112,7 @@ export function AuthLayout({ children, footerLink }) {
               position: "absolute",
               right: 14,
               top: "50%",
-              transform: "translateY(-57%)",
+              transform: "translateY(-60%)",
             }}
           >
             <PTECLogo height={58} />
