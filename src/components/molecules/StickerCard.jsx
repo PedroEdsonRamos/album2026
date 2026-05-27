@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useInView } from "@/hooks/useInView.js";
 import { teamInfo } from "@/utils/teamInfo.js";
 import { getFinish } from "@/styles/finishes.js";
@@ -24,6 +25,7 @@ const toRgba = (hex, alpha) => {
 
 export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
   const [ref, vis] = useInView(0.05);
+  const [touched, setTouched] = useState(false);
   const team = teamInfo(s.team);
   const displayRarity = getRarestRarity(s.typeBreakdown) ?? s.rarity;
   const fin = getFinish(displayRarity);
@@ -38,10 +40,15 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
     if (onToggle) onToggle(s.id);
     else if (onClick) onClick(s);
   };
+  const handleTouch = () => {
+    setTouched(true);
+    setTimeout(() => setTouched(false), 300);
+  };
   return (
     <div
       ref={ref}
       onClick={handleClick}
+      onTouchStart={handleTouch}
       style={{
         background: owned
           ? `linear-gradient(135deg, ${fin.bg} 0%, ${toRgba(fin.color, 0.06)} 100%)`
@@ -53,9 +60,11 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
           : dup
             ? "1px solid rgba(168,85,247,0.28)"
             : `1px solid ${C.border}`,
-        boxShadow: owned
-          ? `0 0 0 1px ${toRgba(fin.color, 0.12)}, 0 4px 14px ${toRgba(fin.color, 0.16)}`
-          : "none",
+        boxShadow: touched
+          ? `0 0 0 2px ${toRgba(fin.color, 0.5)}, 0 6px 24px ${toRgba(fin.color, 0.35)}`
+          : owned
+            ? `0 0 0 1px ${toRgba(fin.color, 0.12)}, 0 4px 14px ${toRgba(fin.color, 0.16)}`
+            : "none",
         borderRadius: 14,
         padding: "12px 11px",
         cursor: clickable ? "pointer" : "default",
@@ -63,8 +72,10 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
         overflow: "hidden",
         backdropFilter: "blur(8px)",
         opacity: vis ? 1 : 0,
-        transform: vis ? "scale(1)" : "scale(0.92)",
-        transition: `opacity .35s ${delay}s, transform .35s ${delay}s, box-shadow .2s, border-color .2s`,
+        transform: vis ? (touched ? "scale(0.975)" : "scale(1)") : "scale(0.92)",
+        transition: touched
+          ? `opacity .35s ${delay}s, transform .08s ease, box-shadow .08s ease`
+          : `opacity .35s ${delay}s, transform .35s ${delay}s, box-shadow .2s, border-color .2s`,
         WebkitTapHighlightColor: "transparent",
       }}
       onMouseEnter={(e) => {
