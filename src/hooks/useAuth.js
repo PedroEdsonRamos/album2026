@@ -42,17 +42,17 @@ export function useAuth() {
     return { data, error };
   };
 
-  const signUp = async (email, password, displayName) => {
-    const { data, error } = await supabase.auth.signUp({
-      email: email.trim().toLowerCase(),
-      password,
-      options: {
-        data: { full_name: displayName },
-        emailRedirectTo: `${window.location.origin}`,
-      },
-    });
-    return { data, error };
-  };
+const signUp = async (email, password, displayName) => {
+  const { data, error } = await supabase.auth.signUp({
+    email: email.trim().toLowerCase(),
+    password,
+    options: {
+      data: { full_name: displayName },
+      emailRedirectTo: "https://fifa-world-cup-2026-virtual-collection.vercel.app",
+    },
+  });
+  return { data, error };
+};
 
   const resetPassword = async (email) => {
     const { data, error } = await supabase.auth.resetPasswordForEmail(
