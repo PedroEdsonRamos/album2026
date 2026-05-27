@@ -51,6 +51,16 @@ const signUp = async (email, password, displayName) => {
       emailRedirectTo: "https://fifa-world-cup-2026-virtual-collection.vercel.app",
     },
   });
+
+  // Supabase retorna sucesso mas com identities vazio
+  // quando o email já está cadastrado
+  if (data?.user && data.user.identities?.length === 0) {
+    return {
+      data: null,
+      error: { message: "User already registered" },
+    };
+  }
+
   return { data, error };
 };
 
