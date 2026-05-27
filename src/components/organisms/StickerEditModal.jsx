@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { FINISH, rarToFinish, getFinish } from "@/styles/finishes.js";
 import { teamInfo } from "@/utils/teamInfo.js";
 import { C } from "@/styles/tokens.js";
-import { getStickerCategory, isFixedType, isTypeAllowed, CATEGORY_LABEL } from "@/utils/stickerTypes.js";
+import { getStickerCategory, isFixedType, isTypeAllowed, getDefaultRarity, CATEGORY_LABEL } from "@/utils/stickerTypes.js";
 
 const RARITY_MAP = {
   Comum: "Comum",
@@ -22,6 +22,12 @@ const FINISH_TO_RARITY = {
   Ouro: "Ouro",
   Metalizado: "Metalizado",
   "Coca-Cola": "Coca-Cola",
+};
+
+const btnStyle = {
+  width: 32, height: 32, background: C.surface, border: `1px solid ${C.border}`,
+  borderRadius: 8, color: "#fff", fontSize: 18, cursor: "pointer",
+  display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "inherit",
 };
 
 export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
@@ -53,6 +59,10 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
       };
     });
   };
+
+  const fixedRarity = fixed ? getDefaultRarity(sticker) : null;
+  const incFixed = () => onChange((p) => ({ ...p, duplicates: (p.duplicates || 1) + 1 }));
+  const decFixed = () => onChange((p) => ({ ...p, duplicates: Math.max(1, (p.duplicates || 1) - 1) }));
 
   return (
     <div
@@ -94,6 +104,7 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
           </div>
         </div>
 
+        {/* Status */}
         <div
           style={{
             fontSize: 10,
@@ -142,7 +153,115 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
           })}
         </div>
 
-        {sticker.status === "Repetida" && (
+        {/* Tipo — sempre visível */}
+        <div style={{ marginBottom: 16 }}>
+          <div
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              color: C.t2,
+              textTransform: "uppercase",
+              letterSpacing: "0.1em",
+              marginBottom: 8,
+            }}
+          >
+            Tipo
+            <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 600, color: C.t3, textTransform: "none", letterSpacing: 0 }}>
+              {CATEGORY_LABEL[category]}
+            </span>
+          </div>
+
+          {fixed ? (
+            <>
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  background: ef.bg,
+                  border: `1px solid ${ef.border}`,
+                  color: ef.color,
+                  borderRadius: 999,
+                  padding: "5px 16px",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                  minWidth: 80,
+                }}
+              >
+                {ef.label}
+              </span>
+              <div style={{ fontSize: 10, color: C.t3, marginTop: 6 }}>
+                🔒 Tipo automático para {CATEGORY_LABEL[category]}.
+              </div>
+            </>
+          ) : sticker.status !== "Repetida" ? (
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {Object.entries(FINISH).map(([key, fin]) => {
+                const active = rarToFinish(sticker.rarity) === key;
+                const allowed = isTypeAllowed(sticker, key);
+                return (
+                  <button
+                    key={key}
+                    onClick={() => allowed && onChange((p) => ({ ...p, rarity: RARITY_MAP[key] || "Comum" }))}
+                    title={!allowed ? `Tipo não permitido para ${CATEGORY_LABEL[category]}` : undefined}
+                    onMouseEnter={(e) => {
+                      if (!allowed) return;
+                      e.currentTarget.style.filter = "brightness(1.15)";
+                      e.currentTarget.style.transform = "translateY(-2px)";
+                      e.currentTarget.style.boxShadow = `0 6px 16px ${fin.glow}`;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.filter = "";
+                      e.currentTarget.style.transform = "";
+                      e.currentTarget.style.boxShadow = active ? `0 4px 12px ${fin.glow}` : "";
+                    }}
+                    style={{
+                      flex: 1,
+                      minWidth: 54,
+                      background: active ? fin.bg : "transparent",
+                      border: `1px solid ${active ? fin.border : C.borderHi}`,
+                      color: active ? fin.color : C.t3,
+                      boxShadow: active ? `0 4px 12px ${fin.glow}` : "none",
+                      borderRadius: 10,
+                      padding: "10px 6px",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      cursor: allowed ? "pointer" : "not-allowed",
+                      fontFamily: "inherit",
+                      transition: "all .18s",
+                      opacity: allowed ? 1 : 0.35,
+                    }}
+                  >
+                    {fin.label}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                background: ef.bg,
+                border: `1px solid ${ef.border}`,
+                color: ef.color,
+                borderRadius: 999,
+                padding: "5px 16px",
+                fontSize: 12,
+                fontWeight: 700,
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+                minWidth: 80,
+              }}
+            >
+              {ef.label}
+            </span>
+          )}
+        </div>
+
+        {/* Quantidade por tipo — Repetida + não fixo */}
+        {sticker.status === "Repetida" && !fixed && (
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>
               Quantidade por tipo
@@ -156,17 +275,11 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
                     <span style={{ background: fin.bg, border: `1px solid ${fin.border}`, color: fin.color, borderRadius: 8, padding: "4px 10px", fontSize: 11, fontWeight: 700, width: 72, textAlign: "center", flexShrink: 0 }}>
                       {fin.label}
                     </span>
-                    <button
-                      onClick={() => updateTypeBreakdown(rarityKey, -1)}
-                      style={{ width: 32, height: 32, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, color: "#fff", fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "inherit" }}
-                    >−</button>
+                    <button onClick={() => updateTypeBreakdown(rarityKey, -1)} style={btnStyle}>−</button>
                     <span style={{ width: 28, textAlign: "center", fontSize: 15, fontWeight: 700, color: qty > 0 ? "#fff" : C.t4 }}>
                       {qty}
                     </span>
-                    <button
-                      onClick={() => updateTypeBreakdown(rarityKey, +1)}
-                      style={{ width: 32, height: 32, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, color: "#fff", fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "inherit" }}
-                    >+</button>
+                    <button onClick={() => updateTypeBreakdown(rarityKey, +1)} style={btnStyle}>+</button>
                     {qty > 0 && (
                       <span style={{ fontSize: 11, color: C.t3 }}>{qty === 1 ? "1 cópia" : `${qty} cópias`}</span>
                     )}
@@ -175,80 +288,25 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
               })}
             </div>
             <div style={{ fontSize: 11, color: C.t3, marginTop: 10, textAlign: "right" }}>
-              Total: {Object.values(sticker.typeBreakdown ?? {}).reduce((a, b) => a + b, 0)}× repetidas
+              Total: {totalBreakdown}× repetidas
             </div>
           </div>
         )}
 
-        {sticker.status !== "Repetida" && (
-          <>
-            <div
-              style={{
-                fontSize: 10,
-                fontWeight: 700,
-                color: C.t2,
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
-                marginBottom: 8,
-              }}
-            >
-              Tipo
-              <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 600, color: C.t3, textTransform: "none", letterSpacing: 0 }}>
-                {CATEGORY_LABEL[category]}
-              </span>
+        {/* Quantidade simples — Repetida + fixo */}
+        {sticker.status === "Repetida" && fixed && (
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>
+              Quantidade
             </div>
-            {fixed ? (
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-                <span style={{ background: ef.bg, border: `1px solid ${ef.border}`, color: ef.color, borderRadius: 10, padding: "10px 14px", fontSize: 12, fontWeight: 700 }}>
-                  {ef.label}
-                </span>
-                <span style={{ fontSize: 11, color: C.t3 }}>🔒 automático para {CATEGORY_LABEL[category]}</span>
-              </div>
-            ) : (
-              <div style={{ display: "flex", gap: 6, marginBottom: 20, flexWrap: "wrap" }}>
-                {Object.entries(FINISH).map(([key, fin]) => {
-                  const active = rarToFinish(sticker.rarity) === key;
-                  const allowed = isTypeAllowed(sticker, key);
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => allowed && onChange((p) => ({ ...p, rarity: RARITY_MAP[key] || "Comum" }))}
-                      title={!allowed ? `Tipo não permitido para ${CATEGORY_LABEL[category]}` : undefined}
-                      onMouseEnter={(e) => {
-                        if (!allowed) return;
-                        e.currentTarget.style.filter = "brightness(1.15)";
-                        e.currentTarget.style.transform = "translateY(-2px)";
-                        e.currentTarget.style.boxShadow = `0 6px 16px ${fin.glow}`;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.filter = "";
-                        e.currentTarget.style.transform = "";
-                        e.currentTarget.style.boxShadow = active ? `0 4px 12px ${fin.glow}` : "";
-                      }}
-                      style={{
-                        flex: 1,
-                        minWidth: 54,
-                        background: active ? fin.bg : "transparent",
-                        border: `1px solid ${active ? fin.border : C.borderHi}`,
-                        color: active ? fin.color : C.t3,
-                        boxShadow: active ? `0 4px 12px ${fin.glow}` : "none",
-                        borderRadius: 10,
-                        padding: "10px 6px",
-                        fontSize: 11,
-                        fontWeight: 700,
-                        cursor: allowed ? "pointer" : "not-allowed",
-                        fontFamily: "inherit",
-                        transition: "all .18s",
-                        opacity: allowed ? 1 : 0.35,
-                      }}
-                    >
-                      {fin.label}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <button onClick={decFixed} style={btnStyle}>−</button>
+              <span style={{ fontSize: 16, fontWeight: 700, color: "#fff", width: 30, textAlign: "center" }}>
+                {sticker.duplicates || 1}
+              </span>
+              <button onClick={incFixed} style={btnStyle}>+</button>
+            </div>
+          </div>
         )}
 
         <div style={{ display: "flex", gap: 8 }}>
