@@ -84,3 +84,28 @@ export async function clearUserCollection(userId) {
   }
   return true;
 }
+
+export async function deleteUserAccount(userId) {
+  try {
+    const { error: stickersError } = await supabase
+      .from("user_stickers")
+      .delete()
+      .eq("user_id", userId);
+
+    if (stickersError) {
+      return { ok: false, error: "Erro ao apagar dados da coleção" };
+    }
+
+    // user_profiles: ignora erro — tabela pode não existir
+    await supabase.from("user_profiles").delete().eq("id", userId);
+
+    const { error: signOutError } = await supabase.auth.signOut();
+    if (signOutError) {
+      return { ok: false, error: "Erro ao encerrar sessão" };
+    }
+
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}

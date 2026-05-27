@@ -4,6 +4,7 @@ import { Icon } from "@/components/atoms/Icon.jsx";
 import { sanitizeName } from "@/utils/sanitize";
 import { ChangePasswordSection } from "@/components/auth/ChangePasswordSection.jsx";
 import { ExportDataSection } from "@/components/pages/ExportDataSection.jsx";
+import { DeleteAccountSection } from "@/components/pages/DeleteAccountSection.jsx";
 
 export function Profile({ auth, stickers, setPage }) {
   const [displayName, setDisplayName] = useState(
@@ -237,6 +238,8 @@ export function Profile({ auth, stickers, setPage }) {
       <ChangePasswordSection auth={auth} />
 
       <ExportDataSection auth={auth} stickers={stickers} />
+
+      <DeleteAccountSection auth={auth} />
 
       <div
         style={{
