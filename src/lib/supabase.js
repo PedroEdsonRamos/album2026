@@ -20,11 +20,15 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 export async function testConnection() {
   try {
-    const { error } = await supabase
-      .from("_test_connection")
-      .select("*")
-      .limit(1);
-    if (error?.code === "42P01") return { ok: true };
+    const { error } = await supabase.from("_test_connection").select("*").limit(1);
+    // Qualquer erro relacionado à tabela não existir = conexão OK
+    if (error?.code === "42P01" ||
+        error?.code === "PGRST116" ||
+        error?.message?.includes("does not exist") ||
+        error?.message?.includes("schema cache")) {
+      console.log("✅ Supabase conectado com sucesso!");
+      return { ok: true };
+    }
     if (error) return { ok: false, error: error.message };
     return { ok: true };
   } catch (e) {
