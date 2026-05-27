@@ -1,9 +1,10 @@
 import { useInView } from "@/hooks/useInView.js";
 import { useCounter } from "@/hooks/useCounter.js";
 import { Icon } from "@/components/atoms/Icon.jsx";
+import { CardGlow } from "@/components/atoms/CardGlow.jsx";
 import { C } from "@/styles/tokens.js";
 
-export function StatCard({ label, value, sub, icon, color, noGlow, onClick }) {
+export function StatCard({ label, value, sub, icon, color, noGlow, showLine, onClick }) {
   const [ref, vis] = useInView();
   const n = useCounter(vis ? value : 0, 900);
   return (
@@ -27,19 +28,8 @@ export function StatCard({ label, value, sub, icon, color, noGlow, onClick }) {
       onMouseEnter={(e) => onClick && (e.currentTarget.style.background = C.surfaceHi)}
       onMouseLeave={(e) => onClick && (e.currentTarget.style.background = C.surface)}
     >
-      {!noGlow && (
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            right: 0,
-            width: 70,
-            height: 70,
-            background: `radial-gradient(circle at top right, ${color}18, transparent)`,
-          }}
-        />
-      )}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+      {!noGlow && <CardGlow color={color} showLine={showLine} />}
+      <div style={{ position: "relative", zIndex: 2, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
           <div
             style={{

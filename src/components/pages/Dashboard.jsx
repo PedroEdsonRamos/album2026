@@ -136,6 +136,7 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
             sub={`${pct}% do álbum`}
             icon="check"
             color={C.green}
+            showLine={true}
             onClick={() => goToAlbum({ status: "Tenho" })}
           />
           <StatCard
@@ -144,6 +145,7 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
             sub="para troca"
             icon="swap"
             color={C.violet}
+            showLine={true}
             onClick={() => setPage("trocas")}
           />
         </div>
