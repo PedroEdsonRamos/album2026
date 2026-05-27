@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { C } from "@/styles/tokens.js";
+import { useAuth } from "@/hooks/useAuth.js";
 import { useStickers } from "@/hooks/useStickers.js";
 import { TEAMS } from "@/data/teams.js";
 import { Toast } from "@/components/atoms/Toast.jsx";
@@ -15,8 +16,83 @@ import { AddPage } from "@/components/pages/AddPage.jsx";
 import { Trades } from "@/components/pages/Trades.jsx";
 import { Status } from "@/components/pages/Status.jsx";
 import { Help } from "@/components/pages/Help.jsx";
+import { LoginScreen } from "@/components/auth/LoginScreen.jsx";
+import { SignupScreen } from "@/components/auth/SignupScreen.jsx";
+import { ResetPasswordScreen } from "@/components/auth/ResetPasswordScreen.jsx";
+import { VerifyEmailScreen } from "@/components/auth/VerifyEmailScreen.jsx";
 
 export default function App() {
+  const auth = useAuth();
+  const [authScreen, setAuthScreen] = useState("login");
+  const [pendingEmail, setPendingEmail] = useState("");
+
+  if (auth.loading) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "#0c0c1a",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <div
+          style={{
+            width: 40,
+            height: 40,
+            border: "3px solid rgba(245,158,11,0.2)",
+            borderTopColor: "#f59e0b",
+            borderRadius: "50%",
+            animation: "spin 0.7s linear infinite",
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (!auth.user) {
+    if (authScreen === "signup") {
+      return (
+        <SignupScreen
+          auth={auth}
+          onGoToLogin={() => setAuthScreen("login")}
+          onSignupSuccess={(email) => {
+            setPendingEmail(email);
+            setAuthScreen("verify-email");
+          }}
+        />
+      );
+    }
+    if (authScreen === "reset") {
+      return (
+        <ResetPasswordScreen
+          auth={auth}
+          onGoToLogin={() => setAuthScreen("login")}
+        />
+      );
+    }
+    if (authScreen === "verify-email") {
+      return (
+        <VerifyEmailScreen
+          email={pendingEmail}
+          onGoToLogin={() => setAuthScreen("login")}
+        />
+      );
+    }
+    return (
+      <LoginScreen
+        auth={auth}
+        onGoToSignup={() => setAuthScreen("signup")}
+        onGoToReset={() => setAuthScreen("reset")}
+      />
+    );
+  }
+
+  return <AppContent auth={auth} />;
+}
+
+function AppContent({ auth }) {
   const { stickers, setStickers } = useStickers();
   const [page, setPage] = useState("dashboard");
   const [selectedTeam, setSelectedTeam] = useState(null);
