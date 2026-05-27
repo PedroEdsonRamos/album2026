@@ -34,25 +34,29 @@ export function AuthInput({
         style={{
           width: "100%",
           background: "rgba(255,255,255,0.06)",
-          border: `1px solid ${error ? "rgba(248,113,113,0.6)" : "rgba(255,255,255,0.12)"}`,
+          border: `1px solid ${error ? "rgba(248,113,113,0.6)" : "rgba(255,255,255,0.1)"}`,
           borderRadius: 12,
           padding: "13px 16px",
           fontSize: 14,
           color: "#fff",
           fontFamily: "inherit",
           outline: "none",
-          transition: "border-color .2s",
+          transition: "border-color .2s, box-shadow .2s",
           boxSizing: "border-box",
         }}
         onFocus={(e) => {
           e.target.style.borderColor = error
             ? "rgba(248,113,113,0.8)"
-            : "rgba(245,158,11,0.6)";
+            : "rgba(245,158,11,0.5)";
+          e.target.style.boxShadow = error
+            ? "none"
+            : "0 0 0 3px rgba(245,158,11,0.08)";
         }}
         onBlur={(e) => {
           e.target.style.borderColor = error
             ? "rgba(248,113,113,0.6)"
-            : "rgba(255,255,255,0.12)";
+            : "rgba(255,255,255,0.1)";
+          e.target.style.boxShadow = "none";
         }}
       />
       {error && (

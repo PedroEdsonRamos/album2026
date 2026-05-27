@@ -17,9 +17,9 @@ export function AuthButton({
         border: isPrimary ? "none" : "1px solid rgba(255,255,255,0.15)",
         background: isPrimary
           ? loading || disabled
-            ? "rgba(245,158,11,0.4)"
-            : "linear-gradient(135deg, #f59e0b, #fbbf24)"
-          : "rgba(255,255,255,0.06)",
+            ? "rgba(245,158,11,0.35)"
+            : "linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)"
+          : "rgba(255,255,255,0.05)",
         color: isPrimary ? "#000" : "#fff",
         fontSize: 14,
         fontWeight: isPrimary ? 800 : 600,
