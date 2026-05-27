@@ -25,6 +25,42 @@ export function useAuth() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Logout automático após 30 min de inatividade
+  useEffect(() => {
+    if (!user) return;
+
+    let inactivityTimer;
+
+    const resetTimer = () => {
+      clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(async () => {
+        await supabase.auth.signOut();
+      }, 30 * 60 * 1000);
+    };
+
+    const events = ["mousedown", "mousemove", "keydown", "touchstart", "scroll"];
+    events.forEach((e) => window.addEventListener(e, resetTimer, { passive: true }));
+    resetTimer();
+
+    return () => {
+      clearTimeout(inactivityTimer);
+      events.forEach((e) => window.removeEventListener(e, resetTimer));
+    };
+  }, [user]);
+
+  // Sincroniza logout entre abas do browser
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key && e.key.includes("supabase") && !e.newValue) {
+        setUser(null);
+        setSession(null);
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
   const signInWithEmail = async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email: sanitizeEmail(email),
