@@ -1,5 +1,6 @@
 import { useInView } from "@/hooks/useInView.js";
 import { FINISH } from "@/styles/finishes.js";
+import { CardGlow, toRgba } from "@/components/atoms/CardGlow.jsx";
 import { RANK_BAR, C } from "@/styles/tokens.js";
 
 const FINISH_TO_RARITY = { "Lilás": "Lilás", Bronze: "Bronze", Prata: "Prata", Ouro: "Gold" };
@@ -57,6 +58,22 @@ export function TeamCard({ team, stickers, onSelect }) {
         e.currentTarget.style.boxShadow = "";
       }}
     >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: `radial-gradient(ellipse at 60% 50%, ${toRgba(team.color ?? "#f59e0b", 0.09)} 0%, transparent 70%)`,
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
+      />
+      <CardGlow color={team.color ?? "#f59e0b"} showLine={false} />
+      <div
+        style={{
+          position: "relative",
+          zIndex: 2,
+        }}
+      >
       <div
         style={{
           position: "absolute",
@@ -140,6 +157,7 @@ export function TeamCard({ team, stickers, onSelect }) {
         <span style={{ color: C.green }}>✓ {owned}</span>
         <span style={{ color: C.red }}>· {missing} faltam</span>
         {duplicates > 0 && <span style={{ color: C.violet }}>· {duplicates} rep.</span>}
+      </div>
       </div>
     </div>
   );
