@@ -16,6 +16,7 @@ import { AddPage } from "@/components/pages/AddPage.jsx";
 import { Trades } from "@/components/pages/Trades.jsx";
 import { Status } from "@/components/pages/Status.jsx";
 import { Help } from "@/components/pages/Help.jsx";
+import { Profile } from "@/components/pages/Profile.jsx";
 import { LoginScreen } from "@/components/auth/LoginScreen.jsx";
 import { SignupScreen } from "@/components/auth/SignupScreen.jsx";
 import { ResetPasswordScreen } from "@/components/auth/ResetPasswordScreen.jsx";
@@ -93,7 +94,8 @@ export default function App() {
 }
 
 function AppContent({ auth }) {
-  const { stickers, setStickers } = useStickers();
+  const { stickers, setStickers, loading, syncStatus, resetCollection } =
+    useStickers(auth.user.id);
   const [page, setPage] = useState("dashboard");
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [toasts, setToasts] = useState([]);
@@ -102,6 +104,11 @@ function AppContent({ auth }) {
   const [completion, setCompletion] = useState(null);
   const prevStickersRef = useRef(null);
   const mountedRef = useRef(false);
+
+  const handleLogout = async () => {
+    if (!confirm("Deseja sair da sua conta?")) return;
+    await auth.signOut();
+  };
 
   const goToAlbum = (filter = {}) => {
     setSelectedTeam(null);
@@ -123,6 +130,7 @@ function AppContent({ auth }) {
   }, []);
 
   useEffect(() => {
+    if (loading) return;
     if (!mountedRef.current) {
       mountedRef.current = true;
       prevStickersRef.current = stickers;
@@ -160,7 +168,7 @@ function AppContent({ auth }) {
     }
 
     prevStickersRef.current = stickers;
-  }, [stickers]);
+  }, [stickers, loading]);
 
   const removeToast = (id) => setToasts((t) => t.filter((x) => x.id !== id));
 
@@ -170,6 +178,36 @@ function AppContent({ auth }) {
     setPage(id);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "#0c0c1a",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 16,
+        }}
+      >
+        <div
+          style={{
+            width: 36,
+            height: 36,
+            border: "3px solid rgba(245,158,11,0.2)",
+            borderTopColor: "#f59e0b",
+            borderRadius: "50%",
+            animation: "spin 0.7s linear infinite",
+          }}
+        />
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>
+          Carregando sua coleção...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -217,6 +255,10 @@ function AppContent({ auth }) {
         }}
         onSearchOpen={() => setSearchOpen(true)}
         onHelpOpen={() => setPage("ajuda")}
+        auth={auth}
+        onLogout={handleLogout}
+        onProfile={() => setPage("profile")}
+        syncStatus={syncStatus}
       />
       <div style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom))" }}>
         <div style={{ padding: "20px 16px 24px", position: "relative", zIndex: 1 }}>
@@ -243,16 +285,20 @@ function AppContent({ auth }) {
           {page === "add" && (
             <AddPage stickers={stickers} setStickers={setStickers} addToast={addToast} />
           )}
-          {page === "trocas" && <Trades stickers={stickers} addToast={addToast} goToAlbum={goToAlbum} setPage={handleNav} setTeamFilter={setSelectedTeam} />}
+          {page === "trocas" && (
+            <Trades stickers={stickers} addToast={addToast} goToAlbum={goToAlbum} setPage={handleNav} setTeamFilter={setSelectedTeam} />
+          )}
           {page === "status" && (
             <Status
               stickers={stickers}
               setStickers={setStickers}
               addToast={addToast}
               setPage={setPage}
+              onReset={resetCollection}
             />
           )}
           {page === "ajuda" && <Help setPage={setPage} />}
+          {page === "profile" && <Profile auth={auth} setPage={setPage} />}
         </div>
         <Footer />
       </div>

@@ -6,8 +6,7 @@ import { TOTAL_OFFICIAL } from "@/data/fwc.js";
 import { ES_RARITY_TYPES } from "@/data/extraStickers.js";
 import { getESCollection, countESCollected } from "@/utils/esCollection.js";
 import { getFinish } from "@/styles/finishes.js";
-import { buildEmptyDatabase } from "@/data/database.js";
-import { clearStorage, clearServiceWorkerCache } from "@/services/storage.js";
+import { clearServiceWorkerCache } from "@/services/storage.js";
 import { CircleProgress } from "@/components/atoms/CircleProgress.jsx";
 import { StatMiniBox } from "@/components/molecules/StatMiniBox.jsx";
 import { CategoryBar } from "@/components/molecules/CategoryBar.jsx";
@@ -15,7 +14,7 @@ import { StatusTeamRow } from "@/components/molecules/StatusTeamRow.jsx";
 import { ResetModal } from "@/components/organisms/ResetModal.jsx";
 import { C } from "@/styles/tokens.js";
 
-export function Status({ stickers, setStickers, addToast, setPage }) {
+export function Status({ stickers, setStickers, addToast, setPage, onReset }) {
   const [showReset, setShowReset] = useState(false);
   const [displayOwned, setDisplayOwned] = useState(null);
   const total = TOTAL_OFFICIAL;
@@ -106,9 +105,12 @@ export function Status({ stickers, setStickers, addToast, setPage }) {
         }
       }, DURATION / STEPS);
     });
-    clearStorage();
     await clearServiceWorkerCache();
-    setStickers(buildEmptyDatabase());
+    if (onReset) {
+      await onReset();
+    } else {
+      setStickers((prev) => prev.map((s) => ({ ...s, status: "Faltando", duplicates: 0, addedAt: null, typeBreakdown: undefined, obs: undefined })));
+    }
     setDisplayOwned(null);
     addToast("Álbum resetado. Todas as figurinhas foram removidas.", "info");
     setPage("dashboard");
