@@ -3,6 +3,7 @@ import { AuthLayout, AuthCard } from "./AuthLayout";
 import { AuthInput } from "./AuthInput";
 import { AuthButton } from "./AuthButton";
 import { validateEmail, translateAuthError } from "@/utils/authValidation";
+import { checkRateLimit, formatRemainingTime } from "@/utils/rateLimiter";
 
 export function ResetPasswordScreen({ onGoToLogin, auth }) {
   const [email, setEmail] = useState("");
@@ -11,6 +12,11 @@ export function ResetPasswordScreen({ onGoToLogin, auth }) {
   const [loading, setLoading] = useState(false);
 
   const handleReset = async () => {
+    const { allowed, remainingMs } = checkRateLimit("reset", 3, 300000);
+    if (!allowed) {
+      setError(`Muitas tentativas. Aguarde ${formatRemainingTime(remainingMs)}.`);
+      return;
+    }
     const emailErr = validateEmail(email);
     if (emailErr) {
       setError(emailErr);

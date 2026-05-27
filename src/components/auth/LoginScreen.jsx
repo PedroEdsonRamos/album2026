@@ -7,6 +7,7 @@ import {
   validatePassword,
   translateAuthError,
 } from "@/utils/authValidation";
+import { checkRateLimit, formatRemainingTime, resetRateLimit } from "@/utils/rateLimiter";
 
 export function LoginScreen({ onGoToSignup, onGoToReset, auth }) {
   const [email, setEmail] = useState("");
@@ -27,11 +28,20 @@ export function LoginScreen({ onGoToSignup, onGoToReset, auth }) {
   };
 
   const handleLogin = async () => {
+    const { allowed, remainingMs } = checkRateLimit("login", 5, 60000);
+    if (!allowed) {
+      setAuthError(`Muitas tentativas. Aguarde ${formatRemainingTime(remainingMs)}.`);
+      return;
+    }
     if (!validate()) return;
     setLoading(true);
     setAuthError(null);
     const { error } = await auth.signInWithEmail(email, password);
-    if (error) setAuthError(translateAuthError(error));
+    if (error) {
+      setAuthError(translateAuthError(error));
+    } else {
+      resetRateLimit("login");
+    }
     setLoading(false);
   };
 

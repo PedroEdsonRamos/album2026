@@ -9,6 +9,7 @@ import {
   validateDisplayName,
   translateAuthError,
 } from "@/utils/authValidation";
+import { checkRateLimit, formatRemainingTime } from "@/utils/rateLimiter";
 
 export function SignupScreen({ onGoToLogin, auth, onSignupSuccess }) {
   const [displayName, setDisplayName] = useState("");
@@ -34,6 +35,11 @@ export function SignupScreen({ onGoToLogin, auth, onSignupSuccess }) {
   };
 
   const handleSignup = async () => {
+    const { allowed, remainingMs } = checkRateLimit("signup", 3, 300000);
+    if (!allowed) {
+      setAuthError(`Muitas tentativas. Aguarde ${formatRemainingTime(remainingMs)}.`);
+      return;
+    }
     if (!validate()) return;
     setLoading(true);
     setAuthError(null);
