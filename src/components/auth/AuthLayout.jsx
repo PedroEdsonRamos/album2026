@@ -112,7 +112,7 @@ export function AuthLayout({ children, footerLink }) {
               position: "absolute",
               right: 14,
               top: "50%",
-              transform: "translateY(-55%)",
+              transform: "translateY(-52%)",
             }}
           >
             <PTECLogo height={58} />
