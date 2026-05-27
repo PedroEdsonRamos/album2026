@@ -31,9 +31,11 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
   const fin = getFinish(displayRarity);
   const owned = s.status === "Tenho";
   const dup = s.status === "Repetida";
-  const totalCopies = s.typeBreakdown
+  const hasMultipleTypes = dup && s.typeBreakdown &&
+    Object.keys(s.typeBreakdown).filter((k) => (s.typeBreakdown[k] ?? 0) > 0).length > 1;
+  const totalDuplicates = s.typeBreakdown
     ? Object.values(s.typeBreakdown).reduce((a, b) => a + b, 0)
-    : s.duplicates;
+    : s.duplicates ?? 0;
   const isMine = MY_CODES.has(s.code);
   const clickable = !!(onToggle || onClick);
   const handleClick = () => {
@@ -119,6 +121,25 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
           }}
         />
       )}
+      {dup && totalDuplicates > 0 && (
+        <span
+          style={{
+            position: "absolute",
+            top: 6,
+            right: 8,
+            background: "rgba(168,85,247,0.18)",
+            border: "1px solid rgba(168,85,247,0.35)",
+            color: "#a855f7",
+            borderRadius: 999,
+            padding: "1px 7px",
+            fontSize: 10,
+            fontWeight: 700,
+            zIndex: 1,
+          }}
+        >
+          ×{totalDuplicates}
+        </span>
+      )}
       <div
         style={{
           display: "flex",
@@ -142,33 +163,6 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
         >
           {team.name}
         </span>
-        {dup && s.typeBreakdown && Object.keys(s.typeBreakdown).length > 1 && (
-          <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-            {Object.entries(s.typeBreakdown).map(([rarityKey, qty]) => {
-              const f = getFinish(rarityKey);
-              return (
-                <span key={rarityKey} style={{ background: f.bg, border: `1px solid ${f.border}`, color: f.color, borderRadius: 6, padding: "1px 5px", fontSize: 9, fontWeight: 700, lineHeight: "14px" }}>
-                  {f.label} ×{qty}
-                </span>
-              );
-            })}
-          </div>
-        )}
-        {dup && !(s.typeBreakdown && Object.keys(s.typeBreakdown).length > 1) && (
-          <span
-            style={{
-              background: fin.bg,
-              color: fin.color,
-              borderRadius: 999,
-              padding: "0 5px",
-              fontSize: 10,
-              fontWeight: 700,
-              border: `1px solid ${fin.border}`,
-            }}
-          >
-            ×{totalCopies}
-          </span>
-        )}
         {owned && (
           <span
             style={{
@@ -223,7 +217,10 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
             textAlign: "center",
           }}
         >
-          {fin.label}{s.typeBreakdown?.[displayRarity] > 0 ? ` ×${s.typeBreakdown[displayRarity]}` : ""}
+          {fin.label}
+          {dup && hasMultipleTypes && (s.typeBreakdown?.[displayRarity] ?? 0) > 0
+            ? ` ×${s.typeBreakdown[displayRarity]}`
+            : ""}
         </span>
       </div>
     </div>
