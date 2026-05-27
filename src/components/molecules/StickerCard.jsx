@@ -3,6 +3,7 @@ import { teamInfo } from "@/utils/teamInfo.js";
 import { getFinish } from "@/styles/finishes.js";
 import { MY_CODES } from "@/data/userCollection.js";
 import { Icon } from "@/components/atoms/Icon.jsx";
+import { CardGlow } from "@/components/atoms/CardGlow.jsx";
 import { C } from "@/styles/tokens.js";
 
 const RARITY_PRIORITY = ["Ouro", "Prata", "Bronze", "Lilás", "Metalizado", "Comum", "Coca-Cola"];
@@ -75,18 +76,7 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
       >
         {s.team}
       </div>
-      {fin.label !== "Regular" && (
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            right: 0,
-            width: 52,
-            height: 52,
-            background: `radial-gradient(circle at top right, ${fin.color}30, transparent)`,
-          }}
-        />
-      )}
+      <CardGlow color={fin.color} showLine={owned} />
       {isMine && (
         <div
           style={{
@@ -96,16 +86,18 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
             right: 0,
             height: 2,
             background: fin.color,
+            zIndex: 3,
           }}
         />
       )}
       <div
         style={{
+          position: "relative",
+          zIndex: 2,
           display: "flex",
           alignItems: "center",
           gap: 5,
           marginBottom: 7,
-          position: "relative",
         }}
       >
         <span style={{ fontSize: 20 }}>{team.flag}</span>
@@ -173,6 +165,7 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
           marginBottom: 5,
           minHeight: 28,
           position: "relative",
+          zIndex: 2,
         }}
       >
         {s.name}
@@ -183,6 +176,7 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
           alignItems: "center",
           justifyContent: "space-between",
           position: "relative",
+          zIndex: 2,
         }}
       >
         <span style={{ fontSize: 9, color: C.t3 }}>{s.position}</span>
