@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { id: "add", label: "Adicionar", icon: "plus" },
   { id: "trocas", label: "Trocas", icon: "swap" },
   { id: "status", label: "Status", icon: "chart" },
+  { id: "ajuda",  label: "Ajuda",  icon: "help-circle" },
 ];
 
 export function BottomNav({ page, onNav }) {

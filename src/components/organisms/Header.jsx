@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { TOTAL_OFFICIAL } from "@/data/fwc.js";
 import { Icon } from "@/components/atoms/Icon.jsx";
 import { FIFATrophy } from "@/components/atoms/FIFATrophy.jsx";
 import { SyncIndicator } from "@/components/atoms/SyncIndicator.jsx";
@@ -150,16 +149,13 @@ function UserMenu({ user, onLogout, onProfile }) {
 export function Header({
   page,
   selectedTeam,
-  stickers,
   onBack,
   onSearchOpen,
-  onHelpOpen,
   auth,
   onLogout,
   onProfile,
   syncStatus,
 }) {
-  const owned = stickers.filter((s) => s.status === "Tenho").length;
   return (
     <div
       style={{
@@ -234,24 +230,6 @@ export function Header({
         </div>
       </div>
       <button
-        onClick={onHelpOpen}
-        aria-label="Ajuda"
-        style={{
-          background: "none",
-          border: "none",
-          color: C.t2,
-          cursor: "pointer",
-          padding: 6,
-          borderRadius: 8,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
-      >
-        <Icon name="help-circle" size={20} />
-      </button>
-      <button
         onClick={onSearchOpen}
         style={{
           background: C.surface,
@@ -269,19 +247,6 @@ export function Header({
       >
         <Icon name="search" size={18} />
       </button>
-      <div
-        style={{
-          fontSize: 12,
-          color: C.t2,
-          background: C.surface,
-          borderRadius: 999,
-          padding: "4px 10px",
-          border: `1px solid ${C.borderHi}`,
-          flexShrink: 0,
-        }}
-      >
-        {owned}/{TOTAL_OFFICIAL}
-      </div>
       {auth?.user && (
         <>
           <SyncIndicator status={syncStatus} />

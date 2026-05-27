@@ -248,13 +248,11 @@ function AppContent({ auth }) {
       <Header
         page={page}
         selectedTeam={selectedTeam}
-        stickers={stickers}
         onBack={() => {
           setSelectedTeam(null);
           setPage("teams");
         }}
         onSearchOpen={() => setSearchOpen(true)}
-        onHelpOpen={() => setPage("ajuda")}
         auth={auth}
         onLogout={handleLogout}
         onProfile={() => setPage("profile")}
