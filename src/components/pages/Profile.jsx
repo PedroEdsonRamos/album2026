@@ -3,8 +3,9 @@ import { supabase } from "@/lib/supabase";
 import { Icon } from "@/components/atoms/Icon.jsx";
 import { sanitizeName } from "@/utils/sanitize";
 import { ChangePasswordSection } from "@/components/auth/ChangePasswordSection.jsx";
+import { ExportDataSection } from "@/components/pages/ExportDataSection.jsx";
 
-export function Profile({ auth, setPage }) {
+export function Profile({ auth, stickers, setPage }) {
   const [displayName, setDisplayName] = useState(
     auth.user?.user_metadata?.full_name ?? ""
   );
@@ -234,6 +235,8 @@ export function Profile({ auth, setPage }) {
       </div>
 
       <ChangePasswordSection auth={auth} />
+
+      <ExportDataSection auth={auth} stickers={stickers} />
 
       <div
         style={{

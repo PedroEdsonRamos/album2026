@@ -296,7 +296,7 @@ function AppContent({ auth }) {
             />
           )}
           {page === "ajuda" && <Help setPage={setPage} />}
-          {page === "profile" && <Profile auth={auth} setPage={setPage} />}
+          {page === "profile" && <Profile auth={auth} stickers={stickers} setPage={setPage} />}
         </div>
         <Footer />
       </div>
