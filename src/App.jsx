@@ -14,6 +14,7 @@ import { Stickers } from "@/components/pages/Stickers.jsx";
 import { AddPage } from "@/components/pages/AddPage.jsx";
 import { Trades } from "@/components/pages/Trades.jsx";
 import { Status } from "@/components/pages/Status.jsx";
+import { Help } from "@/components/pages/Help.jsx";
 
 export default function App() {
   const { stickers, setStickers } = useStickers();
@@ -139,6 +140,7 @@ export default function App() {
           setPage("teams");
         }}
         onSearchOpen={() => setSearchOpen(true)}
+        onHelpOpen={() => setPage("ajuda")}
       />
       <div style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom))" }}>
         <div style={{ padding: "20px 16px 24px", position: "relative", zIndex: 1 }}>
@@ -174,6 +176,7 @@ export default function App() {
               setPage={setPage}
             />
           )}
+          {page === "ajuda" && <Help setPage={setPage} />}
         </div>
         <Footer />
       </div>

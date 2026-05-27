@@ -3,7 +3,7 @@ import { Icon } from "@/components/atoms/Icon.jsx";
 import { FIFATrophy } from "@/components/atoms/FIFATrophy.jsx";
 import { C } from "@/styles/tokens.js";
 
-export function Header({ page, selectedTeam, stickers, onBack, onSearchOpen }) {
+export function Header({ page, selectedTeam, stickers, onBack, onSearchOpen, onHelpOpen }) {
   const owned = stickers.filter((s) => s.status === "Tenho").length;
   return (
     <div
@@ -73,6 +73,24 @@ export function Header({ page, selectedTeam, stickers, onBack, onSearchOpen }) {
           COLEÇÃO VIRTUAL · 994 FIGURINHAS
         </div>
       </div>
+      <button
+        onClick={onHelpOpen}
+        aria-label="Ajuda"
+        style={{
+          background: "none",
+          border: "none",
+          color: C.t2,
+          cursor: "pointer",
+          padding: 6,
+          borderRadius: 8,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+      >
+        <Icon name="help-circle" size={20} />
+      </button>
       <button
         onClick={onSearchOpen}
         style={{
