@@ -14,6 +14,14 @@ const getRarestRarity = (breakdown) => {
   return null;
 };
 
+const toRgba = (hex, alpha) => {
+  if (!hex || !hex.startsWith("#") || hex.length < 7) return `rgba(245,158,11,${alpha})`;
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+};
+
 export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
   const [ref, vis] = useInView(0.05);
   const team = teamInfo(s.team);
@@ -35,8 +43,19 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
       ref={ref}
       onClick={handleClick}
       style={{
-        background: owned || dup ? fin.bg : "rgba(12,12,26,0.7)",
-        border: `1px solid ${owned ? fin.border : dup ? fin.color + "55" : C.border}`,
+        background: owned
+          ? `linear-gradient(135deg, ${fin.bg} 0%, ${toRgba(fin.color, 0.06)} 100%)`
+          : dup
+            ? "rgba(168,85,247,0.07)"
+            : C.surface,
+        border: owned
+          ? `1px solid ${toRgba(fin.color, 0.55)}`
+          : dup
+            ? "1px solid rgba(168,85,247,0.28)"
+            : `1px solid ${C.border}`,
+        boxShadow: owned
+          ? `0 0 0 1px ${toRgba(fin.color, 0.12)}, 0 4px 14px ${toRgba(fin.color, 0.16)}`
+          : "none",
         borderRadius: 14,
         padding: "12px 11px",
         cursor: clickable ? "pointer" : "default",
@@ -56,7 +75,9 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = "";
-        e.currentTarget.style.boxShadow = "";
+        e.currentTarget.style.boxShadow = owned
+          ? `0 0 0 1px ${toRgba(fin.color, 0.12)}, 0 4px 14px ${toRgba(fin.color, 0.16)}`
+          : "";
       }}
     >
       <div
