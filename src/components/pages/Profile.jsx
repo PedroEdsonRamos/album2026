@@ -2,6 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Icon } from "@/components/atoms/Icon.jsx";
 import { sanitizeName } from "@/utils/sanitize";
+import { ChangePasswordSection } from "@/components/auth/ChangePasswordSection.jsx";
 
 export function Profile({ auth, setPage }) {
   const [displayName, setDisplayName] = useState(
@@ -231,6 +232,8 @@ export function Profile({ auth, setPage }) {
           {saved ? "✓ Salvo!" : saving ? "Salvando..." : "Salvar alterações"}
         </button>
       </div>
+
+      <ChangePasswordSection auth={auth} />
 
       <div
         style={{
