@@ -171,8 +171,6 @@ export default function App() {
 
 function AppContent({ auth }) {
   const online = useOnlineStatus();
-  const { stickers, setStickers, loading, syncStatus, resetCollection } =
-    useStickers(auth.user.id);
   const [page, setPage] = useState("dashboard");
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [toasts, setToasts] = useState([]);
@@ -181,6 +179,14 @@ function AppContent({ auth }) {
   const [completion, setCompletion] = useState(null);
   const prevStickersRef = useRef(null);
   const mountedRef = useRef(false);
+
+  const addToast = useCallback((msg, type = "success", duration) => {
+    const id = Date.now() + Math.random();
+    setToasts((t) => [...t, { id, msg, type, duration }]);
+  }, []);
+
+  const { stickers, setStickers, loading, syncStatus, resetCollection } =
+    useStickers(auth.user.id, addToast);
 
   const handleLogout = async () => {
     if (!confirm("Deseja sair da sua conta?")) return;
@@ -200,11 +206,6 @@ function AppContent({ auth }) {
     setPage("stickers");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-
-  const addToast = useCallback((msg, type = "success", duration) => {
-    const id = Date.now() + Math.random();
-    setToasts((t) => [...t, { id, msg, type, duration }]);
-  }, []);
 
   useEffect(() => {
     if (loading) return;

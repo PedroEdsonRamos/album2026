@@ -6,13 +6,15 @@ import {
   clearUserCollection,
 } from "@/services/syncService";
 
-export function useStickers(userId) {
+export function useStickers(userId, addToast) {
   const [stickers, setStickers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [syncStatus, setSyncStatus] = useState("idle");
 
   const pendingSave = useRef(new Map());
   const saveTimer = useRef(null);
+  const addToastRef = useRef(null);
+  addToastRef.current = addToast ?? null;
 
   useEffect(() => {
     if (!userId) return;
@@ -73,7 +75,13 @@ export function useStickers(userId) {
           toSave.map((s) => saveSticker(userId, s))
         );
 
-        setSyncStatus(results.every(Boolean) ? "synced" : "error");
+        const allOk = results.every(Boolean);
+        setSyncStatus(allOk ? "synced" : "error");
+
+        if (!allOk) {
+          addToastRef.current?.("Erro ao sincronizar. Tentando novamente...", "warning");
+          toSave.forEach(s => pendingSave.current.set(s.code, s));
+        }
       }, 800);
     },
     [userId]
