@@ -2,64 +2,112 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { sanitizeEmail, sanitizeName } from "@/utils/sanitize";
 
+async function withTimeout(promise, ms, fallback) {
+  const timeout = new Promise(resolve =>
+    setTimeout(() => resolve(fallback), ms)
+  );
+  return Promise.race([promise, timeout]);
+}
+
 export function useAuth() {
-  const [user, setUser] = useState(null);
-  const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser]         = useState(null);
+  const [session, setSession]   = useState(null);
+  const [loading, setLoading]   = useState(true);
   const [approved, setApproved] = useState(null);
   // null = ainda verificando | true = aprovado | false = aguardando
 
   const checkApproval = async (userId) => {
     if (!userId) { setApproved(false); return; }
 
-    const { data, error } = await supabase
-      .from("user_profiles")
-      .select("approved")
-      .eq("id", userId)
-      .single();
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const result = await withTimeout(
+          supabase
+            .from("user_profiles")
+            .select("approved")
+            .eq("id", userId)
+            .single(),
+          5000,
+          { data: null, error: "timeout" }
+        );
 
-    if (error || !data) {
-      // Perfil pode ainda não ter sido criado pelo trigger — tenta após 1s
-      setTimeout(async () => {
-        const { data: retry } = await supabase
-          .from("user_profiles")
-          .select("approved")
-          .eq("id", userId)
-          .single();
-        setApproved(retry?.approved ?? false);
-      }, 1000);
-      return;
+        if (result.data) {
+          setApproved(result.data.approved ?? false);
+          return;
+        }
+
+        if (attempt === 3) {
+          console.warn("[useAuth] checkApproval falhou após 3 tentativas");
+          setApproved(false);
+          return;
+        }
+
+        await new Promise(r => setTimeout(r, attempt * 1000));
+
+      } catch (e) {
+        console.warn(`[useAuth] checkApproval tentativa ${attempt} falhou:`, e);
+        if (attempt === 3) setApproved(false);
+      }
     }
-
-    setApproved(data.approved ?? false);
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        checkApproval(session.user.id);
-      } else {
+    // Timeout global de segurança — nunca fica preso mais de 10 segundos
+    const safetyTimeout = setTimeout(() => {
+      console.warn("[useAuth] Safety timeout — liberando tela");
+      setLoading(false);
+    }, 10000);
+
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+
+        if (session?.user) {
+          checkApproval(session.user.id).finally(() => {
+            clearTimeout(safetyTimeout);
+            setLoading(false);
+          });
+        } else {
+          clearTimeout(safetyTimeout);
+          setApproved(null);
+          setLoading(false);
+        }
+      })
+      .catch(e => {
+        console.error("[useAuth] Erro ao carregar sessão:", e);
+        clearTimeout(safetyTimeout);
+        setLoading(false);
+      });
+
+    // Sincroniza logout entre abas
+    const handleStorageChange = (e) => {
+      if (e.key?.includes("supabase") && !e.newValue) {
+        setUser(null);
+        setSession(null);
         setApproved(null);
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          await checkApproval(session.user.id);
+        } else {
+          setApproved(null);
+        }
         setLoading(false);
       }
-    });
+    );
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        await checkApproval(session.user.id);
-      } else {
-        setApproved(null);
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(safetyTimeout);
+      subscription.unsubscribe();
+      window.removeEventListener("storage", handleStorageChange);
+    };
   }, []);
 
   // Logout automático após 30 min de inatividade
@@ -85,19 +133,6 @@ export function useAuth() {
     };
   }, [user]);
 
-  // Sincroniza logout entre abas do browser
-  useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key && e.key.includes("supabase") && !e.newValue) {
-        setUser(null);
-        setSession(null);
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
-
   const signInWithEmail = async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email: sanitizeEmail(email),
@@ -116,27 +151,27 @@ export function useAuth() {
     return { data, error };
   };
 
-const signUp = async (email, password, displayName) => {
-  const { data, error } = await supabase.auth.signUp({
-    email: sanitizeEmail(email),
-    password,
-    options: {
-      data: { full_name: sanitizeName(displayName) },
-      emailRedirectTo: "https://fifa-world-cup-2026-virtual-collection.vercel.app",
-    },
-  });
+  const signUp = async (email, password, displayName) => {
+    const { data, error } = await supabase.auth.signUp({
+      email: sanitizeEmail(email),
+      password,
+      options: {
+        data: { full_name: sanitizeName(displayName) },
+        emailRedirectTo: "https://fifa-world-cup-2026-virtual-collection.vercel.app",
+      },
+    });
 
-  // Supabase retorna sucesso mas com identities vazio
-  // quando o email já está cadastrado
-  if (data?.user && data.user.identities?.length === 0) {
-    return {
-      data: null,
-      error: { message: "User already registered" },
-    };
-  }
+    // Supabase retorna sucesso mas com identities vazio
+    // quando o email já está cadastrado
+    if (data?.user && data.user.identities?.length === 0) {
+      return {
+        data: null,
+        error: { message: "User already registered" },
+      };
+    }
 
-  return { data, error };
-};
+    return { data, error };
+  };
 
   const resetPassword = async (email) => {
     const { data, error } = await supabase.auth.resetPasswordForEmail(
