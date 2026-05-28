@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, lazy, Suspense } from "react";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus.js";
 import { SkeletonGrid } from "@/components/atoms/SkeletonCard.jsx";
 import { C } from "@/styles/tokens.js";
@@ -11,20 +11,38 @@ import { Header } from "@/components/organisms/Header.jsx";
 import { BottomNav } from "@/components/organisms/BottomNav.jsx";
 import { Footer } from "@/components/organisms/Footer.jsx";
 import { QuickSearch } from "@/components/organisms/QuickSearch.jsx";
-import { Dashboard } from "@/components/pages/Dashboard.jsx";
-import { Teams } from "@/components/pages/Teams.jsx";
-import { Stickers } from "@/components/pages/Stickers.jsx";
-import { AddPage } from "@/components/pages/AddPage.jsx";
-import { Trades } from "@/components/pages/Trades.jsx";
-import { Status } from "@/components/pages/Status.jsx";
-import { Help } from "@/components/pages/Help.jsx";
-import { Profile } from "@/components/pages/Profile.jsx";
+const Dashboard = lazy(() => import("@/components/pages/Dashboard.jsx").then(m => ({ default: m.Dashboard })));
+const Teams     = lazy(() => import("@/components/pages/Teams.jsx").then(m => ({ default: m.Teams })));
+const Stickers  = lazy(() => import("@/components/pages/Stickers.jsx").then(m => ({ default: m.Stickers })));
+const AddPage   = lazy(() => import("@/components/pages/AddPage.jsx").then(m => ({ default: m.AddPage })));
+const Trades    = lazy(() => import("@/components/pages/Trades.jsx").then(m => ({ default: m.Trades })));
+const Status    = lazy(() => import("@/components/pages/Status.jsx").then(m => ({ default: m.Status })));
+const Help      = lazy(() => import("@/components/pages/Help.jsx").then(m => ({ default: m.Help })));
+const Profile   = lazy(() => import("@/components/pages/Profile.jsx").then(m => ({ default: m.Profile })));
 import { LoginScreen } from "@/components/auth/LoginScreen.jsx";
 import { SignupScreen } from "@/components/auth/SignupScreen.jsx";
 import { ResetPasswordScreen } from "@/components/auth/ResetPasswordScreen.jsx";
 import { VerifyEmailScreen } from "@/components/auth/VerifyEmailScreen.jsx";
 import { PendingApprovalScreen } from "@/components/auth/PendingApprovalScreen.jsx";
 import { AuthCallbackScreen } from "@/components/auth/AuthCallbackScreen.jsx";
+
+function PageSuspense({ children }) {
+  return (
+    <Suspense fallback={
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 200 }}>
+        <div style={{
+          width: 28, height: 28,
+          border: "2px solid rgba(245,158,11,0.2)",
+          borderTopColor: "#f59e0b",
+          borderRadius: "50%",
+          animation: "spin 0.7s linear infinite",
+        }} />
+      </div>
+    }>
+      {children}
+    </Suspense>
+  );
+}
 
 function LoadingScreen() {
   const [showTip, setShowTip] = useState(false);
@@ -322,42 +340,37 @@ function AppContent({ auth }) {
       <div style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom))" }}>
         <div style={{ padding: "20px 16px 24px", position: "relative", zIndex: 1 }}>
           {page === "dashboard" && (
-            <Dashboard
-              stickers={stickers}
-              setPage={setPage}
-              setTeamFilter={setSelectedTeam}
-              goToAlbum={goToAlbum}
-            />
+            <PageSuspense>
+              <Dashboard stickers={stickers} setPage={setPage} setTeamFilter={setSelectedTeam} goToAlbum={goToAlbum} />
+            </PageSuspense>
           )}
           {page === "teams" && (
-            <Teams stickers={stickers} setPage={setPage} setTeamFilter={setSelectedTeam} goToAlbum={goToAlbum} />
+            <PageSuspense>
+              <Teams stickers={stickers} setPage={setPage} setTeamFilter={setSelectedTeam} goToAlbum={goToAlbum} />
+            </PageSuspense>
           )}
           {page === "stickers" && (
-            <Stickers
-              stickers={stickers}
-              selectedTeam={selectedTeam}
-              setStickers={setStickers}
-              addToast={addToast}
-              initialFilter={albumInitialFilter}
-            />
+            <PageSuspense>
+              <Stickers stickers={stickers} selectedTeam={selectedTeam} setStickers={setStickers} addToast={addToast} initialFilter={albumInitialFilter} />
+            </PageSuspense>
           )}
           {page === "add" && (
-            <AddPage stickers={stickers} setStickers={setStickers} addToast={addToast} />
+            <PageSuspense>
+              <AddPage stickers={stickers} setStickers={setStickers} addToast={addToast} />
+            </PageSuspense>
           )}
           {page === "trocas" && (
-            <Trades stickers={stickers} addToast={addToast} goToAlbum={goToAlbum} setPage={handleNav} setTeamFilter={setSelectedTeam} />
+            <PageSuspense>
+              <Trades stickers={stickers} addToast={addToast} goToAlbum={goToAlbum} setPage={handleNav} setTeamFilter={setSelectedTeam} />
+            </PageSuspense>
           )}
           {page === "status" && (
-            <Status
-              stickers={stickers}
-              setStickers={setStickers}
-              addToast={addToast}
-              setPage={setPage}
-              onReset={resetCollection}
-            />
+            <PageSuspense>
+              <Status stickers={stickers} setStickers={setStickers} addToast={addToast} setPage={setPage} onReset={resetCollection} />
+            </PageSuspense>
           )}
-          {page === "ajuda" && <Help setPage={setPage} />}
-          {page === "profile" && <Profile auth={auth} stickers={stickers} setPage={setPage} />}
+          {page === "ajuda" && <PageSuspense><Help setPage={setPage} /></PageSuspense>}
+          {page === "profile" && <PageSuspense><Profile auth={auth} stickers={stickers} setPage={setPage} /></PageSuspense>}
         </div>
         <Footer />
       </div>
