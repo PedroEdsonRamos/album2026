@@ -85,27 +85,37 @@ export async function clearUserCollection(userId) {
   return true;
 }
 
-export async function deleteUserAccount(userId) {
+export async function deleteUserAccount(_userId) {
   try {
-    const { error: stickersError } = await supabase
-      .from("user_stickers")
-      .delete()
-      .eq("user_id", userId);
+    const { data: { session } } = await supabase.auth.getSession();
 
-    if (stickersError) {
-      return { ok: false, error: "Erro ao apagar dados da coleção" };
+    if (!session?.access_token) {
+      return { ok: false, error: "Sessão inválida" };
     }
 
-    // user_profiles: ignora erro — tabela pode não existir
-    await supabase.from("user_profiles").delete().eq("id", userId);
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-    const { error: signOutError } = await supabase.auth.signOut();
-    if (signOutError) {
-      return { ok: false, error: "Erro ao encerrar sessão" };
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error("[deleteUserAccount] Erro:", result.error);
+      return { ok: false, error: result.error ?? "Erro ao excluir conta" };
     }
 
+    await supabase.auth.signOut();
     return { ok: true };
+
   } catch (e) {
-    return { ok: false, error: e.message };
+    console.error("[deleteUserAccount] Erro inesperado:", e);
+    return { ok: false, error: "Erro de conexão. Tente novamente." };
   }
 }
