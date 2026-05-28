@@ -6,19 +6,56 @@ export function useAuth() {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [approved, setApproved] = useState(null);
+  // null = ainda verificando | true = aprovado | false = aguardando
+
+  const checkApproval = async (userId) => {
+    if (!userId) { setApproved(false); return; }
+
+    const { data, error } = await supabase
+      .from("user_profiles")
+      .select("approved")
+      .eq("id", userId)
+      .single();
+
+    if (error || !data) {
+      // Perfil pode ainda não ter sido criado pelo trigger — tenta após 1s
+      setTimeout(async () => {
+        const { data: retry } = await supabase
+          .from("user_profiles")
+          .select("approved")
+          .eq("id", userId)
+          .single();
+        setApproved(retry?.approved ?? false);
+      }, 1000);
+      return;
+    }
+
+    setApproved(data.approved ?? false);
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      setLoading(false);
+      if (session?.user) {
+        checkApproval(session.user.id);
+      } else {
+        setApproved(null);
+        setLoading(false);
+      }
     });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      if (session?.user) {
+        await checkApproval(session.user.id);
+      } else {
+        setApproved(null);
+      }
       setLoading(false);
     });
 
@@ -118,6 +155,8 @@ const signUp = async (email, password, displayName) => {
     user,
     session,
     loading,
+    approved,
+    checkApproval,
     signInWithEmail,
     signInWithGoogle,
     signUp,
