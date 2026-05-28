@@ -6,6 +6,8 @@ import {
   clearUserCollection,
 } from "@/services/syncService";
 
+const CACHE_KEY = "album2026-stickers-cache";
+
 export function useStickers(userId, addToast) {
   const [stickers, setStickers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,15 +27,31 @@ export function useStickers(userId, addToast) {
     setLoading(true);
     const FULL_DB = buildDatabase();
 
+    // Mostra dados do cache imediatamente (se existirem)
+    let hasCached = false;
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const cachedStickers = JSON.parse(cached);
+        if (Array.isArray(cachedStickers) && cachedStickers.length > 0) {
+          setStickers(cachedStickers);
+          setLoading(false);
+          hasCached = true;
+        }
+      }
+    } catch (e) {
+      // cache inválido — ignora
+    }
+
+    // Busca dados frescos do Supabase em background
     try {
       const saved = await loadUserCollection(userId);
 
       if (saved === null) {
-        setStickers(FULL_DB);
+        if (!hasCached) setStickers(FULL_DB);
         setSyncStatus("error");
       } else {
         const byCode = new Map(saved.map((s) => [s.code, s]));
-
         const merged = FULL_DB.map((base) => {
           const remote = byCode.get(base.code);
           if (!remote) return base;
@@ -49,11 +67,12 @@ export function useStickers(userId, addToast) {
         });
 
         setStickers(merged);
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify(merged)); } catch (_) {}
         setSyncStatus("synced");
       }
     } catch (e) {
       console.error("[useStickers] Erro ao carregar:", e);
-      setStickers(buildDatabase());
+      if (!hasCached) setStickers(FULL_DB);
       setSyncStatus("error");
     }
 
