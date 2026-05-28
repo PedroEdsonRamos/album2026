@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useInView } from "@/hooks/useInView.js";
 import { useCounter } from "@/hooks/useCounter.js";
 import { TEAMS } from "@/data/teams.js";
@@ -34,22 +34,25 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
   const pctA = useCounter(hVis ? pct : 0, 1200);
   const [rankSort, setRankSort] = useState("pct");
   const [showAll, setShowAll] = useState(false);
-  const teamStats = TEAMS.map((t) => {
+  const teamStats = useMemo(() => TEAMS.map((t) => {
     const ts = stickers.filter((s) => s.team === t.id);
     const o = ts.filter((s) => s.status === "Tenho").length;
     const legendCount = ts.filter((s) => s.rarity !== "Comum" && s.status === "Tenho").length;
     return { ...t, total: ts.length, owned: o, pct: Math.round((o / (ts.length || 1)) * 100), legendCount };
-  });
-  const sortedTeams = [...teamStats].sort((a, b) => {
+  }), [stickers]);
+  const sortedTeams = useMemo(() => [...teamStats].sort((a, b) => {
     if (rankSort === "pct")  return b.pct - a.pct;
     if (rankSort === "name") return a.name.localeCompare(b.name, "pt-BR");
     return 0;
-  });
-  const visibleTeams = rankSort !== "pct" || showAll ? sortedTeams : sortedTeams.slice(0, 6);
-  const recent = [...stickers]
+  }), [teamStats, rankSort]);
+  const visibleTeams = useMemo(
+    () => rankSort !== "pct" || showAll ? sortedTeams : sortedTeams.slice(0, 6),
+    [sortedTeams, rankSort, showAll]
+  );
+  const recent = useMemo(() => [...stickers]
     .filter((s) => s.status === "Tenho")
     .sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt))
-    .slice(0, 6);
+    .slice(0, 6), [stickers]);
 
   return (
     <div>
