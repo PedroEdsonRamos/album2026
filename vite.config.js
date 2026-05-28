@@ -18,13 +18,21 @@ export default defineConfig({
         passes: 2,
       },
     },
+    chunkSizeWarningLimit: 500,
     rollupOptions: {
       output: {
         generatedCode: {
           arrowFunctions: true,
           constBindings: true,
         },
+        manualChunks: {
+          "vendor-react":    ["react", "react-dom"],
+          "vendor-supabase": ["@supabase/supabase-js"],
+        },
       },
     },
+  },
+  optimizeDeps: {
+    include: ["react", "react-dom", "@supabase/supabase-js"],
   },
 });
