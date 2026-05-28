@@ -1,5 +1,7 @@
 import { supabase } from "@/lib/supabase";
 
+let activeController = null;
+
 async function withRetry(fn, maxAttempts = 3, delayMs = 1000) {
   let lastError;
   for (let i = 0; i < maxAttempts; i++) {
@@ -19,12 +21,19 @@ async function withRetry(fn, maxAttempts = 3, delayMs = 1000) {
 }
 
 export async function loadUserCollection(userId) {
+  if (activeController) activeController.abort();
+  activeController = new AbortController();
+  const { signal } = activeController;
+
   const result = await withRetry(() =>
     supabase
       .from("user_stickers")
       .select("*")
       .eq("user_id", userId)
+      .abortSignal(signal)
   );
+
+  if (signal.aborted || result.error?.name === "AbortError") return null;
 
   if (result.error) {
     console.error("[syncService] Erro ao carregar coleção:", result.error);
