@@ -21,13 +21,14 @@ import { LoginScreen } from "@/components/auth/LoginScreen.jsx";
 import { SignupScreen } from "@/components/auth/SignupScreen.jsx";
 import { ResetPasswordScreen } from "@/components/auth/ResetPasswordScreen.jsx";
 import { VerifyEmailScreen } from "@/components/auth/VerifyEmailScreen.jsx";
+import { PendingApprovalScreen } from "@/components/auth/PendingApprovalScreen.jsx";
 
 export default function App() {
   const auth = useAuth();
   const [authScreen, setAuthScreen] = useState("login");
   const [pendingEmail, setPendingEmail] = useState("");
 
-  if (auth.loading) {
+  if (auth.loading || (auth.user && auth.approved === null)) {
     return (
       <div
         style={{
@@ -40,8 +41,8 @@ export default function App() {
       >
         <div
           style={{
-            width: 40,
-            height: 40,
+            width: 36,
+            height: 36,
             border: "3px solid rgba(245,158,11,0.2)",
             borderTopColor: "#f59e0b",
             borderRadius: "50%",
@@ -88,6 +89,10 @@ export default function App() {
         onGoToReset={() => setAuthScreen("reset")}
       />
     );
+  }
+
+  if (auth.user && auth.approved === false) {
+    return <PendingApprovalScreen auth={auth} />;
   }
 
   return <AppContent auth={auth} />;
