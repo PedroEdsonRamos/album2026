@@ -21,6 +21,11 @@ export function useStickers(userId, addToast) {
   useEffect(() => {
     if (!userId) return;
     loadCollection();
+
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      pendingSave.current.clear();
+    };
   }, [userId]);
 
   const loadCollection = async () => {
