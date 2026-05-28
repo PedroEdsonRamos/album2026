@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus.js";
 import { C } from "@/styles/tokens.js";
 import { useAuth } from "@/hooks/useAuth.js";
 import { useStickers } from "@/hooks/useStickers.js";
@@ -22,35 +23,104 @@ import { SignupScreen } from "@/components/auth/SignupScreen.jsx";
 import { ResetPasswordScreen } from "@/components/auth/ResetPasswordScreen.jsx";
 import { VerifyEmailScreen } from "@/components/auth/VerifyEmailScreen.jsx";
 import { PendingApprovalScreen } from "@/components/auth/PendingApprovalScreen.jsx";
+import { AuthCallbackScreen } from "@/components/auth/AuthCallbackScreen.jsx";
+
+function LoadingScreen() {
+  const [showTip, setShowTip] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowTip(true), 4000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "#0c0c1a",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 20,
+      fontFamily: "'Sora', sans-serif",
+      padding: "24px",
+    }}>
+      <img
+        src="/trophy_title.png"
+        alt="Troféu"
+        style={{ height: 72, opacity: 0.5, objectFit: "contain" }}
+        onError={e => { e.target.style.display = "none"; }}
+      />
+      <div style={{
+        width: 32, height: 32,
+        border: "3px solid rgba(245,158,11,0.15)",
+        borderTopColor: "#f59e0b",
+        borderRadius: "50%",
+        animation: "spin 0.8s linear infinite",
+      }} />
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.22)", letterSpacing: "0.06em" }}>
+        Conectando...
+      </div>
+      {showTip && (
+        <div style={{
+          background: "rgba(245,158,11,0.08)",
+          border: "1px solid rgba(245,158,11,0.15)",
+          borderRadius: 12,
+          padding: "12px 16px",
+          fontSize: 12,
+          color: "rgba(245,158,11,0.6)",
+          textAlign: "center",
+          maxWidth: 280,
+          lineHeight: 1.6,
+          animation: "fadeIn .5s ease",
+        }}>
+          Isso está demorando mais que o esperado.
+          <br />
+          Verifique sua conexão com a internet.
+        </div>
+      )}
+    </div>
+  );
+}
+
+function OfflineBanner() {
+  return (
+    <div style={{
+      position: "fixed",
+      top: 0, left: "50%",
+      transform: "translateX(-50%)",
+      width: "100%", maxWidth: 480,
+      zIndex: 9999,
+      background: "rgba(248,113,113,0.95)",
+      backdropFilter: "blur(8px)",
+      padding: "10px 16px",
+      textAlign: "center",
+      fontSize: 12,
+      fontWeight: 600,
+      color: "#fff",
+      fontFamily: "'Sora', sans-serif",
+    }}>
+      📡 Sem conexão — suas alterações serão salvas quando voltar online
+    </div>
+  );
+}
 
 export default function App() {
   const auth = useAuth();
   const [authScreen, setAuthScreen] = useState("login");
   const [pendingEmail, setPendingEmail] = useState("");
 
+  const isAuthCallback = window.location.hash.includes("access_token") ||
+                         window.location.hash.includes("type=signup") ||
+                         window.location.search.includes("type=recovery") ||
+                         window.location.search.includes("token_hash");
+
+  if (isAuthCallback && auth.loading) {
+    return <AuthCallbackScreen />;
+  }
+
   if (auth.loading || (auth.user && auth.approved === null)) {
-    return (
-      <div
-        style={{
-          minHeight: "100vh",
-          background: "#0c0c1a",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <div
-          style={{
-            width: 36,
-            height: 36,
-            border: "3px solid rgba(245,158,11,0.2)",
-            borderTopColor: "#f59e0b",
-            borderRadius: "50%",
-            animation: "spin 0.7s linear infinite",
-          }}
-        />
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (!auth.user) {
@@ -99,6 +169,7 @@ export default function App() {
 }
 
 function AppContent({ auth }) {
+  const online = useOnlineStatus();
   const { stickers, setStickers, loading, syncStatus, resetCollection } =
     useStickers(auth.user.id);
   const [page, setPage] = useState("dashboard");
@@ -215,6 +286,8 @@ function AppContent({ auth }) {
   }
 
   return (
+    <>
+      {!online && <OfflineBanner />}
     <div
       style={{
         minHeight: "100vh",
@@ -307,5 +380,6 @@ function AppContent({ auth }) {
       </div>
       <BottomNav page={page} onNav={handleNav} />
     </div>
+    </>
   );
 }
