@@ -71,6 +71,12 @@ textarea {
   50% { opacity: 0.4; }
 }
 
+@keyframes shimmer {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
 html, body, #root {
   background-color: #0c0c1a;
   margin: 0;

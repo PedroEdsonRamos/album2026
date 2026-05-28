@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus.js";
+import { SkeletonGrid } from "@/components/atoms/SkeletonCard.jsx";
 import { C } from "@/styles/tokens.js";
 import { useAuth } from "@/hooks/useAuth.js";
 import { useStickers } from "@/hooks/useStickers.js";
@@ -257,30 +258,11 @@ function AppContent({ auth }) {
 
   if (loading) {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          background: "#0c0c1a",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 16,
-        }}
-      >
-        <div
-          style={{
-            width: 36,
-            height: 36,
-            border: "3px solid rgba(245,158,11,0.2)",
-            borderTopColor: "#f59e0b",
-            borderRadius: "50%",
-            animation: "spin 0.7s linear infinite",
-          }}
-        />
-        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>
-          Carregando sua coleção...
-        </div>
+      <div style={{
+        minHeight: "100vh", background: "#0c0c1a",
+        padding: "80px 16px 24px",
+      }}>
+        <SkeletonGrid count={12} />
       </div>
     );
   }
