@@ -1,17 +1,37 @@
 import { supabase } from "@/lib/supabase";
 
-export async function loadUserCollection(userId) {
-  const { data, error } = await supabase
-    .from("user_stickers")
-    .select("*")
-    .eq("user_id", userId);
+async function withRetry(fn, maxAttempts = 3, delayMs = 1000) {
+  let lastError;
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      const result = await fn();
+      if (!result?.error) return result;
+      lastError = result.error;
+    } catch (e) {
+      lastError = e;
+    }
+    if (i < maxAttempts - 1) {
+      await new Promise(r => setTimeout(r, delayMs * (i + 1)));
+    }
+  }
+  console.error("[syncService] Falhou após", maxAttempts, "tentativas:", lastError);
+  return { data: null, error: lastError };
+}
 
-  if (error) {
-    console.error("[syncService] Erro ao carregar coleção:", error);
+export async function loadUserCollection(userId) {
+  const result = await withRetry(() =>
+    supabase
+      .from("user_stickers")
+      .select("*")
+      .eq("user_id", userId)
+  );
+
+  if (result.error) {
+    console.error("[syncService] Erro ao carregar coleção:", result.error);
     return null;
   }
 
-  return data ?? [];
+  return result.data ?? [];
 }
 
 export async function saveSticker(userId, sticker) {
@@ -26,15 +46,14 @@ export async function saveSticker(userId, sticker) {
     added_at: sticker.addedAt ?? null,
   };
 
-  const { error } = await supabase
-    .from("user_stickers")
-    .upsert(payload, {
-      onConflict: "user_id,code",
-      ignoreDuplicates: false,
-    });
+  const result = await withRetry(() =>
+    supabase
+      .from("user_stickers")
+      .upsert(payload, { onConflict: "user_id,code", ignoreDuplicates: false })
+  );
 
-  if (error) {
-    console.error("[syncService] Erro ao salvar sticker:", error.message);
+  if (result.error) {
+    console.error("[syncService] Erro ao salvar sticker:", result.error.message);
     return false;
   }
   return true;
