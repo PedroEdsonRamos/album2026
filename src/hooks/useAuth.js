@@ -176,7 +176,7 @@ export function useAuth() {
   const resetPassword = async (email) => {
     const { data, error } = await supabase.auth.resetPasswordForEmail(
       sanitizeEmail(email),
-      { redirectTo: `${window.location.origin}/reset-password` }
+      { redirectTo: "https://fifa-world-cup-2026-virtual-collection.vercel.app" }
     );
     return { data, error };
   };
