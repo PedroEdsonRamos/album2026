@@ -22,6 +22,7 @@ const Profile   = lazy(() => import("@/components/pages/Profile.jsx").then(m => 
 import { LoginScreen } from "@/components/auth/LoginScreen.jsx";
 import { SignupScreen } from "@/components/auth/SignupScreen.jsx";
 import { ResetPasswordScreen } from "@/components/auth/ResetPasswordScreen.jsx";
+import { ResetPasswordConfirmScreen } from "@/components/auth/ResetPasswordConfirmScreen.jsx";
 import { VerifyEmailScreen } from "@/components/auth/VerifyEmailScreen.jsx";
 import { PendingApprovalScreen } from "@/components/auth/PendingApprovalScreen.jsx";
 import { AuthCallbackScreen } from "@/components/auth/AuthCallbackScreen.jsx";
@@ -129,12 +130,29 @@ export default function App() {
   const [authScreen, setAuthScreen] = useState("login");
   const [pendingEmail, setPendingEmail] = useState("");
 
-  const isAuthCallback = window.location.hash.includes("access_token") ||
-                         window.location.hash.includes("type=signup") ||
-                         window.location.search.includes("type=recovery") ||
+  // Detecta tipo de callback pelo hash da URL (Supabase redireciona com #access_token=...&type=...)
+  const hash = window.location.hash;
+  const hashParams = new URLSearchParams(hash.replace("#", "?"));
+  const callbackType = hashParams.get("type");
+  const hasAccessToken = hash.includes("access_token");
+
+  // Callback de reset de senha → mostra tela de redefinição
+  if (hasAccessToken && callbackType === "recovery") {
+    return (
+      <ResetPasswordConfirmScreen
+        onSuccess={() => {
+          window.history.replaceState(null, "", "/");
+          window.location.reload();
+        }}
+      />
+    );
+  }
+
+  // Callback de confirmação de email → mostra tela de espera
+  const isEmailConfirm = (hasAccessToken && callbackType === "signup") ||
                          window.location.search.includes("token_hash");
 
-  if (isAuthCallback && auth.loading) {
+  if (isEmailConfirm && auth.loading) {
     return <AuthCallbackScreen />;
   }
 
