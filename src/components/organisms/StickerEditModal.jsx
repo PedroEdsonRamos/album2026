@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { FINISH, rarToFinish, getFinish } from "@/styles/finishes.js";
 import { teamInfo } from "@/utils/teamInfo.js";
 import { C } from "@/styles/tokens.js";
@@ -31,6 +31,7 @@ const btnStyle = {
 };
 
 export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
+  const [saving, setSaving] = useState(false);
   const originalStatus = useRef(sticker.status).current;
   const et = teamInfo(sticker.team);
   const ef = getFinish(sticker.rarity);
@@ -328,8 +329,15 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
             Cancelar
           </button>
           <button
-            onClick={() => canSave && onSave({ status: sticker.status, rarity: sticker.rarity, duplicates: sticker.duplicates })}
-            disabled={!canSave}
+            onClick={() => {
+              if (!canSave || saving) return;
+              setSaving(true);
+              setTimeout(() => {
+                onSave({ status: sticker.status, rarity: sticker.rarity, duplicates: sticker.duplicates });
+                setSaving(false);
+              }, 250);
+            }}
+            disabled={!canSave || saving}
             title={!canSave ? "Mínimo 2 cópias para marcar como Repetida" : undefined}
             style={{
               flex: 2,
@@ -340,13 +348,13 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
               fontSize: 13,
               fontWeight: 800,
               color: canSave ? "#000" : C.t4,
-              cursor: canSave ? "pointer" : "not-allowed",
+              cursor: canSave && !saving ? "pointer" : "not-allowed",
               fontFamily: "inherit",
               transition: "all .2s",
-              opacity: canSave ? 1 : 0.5,
+              opacity: canSave && !saving ? 1 : 0.5,
             }}
           >
-            {!canSave ? "Mínimo 2×" : "Salvar"}
+            {!canSave ? "Mínimo 2×" : saving ? "Salvando..." : "Salvar"}
           </button>
         </div>
       </div>

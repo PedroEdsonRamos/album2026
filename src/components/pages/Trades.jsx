@@ -7,6 +7,13 @@ import { C } from "@/styles/tokens.js";
 
 export function Trades({ stickers, addToast, goToAlbum, setPage, setTeamFilter }) {
   const [collapsed, setCollapsed] = useState({});
+  const [sharing, setSharing] = useState(false);
+
+  const withSharing = (fn) => () => {
+    setSharing(true);
+    fn();
+    setTimeout(() => setSharing(false), 1000);
+  };
 
   const dups = stickers.filter((s) => s.status === "Repetida");
 
@@ -117,16 +124,18 @@ export function Trades({ stickers, addToast, goToAlbum, setPage, setTeamFilter }
           </div>
         </div>
         <button
-          onClick={handleShareAll}
+          onClick={withSharing(handleShareAll)}
+          disabled={sharing}
           style={{
             display: "flex", alignItems: "center", gap: 6,
             background: C.violetDim, border: `1px solid ${C.violet}55`,
             color: C.violet, borderRadius: 10, padding: "8px 14px",
-            fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+            fontSize: 12, fontWeight: 700, cursor: sharing ? "not-allowed" : "pointer",
+            fontFamily: "inherit", opacity: sharing ? 0.6 : 1,
           }}
         >
           <Icon name="share" size={14} />
-          Compartilhar
+          {sharing ? "Abrindo..." : "Compartilhar"}
         </button>
       </div>
 
@@ -143,15 +152,17 @@ export function Trades({ stickers, addToast, goToAlbum, setPage, setTeamFilter }
             >{t.name}</span>
             <span style={{ fontSize: 11, color: C.t3 }}>({t.items.length})</span>
             <button
-              onClick={() => shareTeam(t, t.items)}
+              onClick={withSharing(() => shareTeam(t, t.items))}
+              disabled={sharing}
               style={{
                 display: "flex", alignItems: "center", gap: 4,
                 background: C.surface, border: `1px solid ${C.borderHi}`,
                 color: C.t2, borderRadius: 8, padding: "4px 10px",
-                fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+                fontSize: 11, fontWeight: 600, cursor: sharing ? "not-allowed" : "pointer",
+                fontFamily: "inherit", opacity: sharing ? 0.6 : 1,
               }}
             >
-              <Icon name="share" size={12} /> Compartilhar
+              <Icon name="share" size={12} /> {sharing ? "Abrindo..." : "Compartilhar"}
             </button>
             <button
               onClick={() => toggleCollapse(t.id)}
