@@ -27,6 +27,14 @@ import { VerifyEmailScreen } from "@/components/auth/VerifyEmailScreen.jsx";
 import { PendingApprovalScreen } from "@/components/auth/PendingApprovalScreen.jsx";
 import { AuthCallbackScreen } from "@/components/auth/AuthCallbackScreen.jsx";
 
+function PageTransition({ children, pageKey }) {
+  return (
+    <div key={pageKey} style={{ animation: "pageEnter 0.18s ease-out" }}>
+      {children}
+    </div>
+  );
+}
+
 function PageSuspense({ children }) {
   return (
     <Suspense fallback={
@@ -357,38 +365,40 @@ function AppContent({ auth }) {
       />
       <div style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom))" }}>
         <div style={{ padding: "20px 16px 24px", position: "relative", zIndex: 1 }}>
-          {page === "dashboard" && (
-            <PageSuspense>
-              <Dashboard stickers={stickers} setPage={setPage} setTeamFilter={setSelectedTeam} goToAlbum={goToAlbum} />
-            </PageSuspense>
-          )}
-          {page === "teams" && (
-            <PageSuspense>
-              <Teams stickers={stickers} setPage={setPage} setTeamFilter={setSelectedTeam} goToAlbum={goToAlbum} />
-            </PageSuspense>
-          )}
-          {page === "stickers" && (
-            <PageSuspense>
-              <Stickers stickers={stickers} selectedTeam={selectedTeam} setStickers={setStickers} addToast={addToast} initialFilter={albumInitialFilter} />
-            </PageSuspense>
-          )}
-          {page === "add" && (
-            <PageSuspense>
-              <AddPage stickers={stickers} setStickers={setStickers} addToast={addToast} />
-            </PageSuspense>
-          )}
-          {page === "trocas" && (
-            <PageSuspense>
-              <Trades stickers={stickers} addToast={addToast} goToAlbum={goToAlbum} setPage={handleNav} setTeamFilter={setSelectedTeam} />
-            </PageSuspense>
-          )}
-          {page === "status" && (
-            <PageSuspense>
-              <Status stickers={stickers} setStickers={setStickers} addToast={addToast} setPage={setPage} onReset={resetCollection} />
-            </PageSuspense>
-          )}
-          {page === "ajuda" && <PageSuspense><Help setPage={setPage} /></PageSuspense>}
-          {page === "profile" && <PageSuspense><Profile auth={auth} stickers={stickers} setPage={setPage} /></PageSuspense>}
+          <PageTransition pageKey={page}>
+            {page === "dashboard" && (
+              <PageSuspense>
+                <Dashboard stickers={stickers} setPage={setPage} setTeamFilter={setSelectedTeam} goToAlbum={goToAlbum} />
+              </PageSuspense>
+            )}
+            {page === "teams" && (
+              <PageSuspense>
+                <Teams stickers={stickers} setPage={setPage} setTeamFilter={setSelectedTeam} goToAlbum={goToAlbum} />
+              </PageSuspense>
+            )}
+            {page === "stickers" && (
+              <PageSuspense>
+                <Stickers stickers={stickers} selectedTeam={selectedTeam} setStickers={setStickers} addToast={addToast} initialFilter={albumInitialFilter} />
+              </PageSuspense>
+            )}
+            {page === "add" && (
+              <PageSuspense>
+                <AddPage stickers={stickers} setStickers={setStickers} addToast={addToast} />
+              </PageSuspense>
+            )}
+            {page === "trocas" && (
+              <PageSuspense>
+                <Trades stickers={stickers} addToast={addToast} goToAlbum={goToAlbum} setPage={handleNav} setTeamFilter={setSelectedTeam} />
+              </PageSuspense>
+            )}
+            {page === "status" && (
+              <PageSuspense>
+                <Status stickers={stickers} setStickers={setStickers} addToast={addToast} setPage={setPage} onReset={resetCollection} />
+              </PageSuspense>
+            )}
+            {page === "ajuda" && <PageSuspense><Help setPage={setPage} /></PageSuspense>}
+            {page === "profile" && <PageSuspense><Profile auth={auth} stickers={stickers} setPage={setPage} addToast={addToast} /></PageSuspense>}
+          </PageTransition>
         </div>
         <Footer />
       </div>
