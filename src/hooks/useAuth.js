@@ -138,6 +138,12 @@ export function useAuth() {
       email: sanitizeEmail(email),
       password,
     });
+
+    // Inicia verificação de aprovação em background — não bloqueia o login
+    if (data?.user) {
+      checkApproval(data.user.id);
+    }
+
     return { data, error };
   };
 
@@ -182,8 +188,17 @@ export function useAuth() {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    return { error };
+    // Atualiza estado local imediatamente — usuário vê o efeito na hora
+    setUser(null);
+    setSession(null);
+    setApproved(null);
+
+    // Sincroniza com Supabase em background
+    supabase.auth.signOut().catch(e => {
+      console.warn("[useAuth] Erro no signOut:", e);
+    });
+
+    return { error: null };
   };
 
   return {
