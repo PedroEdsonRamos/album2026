@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabase";
 
 let activeController = null;
 
-async function withRetry(fn, maxAttempts = 3, delayMs = 1000) {
+async function withRetry(fn, maxAttempts = 2, delayMs = 800) {
   let lastError;
   for (let i = 0; i < maxAttempts; i++) {
     try {

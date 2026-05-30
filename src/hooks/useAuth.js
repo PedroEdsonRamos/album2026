@@ -19,7 +19,7 @@ export function useAuth() {
   const checkApproval = async (userId) => {
     if (!userId) { setApproved(false); return; }
 
-    for (let attempt = 1; attempt <= 3; attempt++) {
+    for (let attempt = 1; attempt <= 2; attempt++) {
       try {
         const result = await withTimeout(
           supabase
@@ -27,7 +27,7 @@ export function useAuth() {
             .select("approved")
             .eq("id", userId)
             .single(),
-          5000,
+          3000,
           { data: null, error: "timeout" }
         );
 
@@ -36,27 +36,27 @@ export function useAuth() {
           return;
         }
 
-        if (attempt === 3) {
-          console.warn("[useAuth] checkApproval falhou após 3 tentativas");
+        if (attempt === 2) {
+          console.warn("[useAuth] checkApproval falhou após 2 tentativas");
           setApproved(false);
           return;
         }
 
-        await new Promise(r => setTimeout(r, attempt * 1000));
+        await new Promise(r => setTimeout(r, 800));
 
       } catch (e) {
         console.warn(`[useAuth] checkApproval tentativa ${attempt} falhou:`, e);
-        if (attempt === 3) setApproved(false);
+        if (attempt === 2) setApproved(false);
       }
     }
   };
 
   useEffect(() => {
-    // Timeout global de segurança — nunca fica preso mais de 10 segundos
+    // Timeout global de segurança — nunca fica preso mais de 6 segundos
     const safetyTimeout = setTimeout(() => {
       console.warn("[useAuth] Safety timeout — liberando tela");
       setLoading(false);
-    }, 10000);
+    }, 6000);
 
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
