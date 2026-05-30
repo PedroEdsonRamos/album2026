@@ -6,7 +6,7 @@ import { ChangePasswordSection } from "@/components/auth/ChangePasswordSection.j
 import { ExportDataSection } from "@/components/pages/ExportDataSection.jsx";
 import { DeleteAccountSection } from "@/components/pages/DeleteAccountSection.jsx";
 
-export function Profile({ auth, stickers, setPage }) {
+export function Profile({ auth, stickers, setPage, addToast }) {
   const [displayName, setDisplayName] = useState(
     auth.user?.user_metadata?.full_name ?? ""
   );
@@ -31,6 +31,7 @@ export function Profile({ auth, stickers, setPage }) {
       setError("Erro ao salvar. Tente novamente.");
     } else {
       setSaved(true);
+      addToast?.("Nome atualizado com sucesso ✓", "success");
       setTimeout(() => setSaved(false), 2500);
     }
     setSaving(false);
@@ -235,9 +236,9 @@ export function Profile({ auth, stickers, setPage }) {
         </button>
       </div>
 
-      <ChangePasswordSection auth={auth} />
+      <ChangePasswordSection auth={auth} addToast={addToast} />
 
-      <ExportDataSection auth={auth} stickers={stickers} />
+      <ExportDataSection auth={auth} stickers={stickers} addToast={addToast} />
 
       <DeleteAccountSection auth={auth} />
 

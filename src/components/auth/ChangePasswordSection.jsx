@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { validatePassword, translateAuthError } from "@/utils/authValidation";
 
-export function ChangePasswordSection({ auth }) {
+export function ChangePasswordSection({ auth, addToast }) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword]         = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -45,6 +45,7 @@ export function ChangePasswordSection({ auth }) {
       setAuthError(translateAuthError(error));
     } else {
       setSaved(true);
+      addToast?.("Senha alterada com sucesso ✓", "success");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");

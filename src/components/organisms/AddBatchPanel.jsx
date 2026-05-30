@@ -41,7 +41,7 @@ function ResultBox({ result }) {
   );
 }
 
-export function AddBatchPanel({ stickers, setStickers }) {
+export function AddBatchPanel({ stickers, setStickers, addToast }) {
   const [batch, setBatch] = useState("");
   const [result, setResult] = useState(null);
   const [adding, setAdding] = useState(false);
@@ -72,6 +72,7 @@ export function AddBatchPanel({ stickers, setStickers }) {
       });
       setStickers((prev) => prev.map((s) => upd[s.id] || s));
       setResult({ added, dups, notFound });
+      if (added > 0) addToast?.(`${added} figurinha${added > 1 ? "s" : ""} adicionada${added > 1 ? "s" : ""} ✓`, "success");
       setBatch("");
       setAdding(false);
     }, 500);

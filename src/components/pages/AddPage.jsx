@@ -35,7 +35,7 @@ export function AddPage({ stickers, setStickers, addToast }) {
 
       {mode === "single" && <AddSinglePanel stickers={stickers} setStickers={setStickers} addToast={addToast} />}
       {mode === "team"   && <AddTeamPanel   stickers={stickers} setStickers={setStickers} />}
-      {mode === "batch"  && <AddBatchPanel  stickers={stickers} setStickers={setStickers} />}
+      {mode === "batch"  && <AddBatchPanel  stickers={stickers} setStickers={setStickers} addToast={addToast} />}
     </div>
   );
 }

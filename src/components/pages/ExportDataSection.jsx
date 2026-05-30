@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export function ExportDataSection({ auth, stickers }) {
+export function ExportDataSection({ auth, stickers, addToast }) {
   const [exporting, setExporting] = useState(false);
 
   const handleExport = () => {
@@ -44,7 +44,7 @@ export function ExportDataSection({ auth, stickers }) {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-
+    addToast?.("Download iniciado ✓", "success");
     setExporting(false);
   };
 
