@@ -161,7 +161,7 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
             onClick={() => goToAlbum({ position: "Foto Equipe" })} />
           <StatCard label="Especiais" value={especiaisOwned} sub="FWC + Coca-Cola"
             icon={null} color="#94a3b8" noGlow
-            onClick={() => setPage("times")} />
+            onClick={() => goToAlbum({ finish: "Coca-Cola" })} />
         </div>
         <div style={{
           display: "flex", alignItems: "center", gap: 8,
