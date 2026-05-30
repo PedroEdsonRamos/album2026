@@ -6,11 +6,36 @@
 
   <link rel="icon" type="image/png" href="/trophy_title.png" />
   <style>
-    html, body, #root {
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
       background-color: #0c0c1a;
       margin: 0;
       padding: 0;
       min-height: 100vh;
+      font-family: 'Sora', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    #root {
+      min-height: 100vh;
+      background-color: #0c0c1a;
+    }
+    /* Spinner CSS puro antes do React carregar */
+    #root:empty::after {
+      content: '';
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 32px;
+      height: 32px;
+      border: 3px solid rgba(245,158,11,0.2);
+      border-top-color: #f59e0b;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: translate(-50%, -50%) rotate(360deg); }
     }
   </style>
 
