@@ -4,8 +4,18 @@ import { getFinish } from "@/styles/finishes.js";
 import { Icon } from "@/components/atoms/Icon.jsx";
 import { C } from "@/styles/tokens.js";
 
+function useDebounce(value, delay = 300) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
+}
+
 export function QuickSearch({ stickers, onClose, onGoTo }) {
   const [q, setQ] = useState("");
+  const debouncedQ = useDebounce(q, 300);
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -13,9 +23,9 @@ export function QuickSearch({ stickers, onClose, onGoTo }) {
   }, []);
 
   const results = useMemo(() => {
-    if (!q.trim()) return [];
-    const queryNorm = q.trim().toUpperCase().replace(/\s/g, "");
-    const queryUp = q.trim().toUpperCase();
+    if (!debouncedQ.trim()) return [];
+    const queryNorm = debouncedQ.trim().toUpperCase().replace(/\s/g, "");
+    const queryUp = debouncedQ.trim().toUpperCase();
     return stickers
       .filter((s) => {
         const codeMatch = s.code.replace(/\s/g, "").includes(queryNorm);
@@ -26,11 +36,11 @@ export function QuickSearch({ stickers, onClose, onGoTo }) {
         return codeMatch || nameMatch || teamMatch;
       })
       .slice(0, 50);
-  }, [q, stickers]);
+  }, [debouncedQ, stickers]);
 
-  const exact = q.trim()
+  const exact = debouncedQ.trim()
     ? (() => {
-        const queryNorm = q.trim().toUpperCase().replace(/\s+/g, "");
+        const queryNorm = debouncedQ.trim().toUpperCase().replace(/\s+/g, "");
         return results.find((r) => r.code === queryNorm);
       })()
     : null;
@@ -154,8 +164,8 @@ export function QuickSearch({ stickers, onClose, onGoTo }) {
             overflowY: "auto",
             overflowX: "hidden",
             borderRadius: 12,
-            border: q.trim() ? `1px solid ${C.border}` : "none",
-            background: q.trim() ? C.panelHi : "transparent",
+            border: debouncedQ.trim() ? `1px solid ${C.border}` : "none",
+            background: debouncedQ.trim() ? C.panelHi : "transparent",
           }}
         >
           {results.map((s) => {
@@ -214,12 +224,12 @@ export function QuickSearch({ stickers, onClose, onGoTo }) {
               </div>
             );
           })}
-          {q.trim() && results.length === 0 && (
+          {debouncedQ.trim() && results.length === 0 && (
             <div style={{ fontSize: 12, color: C.t3, padding: "12px 14px", textAlign: "center" }}>
-              Nenhuma figurinha encontrada para &quot;{q}&quot;
+              Nenhuma figurinha encontrada para &quot;{debouncedQ}&quot;
             </div>
           )}
-          {!q.trim() && (
+          {!debouncedQ.trim() && (
             <div style={{ textAlign: "center", padding: "32px", color: C.t3, fontSize: 13 }}>
               Digite um código, seleção ou nome para buscar
             </div>
