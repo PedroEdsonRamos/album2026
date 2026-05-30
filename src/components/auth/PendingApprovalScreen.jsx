@@ -39,21 +39,30 @@ export function PendingApprovalScreen({ auth }) {
 
         <div style={{
           fontSize: 13, color: "rgba(255,255,255,0.45)",
-          lineHeight: 1.7, marginBottom: 24,
+          lineHeight: 1.8, marginBottom: 20,
         }}>
-          Seu cadastro foi recebido e está sendo analisado.
+          Seu cadastro foi recebido com sucesso!
           <br />
-          Você receberá acesso assim que for aprovado.
+          Nossa equipe analisa os acessos manualmente
+          <br />
+          e você será notificado em breve.
         </div>
 
         <div style={{
           background: "rgba(245,158,11,0.08)",
           border: "1px solid rgba(245,158,11,0.2)",
           borderRadius: 12, padding: "12px 16px",
-          marginBottom: 24, fontSize: 13,
+          marginBottom: 8, fontSize: 13,
           color: "rgba(245,158,11,0.8)",
         }}>
           📧 {auth.user?.email}
+        </div>
+
+        <div style={{
+          fontSize: 11, color: "rgba(255,255,255,0.25)",
+          marginBottom: 24, lineHeight: 1.6,
+        }}>
+          Prazo estimado: até 24 horas
         </div>
 
         {checked && (
@@ -64,7 +73,7 @@ export function PendingApprovalScreen({ auth }) {
             marginBottom: 16, fontSize: 12,
             color: "rgba(255,255,255,0.4)",
           }}>
-            Acesso ainda não liberado. Aguarde a aprovação.
+            Acesso ainda não liberado. Tente novamente mais tarde.
           </div>
         )}
 
