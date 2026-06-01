@@ -344,10 +344,7 @@ function AppContent({ auth }) {
         <QuickSearch
           stickers={stickers}
           onClose={() => setSearchOpen(false)}
-          onGoTo={(s) => {
-            setSelectedTeam(s.team);
-            setPage("stickers");
-          }}
+          onGoTo={(s) => goToAlbum({ search: s.code })}
         />
       )}
       <Header
