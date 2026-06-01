@@ -5,12 +5,47 @@ import { getStickerCategory, getDefaultRarity, STICKER_CATEGORY } from "@/utils/
 const SUFFIX_TO_RARITY = { L: "Lilás", B: "Bronze", P: "Prata", O: "Ouro" };
 
 function parseBatchInput(input, allStickers) {
-  const tokens = input.trim().split(/[\s,;\n]+/).filter(Boolean);
+  if (!input?.trim()) return { results: [], errors: [] };
+
+  // Split by comma, semicolon, newline or whitespace — keeps compatibility with old format
+  const parts = input.trim().split(/[,;\n\s]+/).map(p => p.trim()).filter(Boolean);
+
+  const expandedTokens = [];
+  let lastPrefix = null;
+
+  for (const part of parts) {
+    const upper = part.toUpperCase();
+
+    const fullRange  = upper.match(/^([A-Z]+)(\d+)-(\d+)$/);       // BRA1-5
+    const fullCode   = upper.match(/^([A-Z]+)(\d+)(?::([LBPO]))?$/); // BRA10 or ARG17:L
+    const rangeOnly  = upper.match(/^(\d+)-(\d+)$/);                 // 2-5 (abbreviated)
+    const numOnly    = /^\d+$/.test(upper);                          // 2   (abbreviated)
+
+    if (fullRange) {
+      const [, prefix, startStr, endStr] = fullRange;
+      lastPrefix = prefix;
+      for (let i = parseInt(startStr); i <= parseInt(endStr); i++) expandedTokens.push(`${prefix}${i}`);
+    } else if (fullCode) {
+      const [, prefix, num, suffix] = fullCode;
+      lastPrefix = prefix;
+      expandedTokens.push(suffix ? `${prefix}${num}:${suffix}` : `${prefix}${num}`);
+    } else if (rangeOnly && lastPrefix) {
+      const [, startStr, endStr] = rangeOnly;
+      for (let i = parseInt(startStr); i <= parseInt(endStr); i++) expandedTokens.push(`${lastPrefix}${i}`);
+    } else if (numOnly && lastPrefix) {
+      expandedTokens.push(`${lastPrefix}${upper}`);
+    } else {
+      expandedTokens.push(upper); // unknown — let sticker lookup fail with a clear error
+    }
+  }
+
+  const uniqueTokens = [...new Set(expandedTokens)];
   const results = [], errors = [];
-  tokens.forEach((token) => {
-    const parts = token.toUpperCase().split(":");
-    const code = parts[0].replace(/\s/g, "");
-    const suffix = parts[1];
+
+  uniqueTokens.forEach((token) => {
+    const colonIdx = token.indexOf(":");
+    const code = colonIdx >= 0 ? token.slice(0, colonIdx) : token;
+    const suffix = colonIdx >= 0 ? token.slice(colonIdx + 1) : undefined;
     const sticker = allStickers.find((s) => s.code === code);
     if (!sticker) { errors.push({ token, reason: `Código "${code}" não encontrado` }); return; }
     const category = getStickerCategory(sticker);
@@ -24,6 +59,7 @@ function parseBatchInput(input, allStickers) {
     }
     results.push({ sticker, rarity: suffix ? SUFFIX_TO_RARITY[suffix] : getDefaultRarity(sticker) });
   });
+
   return { results, errors };
 }
 
@@ -83,18 +119,17 @@ export function AddBatchPanel({ stickers, setStickers, addToast }) {
       <div style={{ background: C.amberDim, border: `1px solid ${C.amber}44`, borderRadius: 14, padding: "14px 16px", marginBottom: 16 }}>
         <div style={{ fontSize: 12, fontWeight: 800, color: C.amber, marginBottom: 8 }}>📋 Como usar o lote livre</div>
         <ol style={{ margin: 0, paddingLeft: 18, fontSize: 11, color: C.t2, lineHeight: 1.7 }}>
-          <li>Digite os códigos completos, um por linha ou separados por vírgula</li>
-          <li>O tipo é definido automaticamente conforme a categoria da figurinha</li>
-          <li>Para Extra Stickers, adicione sufixo: <strong style={{ color: C.t1, fontFamily: "monospace" }}>ARG17:L</strong> (Lilás), <strong style={{ color: C.t1, fontFamily: "monospace" }}>ARG17:B</strong> (Bronze), <strong style={{ color: C.t1, fontFamily: "monospace" }}>ARG17:P</strong> (Prata), <strong style={{ color: C.t1, fontFamily: "monospace" }}>ARG17:O</strong> (Ouro)</li>
+          <li>Códigos completos: <strong style={{ color: C.t1, fontFamily: "monospace" }}>BRA10, ARG17, FWC3</strong></li>
+          <li>Formato abreviado: <strong style={{ color: C.t1, fontFamily: "monospace" }}>BRA1, 2, 3</strong> → BRA1, BRA2, BRA3</li>
+          <li>Range: <strong style={{ color: C.t1, fontFamily: "monospace" }}>ESP1-5</strong> → ESP1, ESP2, ESP3, ESP4, ESP5</li>
+          <li>Misto: <strong style={{ color: C.t1, fontFamily: "monospace" }}>ARG17, FRA5, 6, 7</strong> → ARG17, FRA5, FRA6, FRA7</li>
+          <li>Extra Sticker: <strong style={{ color: C.t1, fontFamily: "monospace" }}>ARG17:L</strong> (Lilás) · <strong style={{ color: C.t1, fontFamily: "monospace" }}>:B</strong> Bronze · <strong style={{ color: C.t1, fontFamily: "monospace" }}>:P</strong> Prata · <strong style={{ color: C.t1, fontFamily: "monospace" }}>:O</strong> Ouro</li>
         </ol>
-        <div style={{ marginTop: 8, fontSize: 11, color: C.t2, fontFamily: "monospace" }}>
-          Ex: BRA10, ARG17:O, FWC3, ESP1
-        </div>
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
         <label style={{ fontSize: 11, fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-          Códigos completos
+          Códigos
         </label>
         {batch.trim() && (
           <button
@@ -112,7 +147,7 @@ export function AddBatchPanel({ stickers, setStickers, addToast }) {
         value={batch}
         onChange={(e) => { setBatch(e.target.value); setResult(null); }}
         rows={7}
-        placeholder={"BRA10\nARG17:O\nFWC3, ESP7"}
+        placeholder={"BRA1, 2, 3, 10\nESP1-5\nARG17:L, FRA5, 6, 7"}
         style={{ width: "100%", background: C.surfaceHi, border: `1px solid ${hasErrors && hasInput ? C.red + "88" : C.borderHi}`, borderRadius: 12,
           padding: "14px 16px", color: "#fff", fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: "monospace", resize: "vertical", lineHeight: 1.6 }}
       />
