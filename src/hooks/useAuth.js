@@ -178,12 +178,19 @@ export function useAuth() {
     return { error: null };
   };
 
+  const isGoogleUser = (u) => {
+    if (!u) return false;
+    return u.app_metadata?.provider === "google" ||
+           u.identities?.some(id => id.provider === "google");
+  };
+
   return {
     user,
     session,
     loading,
     approved,
     checkApproval,
+    isGoogleUser: isGoogleUser(user),
     signInWithEmail,
     signInWithGoogle,
     signUp,
