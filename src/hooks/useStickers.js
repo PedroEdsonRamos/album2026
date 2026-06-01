@@ -1,10 +1,68 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { supabase } from "@/lib/supabase";
 import { buildDatabase } from "@/data/database";
+import { TEAMS } from "@/data/teams";
 import {
   loadUserCollection,
   saveSticker,
   clearUserCollection,
 } from "@/services/syncService";
+
+const achievementsSent = new Set();
+
+const checkAchievements = async (stickers, userId) => {
+  if (!userId) return;
+  const session = await supabase.auth.getSession();
+  const token = session.data.session?.access_token;
+  if (!token) return;
+
+  const sendEmail = async (payload) => {
+    const key = JSON.stringify(payload);
+    if (achievementsSent.has(key)) return;
+    achievementsSent.add(key);
+    try {
+      await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-achievement-email`,
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+    } catch (e) {
+      console.warn("[achievements] Erro ao enviar email:", e);
+    }
+  };
+
+  for (const team of TEAMS) {
+    const teamStickers = stickers.filter(s => s.team === team.id);
+    if (teamStickers.length === 0) continue;
+    const allOwned = teamStickers.every(s => s.status === "Tenho" || s.status === "Repetida");
+    if (allOwned) {
+      await sendEmail({ type: "team", teamName: team.name, flag: team.flag });
+    }
+  }
+
+  const groups = [...new Set(TEAMS.map(t => t.grp))];
+  for (const group of groups) {
+    const groupTeams = TEAMS.filter(t => t.grp === group);
+    const groupStickers = stickers.filter(s => groupTeams.some(t => t.id === s.team));
+    if (groupStickers.length === 0) continue;
+    const allOwned = groupStickers.every(s => s.status === "Tenho" || s.status === "Repetida");
+    if (allOwned) {
+      await sendEmail({ type: "group", group });
+    }
+  }
+
+  const TOTAL = 994;
+  const owned = stickers.filter(s => s.status === "Tenho" || s.status === "Repetida").length;
+  if (owned >= TOTAL) {
+    await sendEmail({ type: "album" });
+  }
+};
 
 const CACHE_KEY = "album2026-stickers-cache";
 
@@ -130,10 +188,12 @@ export function useStickers(userId, addToast) {
           }
         });
 
+        setTimeout(() => checkAchievements(next, userId), 500);
+
         return next;
       });
     },
-    [scheduleSave]
+    [scheduleSave, userId]
   );
 
   const resetCollection = async () => {
