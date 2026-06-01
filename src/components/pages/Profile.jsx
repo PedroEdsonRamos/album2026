@@ -236,7 +236,25 @@ export function Profile({ auth, stickers, setPage, addToast }) {
         </button>
       </div>
 
-      <ChangePasswordSection auth={auth} addToast={addToast} />
+      {!auth.isGoogleUser ? (
+        <ChangePasswordSection auth={auth} addToast={addToast} />
+      ) : (
+        <div style={{
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 16,
+          padding: "16px 20px",
+          marginBottom: 12,
+        }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 4 }}>
+            🔑 Senha
+          </div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", lineHeight: 1.6 }}>
+            Sua conta está vinculada ao Google.
+            O acesso é gerenciado pela sua conta Google.
+          </div>
+        </div>
+      )}
 
       <ExportDataSection auth={auth} stickers={stickers} addToast={addToast} />
 
