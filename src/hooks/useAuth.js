@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { sanitizeEmail, sanitizeName } from "@/utils/sanitize";
 
@@ -9,6 +9,8 @@ async function withTimeout(promise, ms, fallback) {
   return Promise.race([promise, timeout]);
 }
 
+const approvalCacheKey = (userId) => `album2026-approved-${userId}`;
+
 export function useAuth() {
   const [user, setUser]         = useState(null);
   const [session, setSession]   = useState(null);
@@ -16,8 +18,23 @@ export function useAuth() {
   const [approved, setApproved] = useState(null);
   // null = ainda verificando | true = aprovado | false = aguardando
 
+  // Ref para leitura do approved atual dentro de closures sem dependências
+  const approvedRef = useRef(null);
+  const setApprovedSynced = (value) => {
+    approvedRef.current = value;
+    setApproved(value);
+  };
+
   const checkApproval = async (userId) => {
-    if (!userId) { setApproved(false); return; }
+    if (!userId) { setApprovedSynced(false); return; }
+
+    // Lê cache imediatamente — usuário aprovado nunca bloqueia por rede
+    const cacheKey = approvalCacheKey(userId);
+    const cached = localStorage.getItem(cacheKey);
+    if (cached === "true") {
+      setApprovedSynced(true);
+      // Continua verificando em background mas não bloqueia a UI
+    }
 
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
@@ -32,13 +49,20 @@ export function useAuth() {
         );
 
         if (result.data) {
-          setApproved(result.data.approved ?? false);
+          const isApproved = result.data.approved ?? false;
+          setApprovedSynced(isApproved);
+          if (isApproved) {
+            localStorage.setItem(cacheKey, "true");
+          } else {
+            localStorage.removeItem(cacheKey);
+          }
           return;
         }
 
         if (attempt === 2) {
           console.warn("[useAuth] checkApproval falhou após 2 tentativas");
-          setApproved(false);
+          // Em falha de rede, confia no cache
+          if (cached !== "true") setApprovedSynced(false);
           return;
         }
 
@@ -46,7 +70,9 @@ export function useAuth() {
 
       } catch (e) {
         console.warn(`[useAuth] checkApproval tentativa ${attempt} falhou:`, e);
-        if (attempt === 2) setApproved(false);
+        if (attempt === 2) {
+          if (cached !== "true") setApprovedSynced(false);
+        }
       }
     }
   };
@@ -70,7 +96,7 @@ export function useAuth() {
           });
         } else {
           clearTimeout(safetyTimeout);
-          setApproved(null);
+          setApprovedSynced(null);
           setLoading(false);
         }
       })
@@ -85,20 +111,43 @@ export function useAuth() {
       if (e.key?.includes("supabase") && !e.newValue) {
         setUser(null);
         setSession(null);
-        setApproved(null);
+        setApprovedSynced(null);
       }
     };
     window.addEventListener("storage", handleStorageChange);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
+        // TOKEN_REFRESHED e USER_UPDATED: só atualiza a sessão, sem re-verificar aprovação
+        if (event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+          setSession(session);
+          return;
+        }
+
+        if (event === "SIGNED_OUT") {
+          setUser(null);
+          setSession(null);
+          setApprovedSynced(null);
+          setLoading(false);
+          return;
+        }
+
+        if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
+          setSession(session);
+          setUser(session?.user ?? null);
+          if (session?.user) {
+            // Só re-verifica se a aprovação ainda não foi confirmada
+            if (approvedRef.current === null) {
+              await checkApproval(session.user.id);
+            }
+          }
+          setLoading(false);
+          return;
+        }
+
+        // Demais eventos (PASSWORD_RECOVERY, etc.)
         setSession(session);
         setUser(session?.user ?? null);
-        if (session?.user) {
-          await checkApproval(session.user.id);
-        } else {
-          setApproved(null);
-        }
         setLoading(false);
       }
     );
@@ -116,7 +165,6 @@ export function useAuth() {
       password,
     });
 
-    // Inicia verificação de aprovação em background — não bloqueia o login
     if (data?.user) {
       checkApproval(data.user.id);
     }
@@ -144,8 +192,6 @@ export function useAuth() {
       },
     });
 
-    // Supabase retorna sucesso mas com identities vazio
-    // quando o email já está cadastrado
     if (data?.user && data.user.identities?.length === 0) {
       return {
         data: null,
@@ -165,12 +211,15 @@ export function useAuth() {
   };
 
   const signOut = async () => {
-    // Atualiza estado local imediatamente — usuário vê o efeito na hora
+    // Limpa cache de aprovação
+    if (user?.id) {
+      localStorage.removeItem(approvalCacheKey(user.id));
+    }
+
     setUser(null);
     setSession(null);
-    setApproved(null);
+    setApprovedSynced(null);
 
-    // Sincroniza com Supabase em background
     supabase.auth.signOut().catch(e => {
       console.warn("[useAuth] Erro no signOut:", e);
     });
