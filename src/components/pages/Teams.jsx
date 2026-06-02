@@ -263,10 +263,23 @@ export function Teams({ stickers, setPage, setTeamFilter, goToAlbum }) {
 
           {extrasTab === "FWC" && (
             <div>
-              {sectionHeader("🌐", "Especiais FWC", `${fwcOwned}/20`)}
+              {sectionHeader("🏆", "Emblemas e Mascotes", "")}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 16 }}>
+                {stickers
+                  .filter((s) => s.team === "FWC" && s.section === "Emblemas e Mascotes")
+                  .map((s, i) => (
+                    <StickerCard
+                      key={s.id}
+                      s={s}
+                      delay={i * 0.03}
+                      onClick={() => { setTeamFilter("FWC"); setPage("stickers"); }}
+                    />
+                  ))}
+              </div>
+              {sectionHeader("📸", "Momentos Históricos", "")}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                 {stickers
-                  .filter((s) => s.team === "FWC")
+                  .filter((s) => s.team === "FWC" && s.section === "Momentos Históricos")
                   .map((s, i) => (
                     <StickerCard
                       key={s.id}

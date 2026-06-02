@@ -25,14 +25,15 @@ export function buildDatabase() {
   FWC_LIST.forEach((f) =>
     db.push(
       mk({
-        code: f.n === "00" ? "FWC00" : `FWC${f.n}`,
+        code: f.n === "00" ? "00" : `FWC${f.n}`,
         name: f.name,
         team: "FWC",
         teamName: "FIFA World Cup",
-        section: "Especiais FIFA",
+        section: f.section ?? "Especiais FIFA",
         position: "Especial",
         number: f.n === "00" ? 0 : parseInt(f.n),
-        rarity: "Metalizado",
+        rarity: f.r ?? "Metalizado",
+        ...(f.country ? { country: f.country, year: f.year } : {}),
       })
     )
   );

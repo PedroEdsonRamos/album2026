@@ -1,8 +1,7 @@
 const MY_RAW = ``;
 
 function normalizeCode(tok) {
-  if (tok === "00") return "00";
-  if (tok === "FWC00") return "FWC00";
+  if (tok === "00" || tok === "FWC00") return "00"; // capa sem prefixo
   const m = tok.match(/^([A-Z]{2,4})\s*(\d+)$/);
   if (m) return `${m[1]}${m[2]}`; // sem espaço: "BRA10", "FWC10"
   return tok;

@@ -38,6 +38,20 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
     : s.duplicates ?? 0;
   const isMine = MY_CODES.has(s.code);
   const clickable = !!(onToggle || onClick);
+
+  // Compute display name and position label
+  const isPlayer = s.team !== "FWC" && s.team !== "CC"
+    && s.position !== "Escudo" && s.position !== "Foto Equipe" && s.position !== "Especial";
+  const displayName = s.position === "Foto Equipe"
+    ? `Seleção ${s.teamName} - ${s.number}`
+    : s.team === "CC"
+      ? `${s.name} - ${s.number}`
+      : isPlayer
+        ? `${s.name} - ${s.number}`
+        : s.name;
+  const positionLabel = s.country && s.year
+    ? `${s.country} · ${s.year}`
+    : s.position;
   const handleClick = () => {
     if (onToggle) onToggle(s.id);
     else if (onClick) onClick(s);
@@ -189,7 +203,7 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
           position: "relative",
         }}
       >
-        {s.name}
+        {displayName}
       </div>
       <div
         style={{
@@ -199,7 +213,7 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
           position: "relative",
         }}
       >
-        <span style={{ fontSize: 9, color: C.t3 }}>{s.position}</span>
+        <span style={{ fontSize: 9, color: C.t3 }}>{positionLabel}</span>
         <span
           style={{
             background: fin.bg,
