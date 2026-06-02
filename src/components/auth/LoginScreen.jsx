@@ -104,7 +104,7 @@ export function LoginScreen({ onGoToSignup, onGoToReset, auth }) {
 
         <div style={{ textAlign: "right", marginBottom: 20, marginTop: -8 }}>
           <button
-            onClick={onGoToReset}
+            onClick={() => onGoToReset(email)}
             style={{
               background: "none",
               border: "none",

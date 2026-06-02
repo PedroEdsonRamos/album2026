@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { AuthLayout } from "./AuthLayout";
 import { AuthButton } from "./AuthButton";
@@ -12,6 +12,17 @@ export function ResetPasswordConfirmScreen({ onSuccess }) {
   const [authError, setAuthError] = useState(null);
   const [loading, setLoading]   = useState(false);
   const [done, setDone]         = useState(false);
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (!hash.includes("access_token")) return;
+    const params = new URLSearchParams(hash.replace("#", "?"));
+    const accessToken = params.get("access_token");
+    const refreshToken = params.get("refresh_token");
+    if (accessToken && refreshToken) {
+      supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+    }
+  }, []);
 
   const validate = () => {
     const e = {};
@@ -58,7 +69,7 @@ export function ResetPasswordConfirmScreen({ onSuccess }) {
               marginBottom: 20, lineHeight: 1.6,
             }}>
               Digite sua nova senha abaixo.
-              Ela deve ter no mínimo 8 caracteres com letra e número.
+              Ela deve ter no mínimo 6 caracteres.
             </div>
 
             {authError && (
@@ -77,7 +88,7 @@ export function ResetPasswordConfirmScreen({ onSuccess }) {
               type="password"
               value={newPassword}
               onChange={e => setNewPassword(e.target.value)}
-              placeholder="Mín. 8 caracteres com letra e número"
+              placeholder="Mínimo 6 caracteres"
               error={errors.password}
               autoComplete="new-password"
               disabled={loading}

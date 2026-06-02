@@ -148,7 +148,7 @@ export function ChangePasswordSection({ auth, addToast }) {
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Mín. 8 caracteres com letra e número"
+              placeholder="Mínimo 6 caracteres"
               style={inputStyle(errors.new)}
             />
             {errors.new && (

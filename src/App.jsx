@@ -137,6 +137,7 @@ export default function App() {
   const auth = useAuth();
   const [authScreen, setAuthScreen] = useState("login");
   const [pendingEmail, setPendingEmail] = useState("");
+  const [resetEmail, setResetEmail] = useState("");
 
   // Detecta tipo de callback pelo hash da URL (Supabase redireciona com #access_token=...&type=...)
   const hash = window.location.hash;
@@ -186,6 +187,7 @@ export default function App() {
         <ResetPasswordScreen
           auth={auth}
           onGoToLogin={() => setAuthScreen("login")}
+          initialEmail={resetEmail}
         />
       );
     }
@@ -201,7 +203,7 @@ export default function App() {
       <LoginScreen
         auth={auth}
         onGoToSignup={() => setAuthScreen("signup")}
-        onGoToReset={() => setAuthScreen("reset")}
+        onGoToReset={(email) => { setResetEmail(email); setAuthScreen("reset"); }}
       />
     );
   }

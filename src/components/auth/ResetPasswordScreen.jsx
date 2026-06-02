@@ -5,8 +5,8 @@ import { AuthButton } from "./AuthButton";
 import { validateEmail, translateAuthError } from "@/utils/authValidation";
 import { checkRateLimit, formatRemainingTime } from "@/utils/rateLimiter";
 
-export function ResetPasswordScreen({ onGoToLogin, auth }) {
-  const [email, setEmail]       = useState("");
+export function ResetPasswordScreen({ onGoToLogin, auth, initialEmail = "" }) {
+  const [email, setEmail]       = useState(initialEmail);
   const [error, setError]       = useState(null);
   const [sent, setSent]         = useState(false);
   const [loading, setLoading]   = useState(false);

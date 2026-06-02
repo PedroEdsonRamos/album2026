@@ -99,7 +99,7 @@ export function SignupScreen({ onGoToLogin, auth, onSignupSuccess }) {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Mín. 8 caracteres com letra e número"
+          placeholder="Mínimo 6 caracteres"
           error={errors.password}
           autoComplete="new-password"
           disabled={loading}
