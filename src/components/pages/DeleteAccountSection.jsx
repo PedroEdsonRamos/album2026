@@ -8,21 +8,26 @@ export function DeleteAccountSection({ auth }) {
   const [deleting, setDeleting] = useState(false);
   const [error, setError]       = useState(null);
 
+  const isGoogle = auth.isGoogleUser;
+
   const handleDelete = async () => {
-    if (!password) { setError("Digite sua senha para confirmar"); return; }
+    if (isGoogle) {
+      if (password !== "EXCLUIR") { setError("Digite EXCLUIR para confirmar"); return; }
+    } else {
+      if (!password) { setError("Digite sua senha para confirmar"); return; }
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: auth.user.email,
+        password,
+      });
+      if (authError) {
+        setError("Senha incorreta. Conta não foi excluída.");
+        setDeleting(false);
+        return;
+      }
+    }
+
     setDeleting(true);
     setError(null);
-
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email: auth.user.email,
-      password,
-    });
-
-    if (authError) {
-      setError("Senha incorreta. Conta não foi excluída.");
-      setDeleting(false);
-      return;
-    }
 
     const { ok, error: deleteError } = await deleteUserAccount(auth.user.id);
 
@@ -30,8 +35,6 @@ export function DeleteAccountSection({ auth }) {
       setError(deleteError ?? "Erro ao excluir conta. Tente novamente.");
       setDeleting(false);
     }
-    // Se ok=true, o signOut dentro de deleteUserAccount já dispara o
-    // onAuthStateChange no useAuth, que redireciona automaticamente para o login
   };
 
   const btnBase = {
@@ -132,9 +135,6 @@ export function DeleteAccountSection({ auth }) {
           <div style={{ fontSize: 14, fontWeight: 700, color: "#f87171", marginBottom: 8 }}>
             🚨 Confirmação final
           </div>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginBottom: 14, lineHeight: 1.6 }}>
-            Digite sua senha para confirmar a exclusão da conta.
-          </div>
 
           {error && (
             <div style={{
@@ -150,25 +150,58 @@ export function DeleteAccountSection({ auth }) {
             </div>
           )}
 
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Sua senha atual"
-            style={{
-              width: "100%",
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(248,113,113,0.4)",
-              borderRadius: 12,
-              padding: "12px 16px",
-              fontSize: 14,
-              color: "#fff",
-              fontFamily: "inherit",
-              outline: "none",
-              boxSizing: "border-box",
-              marginBottom: 14,
-            }}
-          />
+          {isGoogle ? (
+            <>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginBottom: 14, lineHeight: 1.6 }}>
+                Sua conta está vinculada ao Google. Digite{" "}
+                <strong style={{ color: "#fff" }}>EXCLUIR</strong> para confirmar.
+              </div>
+              <input
+                type="text"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Digite EXCLUIR"
+                style={{
+                  width: "100%",
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(248,113,113,0.4)",
+                  borderRadius: 12,
+                  padding: "12px 16px",
+                  fontSize: 14,
+                  color: "#fff",
+                  fontFamily: "inherit",
+                  outline: "none",
+                  boxSizing: "border-box",
+                  marginBottom: 14,
+                }}
+              />
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginBottom: 14, lineHeight: 1.6 }}>
+                Digite sua senha para confirmar a exclusão da conta.
+              </div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Sua senha atual"
+                style={{
+                  width: "100%",
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(248,113,113,0.4)",
+                  borderRadius: 12,
+                  padding: "12px 16px",
+                  fontSize: 14,
+                  color: "#fff",
+                  fontFamily: "inherit",
+                  outline: "none",
+                  boxSizing: "border-box",
+                  marginBottom: 14,
+                }}
+              />
+            </>
+          )}
 
           <div style={{ display: "flex", gap: 8 }}>
             <button
