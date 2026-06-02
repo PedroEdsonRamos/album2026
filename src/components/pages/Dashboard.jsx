@@ -10,7 +10,7 @@ import { StatCard } from "@/components/molecules/StatCard.jsx";
 import { StickerCard } from "@/components/molecules/StickerCard.jsx";
 import { RANK_BAR, C } from "@/styles/tokens.js";
 
-export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
+export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum, goToTeams }) {
   const total = TOTAL_OFFICIAL;
 
   const stats = useMemo(() => {
@@ -168,13 +168,13 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 10 }}>
           <StatCard label="Jogadores" value={jogadoresOwned} sub="incluídos Extra Stickers"
             icon={null} color="#1fc8d1" noGlow
-            onClick={() => goToAlbum({ status: "Tenho" })} />
+            onClick={() => goToAlbum({ position: "Jogadores" })} />
           <StatCard label="Seleções" value={selecoesOwned} sub="fotos equipe"
             icon={null} color={C.amber} noGlow
             onClick={() => goToAlbum({ position: "Foto Equipe" })} />
           <StatCard label="Especiais" value={especiaisOwned} sub="FWC + Coca-Cola"
             icon={null} color="#94a3b8" noGlow
-            onClick={() => goToAlbum({ finish: "Coca-Cola" })} />
+            onClick={() => goToTeams("Extras")} />
         </div>
         <div style={{
           display: "flex", alignItems: "center", gap: 8,

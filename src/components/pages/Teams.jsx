@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { TEAMS } from "@/data/teams.js";
 import { ES_PLAYERS, ES_RARITY_TYPES } from "@/data/extraStickers.js";
 import { TeamCard } from "@/components/molecules/TeamCard.jsx";
@@ -74,11 +74,17 @@ function ESPlayersGrid({ stickers, goToAlbum }) {
   );
 }
 
-export function Teams({ stickers, setPage, setTeamFilter, goToAlbum }) {
+export function Teams({ stickers, setPage, setTeamFilter, goToAlbum, initialSection }) {
   const [grp, setGrp] = useState("Todos");
   const [search, setSearch] = useState("");
   const [sortTeams, setSortTeams] = useState("pct");
   const [extrasTab, setExtrasTab] = useState("FWC");
+
+  useEffect(() => {
+    if (initialSection?._ts && initialSection.section) {
+      setGrp(initialSection.section);
+    }
+  }, [initialSection?._ts]);
 
   const groups = ["Todos", ...new Set(TEAMS.map((t) => t.grp)), "Extras"];
 

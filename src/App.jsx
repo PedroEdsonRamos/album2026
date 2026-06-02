@@ -222,6 +222,7 @@ function AppContent({ auth }) {
   const [toasts, setToasts] = useState([]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [albumInitialFilter, setAlbumInitialFilter] = useState({});
+  const [teamsFilter, setTeamsFilter] = useState({ _ts: 0 });
   const [completion, setCompletion] = useState(null);
   const prevStickersRef = useRef(null);
   const mountedRef = useRef(false);
@@ -238,6 +239,13 @@ function AppContent({ auth }) {
     if (!confirm("Deseja sair da sua conta?")) return;
     await auth.signOut();
   };
+
+  const goToTeams = useCallback((section = "Todos") => {
+    setTeamsFilter({ section, _ts: Date.now() });
+    setSelectedTeam(null);
+    setPage("teams");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   const goToAlbum = (filter = {}) => {
     setSelectedTeam(null);
@@ -367,12 +375,12 @@ function AppContent({ auth }) {
           <PageTransition pageKey={page}>
             {page === "dashboard" && (
               <PageSuspense>
-                <Dashboard stickers={stickers} setPage={setPage} setTeamFilter={setSelectedTeam} goToAlbum={goToAlbum} />
+                <Dashboard stickers={stickers} setPage={setPage} setTeamFilter={setSelectedTeam} goToAlbum={goToAlbum} goToTeams={goToTeams} />
               </PageSuspense>
             )}
             {page === "teams" && (
               <PageSuspense>
-                <Teams stickers={stickers} setPage={setPage} setTeamFilter={setSelectedTeam} goToAlbum={goToAlbum} />
+                <Teams stickers={stickers} setPage={setPage} setTeamFilter={setSelectedTeam} goToAlbum={goToAlbum} initialSection={teamsFilter} />
               </PageSuspense>
             )}
             {page === "stickers" && (

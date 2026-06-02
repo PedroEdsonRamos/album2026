@@ -41,6 +41,10 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
         } else if (fStatus !== "Todos" && s.status !== fStatus) return false;
         if (fFinish !== "Todos" && rarToFinish(s.rarity) !== fFinish) return false;
         if (fPosition === "Extra Stickers") { if (!ES_BY_CODE[s.code]) return false; }
+        else if (fPosition === "Jogadores") {
+          if (s.position === "Escudo" || s.position === "Foto Equipe" || s.position === "Especial") return false;
+          if (s.team === "FWC" || s.team === "CC") return false;
+        }
         else if (fPosition !== "Todos" && s.position !== fPosition) return false;
         return true;
       }),
@@ -226,7 +230,7 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
 
       <div style={{ overflowX: "auto", overflowY: "visible", paddingBottom: 4, marginBottom: 14 }}>
         <div style={{ display: "flex", gap: 5, paddingTop: 5, width: "max-content", overflow: "visible" }}>
-          {["Todos", "Goleiro", "Defensor", "Meio-Campista", "Atacante", "Foto Equipe", "Escudo", "Especial", "Extra Stickers"].map((pos) => (
+          {["Todos", "Jogadores", "Goleiro", "Defensor", "Meio-Campista", "Atacante", "Foto Equipe", "Escudo", "Especial", "Extra Stickers"].map((pos) => (
             <button
               key={pos}
               onClick={() => setFPosition(pos)}
