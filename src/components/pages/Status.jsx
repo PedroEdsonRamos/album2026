@@ -182,9 +182,7 @@ export function Status({ stickers, setStickers, addToast, setPage, onReset }) {
         }
         const STICKERS_PER_PACK = 7;
         const PACK_PRICE = 7.0;
-        const collected = owned / total;
-        const factor = collected > 0 ? 1 / (1 - collected * 0.7) : 1;
-        const packsEstimate = Math.ceil((missing * factor) / STICKERS_PER_PACK);
+        const packsEstimate = Math.ceil(missing / STICKERS_PER_PACK);
         const cost = (packsEstimate * PACK_PRICE).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
         return (
           <div
@@ -199,13 +197,16 @@ export function Status({ stickers, setStickers, addToast, setPage, onReset }) {
             <div style={{ fontSize: 12, fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
               📦 Estimativa para completar
             </div>
+            <div style={{ fontSize: 11, color: C.t3, marginBottom: 10 }}>
+              Faltam {missing.toLocaleString("pt-BR")} figurinhas
+            </div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div>
                 <div style={{ fontSize: 22, fontWeight: 900, color: "#fff" }}>~{packsEstimate.toLocaleString("pt-BR")} pacotes</div>
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontSize: 16, fontWeight: 700, color: C.amber }}>{cost}</div>
-                <div style={{ fontSize: 10, color: C.t3 }}>R$ 7,00/ pacote</div>
+                <div style={{ fontSize: 10, color: C.t3 }}>R$ 7,00 por pacote (7 figurinhas)</div>
               </div>
             </div>
           </div>
