@@ -38,8 +38,9 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
   const category = getStickerCategory(sticker);
   const fixed = isFixedType(sticker);
   const totalBreakdown = Object.values(sticker.typeBreakdown ?? {}).reduce((a, b) => a + b, 0);
-  const requiresMinTwo = originalStatus === "Faltando" && sticker.status === "Repetida";
-  const canSave = !requiresMinTwo || totalBreakdown >= 2;
+  const isRepetida = sticker.status === "Repetida";
+  // Excedente >= 1 para salvar como Repetida
+  const canSave = !isRepetida || (fixed ? (sticker.duplicates ?? 0) >= 1 : totalBreakdown >= 1);
 
   const updateTypeBreakdown = (rarityKey, delta) => {
     onChange((prev) => {
@@ -62,8 +63,8 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
   };
 
   const fixedRarity = fixed ? getDefaultRarity(sticker) : null;
-  const incFixed = () => onChange((p) => ({ ...p, duplicates: (p.duplicates || 1) + 1 }));
-  const decFixed = () => onChange((p) => ({ ...p, duplicates: Math.max(1, (p.duplicates || 1) - 1) }));
+  const incFixed = () => onChange((p) => ({ ...p, duplicates: (p.duplicates ?? 0) + 1 }));
+  const decFixed = () => onChange((p) => ({ ...p, duplicates: Math.max(0, (p.duplicates ?? 0) - 1) }));
 
   return (
     <div
@@ -129,7 +130,7 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
                   onChange((p) => ({
                     ...p,
                     status: st,
-                    duplicates: st === "Repetida" ? Math.max(p.duplicates || 0, 1) : 0,
+                    duplicates: st === "Repetida" ? (p.duplicates ?? 0) : 0,
                     typeBreakdown: st === "Repetida" ? p.typeBreakdown : undefined,
                   }))
                 }
@@ -264,8 +265,11 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
         {/* Quantidade por tipo — Repetida + não fixo */}
         {sticker.status === "Repetida" && !fixed && (
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>
               Quantidade por tipo
+            </div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 10 }}>
+              Informe quantas cópias EXTRAS você tem além da colada no álbum.
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {Object.entries(FINISH).filter(([finishKey]) => isTypeAllowed(sticker, finishKey)).map(([finishKey, fin]) => {
@@ -297,13 +301,16 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
         {/* Quantidade simples — Repetida + fixo */}
         {sticker.status === "Repetida" && fixed && (
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>
-              Quantidade
+            <div style={{ fontSize: 10, fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>
+              Quantidade extra
+            </div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 10 }}>
+              Informe quantas cópias EXTRAS você tem além da colada no álbum.
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <button onClick={decFixed} style={btnStyle}>−</button>
               <span style={{ fontSize: 16, fontWeight: 700, color: "#fff", width: 30, textAlign: "center" }}>
-                {sticker.duplicates || 1}
+                {sticker.duplicates ?? 0}
               </span>
               <button onClick={incFixed} style={btnStyle}>+</button>
             </div>
@@ -338,7 +345,7 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
               }, 250);
             }}
             disabled={!canSave || saving}
-            title={!canSave ? "Mínimo 2 cópias para marcar como Repetida" : undefined}
+            title={!canSave ? "Adicione ao menos 1 cópia extra para salvar como Repetida" : undefined}
             style={{
               flex: 2,
               background: canSave ? `linear-gradient(135deg,${C.amber},${C.amberLt})` : C.surface,
@@ -354,7 +361,7 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
               opacity: canSave && !saving ? 1 : 0.5,
             }}
           >
-            {!canSave ? "Mínimo 2×" : saving ? "Salvando..." : "Salvar"}
+            {!canSave ? "Adicione extras" : saving ? "Salvando..." : "Salvar"}
           </button>
         </div>
       </div>

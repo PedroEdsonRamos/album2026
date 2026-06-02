@@ -38,6 +38,8 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
     : s.duplicates ?? 0;
   const isMine = MY_CODES.has(s.code);
   const clickable = !!(onToggle || onClick);
+  // Total copies = 1 colada + excess (duplicates stores excess count)
+  const totalTenho = dup ? 1 + totalDuplicates : 0;
 
   // Compute display name and position label
   const isPlayer = s.team !== "FWC" && s.team !== "CC"
@@ -66,16 +68,12 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
       onClick={handleClick}
       onTouchStart={handleTouch}
       style={{
-        background: owned
+        background: owned || dup
           ? `linear-gradient(135deg, ${fin.bg} 0%, ${toRgba(fin.color, 0.06)} 100%)`
-          : dup
-            ? "rgba(168,85,247,0.07)"
-            : C.surface,
-        border: owned
+          : C.surface,
+        border: owned || dup
           ? `1px solid ${toRgba(fin.color, 0.55)}`
-          : dup
-            ? "1px solid rgba(168,85,247,0.28)"
-            : `1px solid ${C.border}`,
+          : `1px solid ${C.border}`,
         boxShadow: touched
           ? `0 0 0 2px ${toRgba(fin.color, 0.5)}, 0 6px 24px ${toRgba(fin.color, 0.35)}`
           : owned
@@ -134,25 +132,6 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
             background: fin.color,
           }}
         />
-      )}
-      {dup && totalDuplicates > 0 && (
-        <span
-          style={{
-            position: "absolute",
-            top: 6,
-            right: 8,
-            background: "rgba(168,85,247,0.18)",
-            border: "1px solid rgba(168,85,247,0.35)",
-            color: "#a855f7",
-            borderRadius: 999,
-            padding: "1px 7px",
-            fontSize: 10,
-            fontWeight: 700,
-            zIndex: 1,
-          }}
-        >
-          ×{totalDuplicates}
-        </span>
       )}
       <div
         style={{
@@ -232,9 +211,7 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
           }}
         >
           {fin.label}
-          {dup && hasMultipleTypes && (s.typeBreakdown?.[displayRarity] ?? 0) > 0
-            ? ` ×${s.typeBreakdown[displayRarity]}`
-            : ""}
+          {dup ? ` ${totalTenho}x` : ""}
         </span>
       </div>
     </div>

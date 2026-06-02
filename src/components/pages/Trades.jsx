@@ -202,20 +202,11 @@ export function Trades({ stickers, addToast, goToAlbum, setPage, setTeamFilter }
                   <span
                     style={{
                       background: fin.bg, border: `1px solid ${fin.border}`,
-                      color: fin.color, borderRadius: 999, padding: "1px 7px",
+                      color: fin.color, borderRadius: 999, padding: "2px 9px",
                       fontSize: 10, fontWeight: 700,
                     }}
                   >
-                    {fin.label}
-                  </span>
-                  <span
-                    style={{
-                      background: C.violetDim, color: C.violet,
-                      borderRadius: 999, padding: "2px 8px",
-                      fontSize: 12, fontWeight: 700,
-                    }}
-                  >
-                    ×{qty}
+                    {fin.label} {qty}x
                   </span>
                   <button
                     onClick={(e) => { e.stopPropagation(); shareSticker(sticker, t); }}

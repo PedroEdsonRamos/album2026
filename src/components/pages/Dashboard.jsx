@@ -12,18 +12,31 @@ import { RANK_BAR, C } from "@/styles/tokens.js";
 
 export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
   const total = TOTAL_OFFICIAL;
-  const owned = stickers.filter((s) => s.status === "Tenho").length;
-  const dups = stickers.filter((s) => s.status === "Repetida").length;
-  const jogadoresOwned = stickers.filter((s) =>
-    s.status === "Tenho" && s.team !== "FWC" && s.team !== "CC" &&
-    s.position !== "Escudo" && s.position !== "Foto Equipe"
-  ).length;
-  const especiaisOwned = stickers.filter((s) =>
-    s.status === "Tenho" && (s.team === "FWC" || s.team === "CC")
-  ).length;
-  const selecoesOwned = stickers.filter((s) =>
-    s.status === "Tenho" && s.position === "Foto Equipe"
-  ).length;
+
+  const stats = useMemo(() => {
+    // Códigos únicos coletados (Tenho OU Repetida — cada código conta 1x)
+    const ownedCodes = new Set(
+      stickers
+        .filter((s) => s.status === "Tenho" || s.status === "Repetida")
+        .map((s) => s.code)
+    );
+    const isPlayer = (s) =>
+      s.team !== "FWC" && s.team !== "CC" &&
+      s.position !== "Escudo" && s.position !== "Foto Equipe" && s.position !== "Especial";
+    const isFWC = (s) => s.team === "FWC";
+    const isCC  = (s) => s.team === "CC";
+
+    return {
+      coletadas:      ownedCodes.size,
+      repetidas:      stickers.filter((s) => s.status === "Repetida").length,
+      jogadoresOwned: stickers.filter((s) => ownedCodes.has(s.code) && isPlayer(s)).length,
+      selecoesOwned:  stickers.filter((s) => ownedCodes.has(s.code) && s.position === "Foto Equipe").length,
+      especiaisOwned: stickers.filter((s) => ownedCodes.has(s.code) && (isFWC(s) || isCC(s))).length,
+    };
+  }, [stickers]);
+
+  const { coletadas, repetidas, jogadoresOwned, especiaisOwned, selecoesOwned } = stats;
+  const owned = coletadas; // alias para compatibilidade com pct e progress bar
   const esCollection = getESCollection(stickers);
   const esLilas = esCollection.filter((e) => (e.collectedTypes["Lilás"] ?? 0) > 0).length;
   const esBronze = esCollection.filter((e) => (e.collectedTypes["Bronze"] ?? 0) > 0).length;
@@ -50,7 +63,7 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
     [sortedTeams, rankSort, showAll]
   );
   const recent = useMemo(() => [...stickers]
-    .filter((s) => s.status === "Tenho")
+    .filter((s) => s.status === "Tenho" || s.status === "Repetida")
     .sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt))
     .slice(0, 6), [stickers]);
 
@@ -144,7 +157,7 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum }) {
           />
           <StatCard
             label="Repetidas"
-            value={dups}
+            value={repetidas}
             sub="para troca"
             icon="swap"
             color={C.violet}
