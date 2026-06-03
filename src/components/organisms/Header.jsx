@@ -42,14 +42,14 @@ function UserMenu({ user, onLogout, onProfile }) {
         <>
           <div
             onClick={() => setOpen(false)}
-            style={{ position: "fixed", inset: 0, zIndex: 90 }}
+            style={{ position: "fixed", inset: 0, zIndex: 999, background: "transparent" }}
           />
           <div
             style={{
               position: "absolute",
               top: "calc(100% + 8px)",
               right: 0,
-              zIndex: 100,
+              zIndex: 1000,
               background: "#1a1a2e",
               border: "1px solid rgba(255,255,255,0.1)",
               borderRadius: 14,

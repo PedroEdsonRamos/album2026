@@ -20,8 +20,16 @@ textarea::placeholder {
 
 button,
 input,
-textarea {
+textarea,
+select {
   font-family: inherit;
+}
+
+/* Previne zoom automático do iOS ao focar inputs (requer font-size >= 16px) */
+input,
+textarea,
+select {
+  font-size: 16px;
 }
 
 @keyframes fadeIn {
