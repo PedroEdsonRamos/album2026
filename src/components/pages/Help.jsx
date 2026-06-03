@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Icon } from "@/components/atoms/Icon.jsx";
 import { C } from "@/styles/tokens.js";
-import { SECTIONS } from "@/components/pages/helpSections.jsx";
+import { SECTIONS, WHATSAPP_CARD } from "@/components/pages/helpSections.jsx";
 
 function HelpSection({ section, isOpen, onToggle }) {
   return (
@@ -62,6 +62,7 @@ export function Help({ setPage }) {
           onToggle={() => toggleSection(sec.id)}
         />
       ))}
+      {WHATSAPP_CARD}
     </div>
   );
 }

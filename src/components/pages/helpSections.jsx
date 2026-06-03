@@ -243,13 +243,16 @@ export const SECTIONS = [
     id: "faq", icon: "❓", title: "Dúvidas frequentes",
     content: (
       <>
-        {/* AJUDA: adicionar novas dúvidas conforme surgirem */}
         {[
           { q: "Por que minha figurinha virou Repetida automaticamente?", a: "Ao adicionar uma figurinha que já está como Tenho, o app a converte automaticamente para Repetida — você já tem uma cópia e está adicionando outra." },
+          { q: "Repetida conta como coletada no total?", a: "Sim! Status Repetida significa que você tem a figurinha colada no álbum MAIS cópias extras. Ela conta 1× nas coletadas e as cópias extras aparecem em Repetidas." },
+          { q: "Como lançar uma figurinha Repetida?", a: "Abra o modal de edição, selecione Repetida e informe apenas as cópias EXTRAS (além da que está no álbum). O contador começa em 0 — adicione quantas extras você tem." },
+          { q: "O que é o tipo Mc Donald's?", a: "É uma variação especial disponível apenas para as Fotos de Equipe. Selecione esse tipo no modal de edição quando tiver uma foto de equipe da coleção McDonald's." },
           { q: "As Extra Stickers contam no total do álbum?", a: "Não. O total do álbum é 994 figurinhas (980 regulares + 14 Coca-Cola). As 80 Extra Stickers são rastreadas separadamente e não entram nessa contagem." },
           { q: "O que são as bolinhas coloridas na seção Extra Stickers?", a: "Cada bolinha representa um tipo: Lilás · Bronze · Prata · Ouro. Bolinha preenchida = você tem esse tipo. Vazia = ainda falta." },
           { q: "Como compartilho minhas trocas pelo WhatsApp?", a: "Na aba Trocas, clique no botão Compartilhar de uma figurinha individual ou de uma seleção inteira. O WhatsApp abre com a mensagem pronta." },
           { q: "Resetei o álbum mas as figurinhas ainda aparecem. O que fazer?", a: "Use o botão '🔄 Limpar cache e reiniciar app' que aparece na segunda etapa do modal de reset. Ele limpa todos os dados do app e reinicia." },
+          { q: "Como excluir minha conta?", a: "Vá em Perfil → Excluir conta. Para contas Google, digite EXCLUIR para confirmar. Para contas com senha, será solicitada a senha atual. A exclusão é permanente e remove todos os seus dados." },
           { q: "Posso usar o app sem internet?", a: "Sim. Todos os dados ficam salvos no seu dispositivo. Você só precisa de internet para acessar o app pela primeira vez." },
         ].map((item, i) => (
           <div key={i} style={{ marginBottom: 10, padding: "12px 14px", background: C.surface, borderRadius: 10, border: `1px solid ${C.border}` }}>
@@ -260,4 +263,98 @@ export const SECTIONS = [
       </>
     ),
   },
+  {
+    id: "privacidade", icon: "🔒", title: "Privacidade e Segurança",
+    content: (
+      <>
+        <HelpText>
+          Sua privacidade é nossa prioridade. O <strong style={{ color: "#fff" }}>Álbum Copa 2026</strong> está
+          em conformidade com a <strong style={{ color: "#f59e0b" }}>LGPD (Lei Geral de Proteção de Dados)</strong>.
+        </HelpText>
+
+        <div style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 10, padding: "12px 14px", marginBottom: 14 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#4ade80", marginBottom: 6 }}>✅ O que coletamos</div>
+          <ul style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.7, paddingLeft: 18, margin: 0 }}>
+            <li>Seu email e nome (para login e identificação)</li>
+            <li>Sua coleção de figurinhas (para sincronizar entre dispositivos)</li>
+            <li>Dados de uso do app (para melhorar a experiência)</li>
+          </ul>
+        </div>
+
+        <div style={{ background: "rgba(248,113,113,0.06)", border: "1px solid rgba(248,113,113,0.2)", borderRadius: 10, padding: "12px 14px", marginBottom: 14 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#f87171", marginBottom: 6 }}>❌ O que NUNCA fazemos</div>
+          <ul style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.7, paddingLeft: 18, margin: 0 }}>
+            <li>Vender seus dados para terceiros</li>
+            <li>Compartilhar sua coleção sem permissão</li>
+            <li>Acessar mensagens, contatos ou outros dados do dispositivo</li>
+            <li>Armazenar sua senha em texto plano</li>
+          </ul>
+        </div>
+
+        <div style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 10, padding: "12px 14px", marginBottom: 14 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#f59e0b", marginBottom: 6 }}>🔐 Como protegemos seus dados</div>
+          <ul style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.7, paddingLeft: 18, margin: 0 }}>
+            <li>Conexão criptografada HTTPS em todas as requisições</li>
+            <li>Senhas armazenadas com hash bcrypt</li>
+            <li>Isolamento total entre usuários (Row Level Security)</li>
+            <li>Headers de segurança HTTP máximos</li>
+            <li>Proteção contra tentativas de força bruta</li>
+          </ul>
+        </div>
+
+        <div style={{ background: "rgba(168,85,247,0.06)", border: "1px solid rgba(168,85,247,0.2)", borderRadius: 10, padding: "12px 14px", marginBottom: 14 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#a855f7", marginBottom: 6 }}>⚖️ Seus direitos (LGPD)</div>
+          <ul style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.7, paddingLeft: 18, margin: 0 }}>
+            <li><strong style={{ color: "#fff" }}>Acesso:</strong> ver todos os seus dados no Perfil</li>
+            <li><strong style={{ color: "#fff" }}>Portabilidade:</strong> exportar sua coleção em JSON</li>
+            <li><strong style={{ color: "#fff" }}>Correção:</strong> editar nome e informações no Perfil</li>
+            <li><strong style={{ color: "#fff" }}>Exclusão:</strong> apagar conta e dados permanentemente</li>
+          </ul>
+        </div>
+
+        <HelpText>Para dúvidas sobre privacidade, fale com a gente pelo WhatsApp.</HelpText>
+      </>
+    ),
+  },
 ];
+
+export const WHATSAPP_CARD = (
+  <div style={{
+    background: "linear-gradient(135deg, rgba(37,211,102,0.08), rgba(37,211,102,0.04))",
+    border: "1px solid rgba(37,211,102,0.25)",
+    borderRadius: 14,
+    padding: "20px",
+    marginTop: 24,
+    textAlign: "center",
+  }}>
+    <div style={{ fontSize: 32, marginBottom: 8 }}>💬</div>
+    <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 6 }}>
+      Precisa de ajuda?
+    </div>
+    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.6, marginBottom: 16 }}>
+      Não encontrou o que procurava? Fale com a gente pelo WhatsApp.
+    </div>
+    <a
+      href="https://wa.me/5531994150103?text=Ol%C3%A1!%20Preciso%20de%20ajuda%20com%20o%20%C3%81lbum%20Copa%202026."
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
+        background: "#25d366",
+        color: "#fff",
+        fontWeight: 700,
+        fontSize: 13,
+        padding: "10px 24px",
+        borderRadius: 999,
+        textDecoration: "none",
+      }}
+    >
+      📱 Falar no WhatsApp
+    </a>
+    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 10 }}>
+      (31) 99415-0103
+    </div>
+  </div>
+);
