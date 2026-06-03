@@ -127,12 +127,18 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
               <button
                 key={st}
                 onClick={() =>
-                  onChange((p) => ({
-                    ...p,
-                    status: st,
-                    duplicates: st === "Repetida" ? (p.duplicates ?? 0) : 0,
-                    typeBreakdown: st === "Repetida" ? p.typeBreakdown : undefined,
-                  }))
+                  onChange((p) => {
+                    // Ao entrar em Repetida vindo de outro status: zera contador
+                    if (st === "Repetida" && p.status !== "Repetida") {
+                      return { ...p, status: "Repetida", duplicates: 0, typeBreakdown: undefined };
+                    }
+                    return {
+                      ...p,
+                      status: st,
+                      duplicates: st !== "Repetida" ? 0 : (p.duplicates ?? 0),
+                      typeBreakdown: st !== "Repetida" ? undefined : p.typeBreakdown,
+                    };
+                  })
                 }
                 className="fc-btn"
                 style={{
@@ -147,6 +153,10 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
                   cursor: "pointer",
                   fontFamily: "inherit",
                   transition: "all .18s",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textAlign: "center",
                 }}
               >
                 {st}
@@ -233,6 +243,10 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
                       fontFamily: "inherit",
                       transition: "all .18s",
                       opacity: allowed ? 1 : 0.35,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      textAlign: "center",
                     }}
                   >
                     {fin.label}
@@ -265,11 +279,21 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
         {/* Quantidade por tipo — Repetida + não fixo */}
         {sticker.status === "Repetida" && !fixed && (
           <div style={{ marginBottom: 20 }}>
+            <div style={{
+              background: "rgba(245,158,11,0.08)",
+              border: "1px solid rgba(245,158,11,0.2)",
+              borderRadius: 8,
+              padding: "8px 12px",
+              fontSize: 11,
+              color: "rgba(245,158,11,0.8)",
+              marginBottom: 12,
+              lineHeight: 1.5,
+            }}>
+              ⚠️ Lance apenas as cópias <strong>extras</strong> além da que está colada no álbum.
+              A figurinha principal já está contabilizada.
+            </div>
             <div style={{ fontSize: 10, fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>
               Quantidade por tipo
-            </div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 10 }}>
-              Informe quantas cópias EXTRAS você tem além da colada no álbum.
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {Object.entries(FINISH).filter(([finishKey]) => isTypeAllowed(sticker, finishKey)).map(([finishKey, fin]) => {
@@ -301,11 +325,21 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
         {/* Quantidade simples — Repetida + fixo */}
         {sticker.status === "Repetida" && fixed && (
           <div style={{ marginBottom: 20 }}>
+            <div style={{
+              background: "rgba(245,158,11,0.08)",
+              border: "1px solid rgba(245,158,11,0.2)",
+              borderRadius: 8,
+              padding: "8px 12px",
+              fontSize: 11,
+              color: "rgba(245,158,11,0.8)",
+              marginBottom: 12,
+              lineHeight: 1.5,
+            }}>
+              ⚠️ Lance apenas as cópias <strong>extras</strong> além da que está colada no álbum.
+              A figurinha principal já está contabilizada.
+            </div>
             <div style={{ fontSize: 10, fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>
               Quantidade extra
-            </div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 10 }}>
-              Informe quantas cópias EXTRAS você tem além da colada no álbum.
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <button onClick={decFixed} style={btnStyle}>−</button>

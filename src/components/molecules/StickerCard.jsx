@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useInView } from "@/hooks/useInView.js";
 import { teamInfo } from "@/utils/teamInfo.js";
-import { getFinish } from "@/styles/finishes.js";
+import { FINISH, getFinish } from "@/styles/finishes.js";
 import { MY_CODES } from "@/data/userCollection.js";
 import { Icon } from "@/components/atoms/Icon.jsx";
 import { C } from "@/styles/tokens.js";
 
-const RARITY_PRIORITY = ["Ouro", "Prata", "Bronze", "Lilás", "Metalizado", "Comum", "Coca-Cola"];
+const RARITY_PRIORITY = ["Ouro", "Prata", "Bronze", "Lilás", "Metalizado", "McDonalds", "Comum", "Coca-Cola"];
 const getRarestRarity = (breakdown) => {
   if (!breakdown || Object.keys(breakdown).length === 0) return null;
   for (const r of RARITY_PRIORITY) {
@@ -132,6 +132,39 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
             background: fin.color,
           }}
         />
+      )}
+      {dup && s.typeBreakdown && Object.keys(s.typeBreakdown).filter((k) => (s.typeBreakdown[k] ?? 0) > 0).length > 0 && (
+        <div style={{
+          position: "absolute",
+          top: 6,
+          right: 6,
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+          alignItems: "flex-end",
+          zIndex: 1,
+        }}>
+          {Object.entries(s.typeBreakdown)
+            .filter(([, qty]) => qty > 0)
+            .sort(([typeA], [typeB]) => RARITY_PRIORITY.indexOf(typeA) - RARITY_PRIORITY.indexOf(typeB))
+            .map(([type, qty]) => {
+              const badgeFin = FINISH[type] ?? FINISH.Comum;
+              return (
+                <span key={type} style={{
+                  background: badgeFin.bg,
+                  border: `1px solid ${badgeFin.border}`,
+                  color: badgeFin.color,
+                  borderRadius: 999,
+                  padding: "1px 7px",
+                  fontSize: 9,
+                  fontWeight: 700,
+                  whiteSpace: "nowrap",
+                }}>
+                  {badgeFin.label} {qty}x
+                </span>
+              );
+            })}
+        </div>
       )}
       <div
         style={{
