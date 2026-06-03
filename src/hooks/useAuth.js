@@ -50,10 +50,14 @@ export function useAuth() {
 
         if (result.data) {
           const isApproved = result.data.approved ?? false;
-          setApprovedSynced(isApproved);
           if (isApproved) {
+            setApprovedSynced(true);
             localStorage.setItem(cacheKey, "true");
+          } else if (cached === "true") {
+            // Cache diz aprovado, banco diz não — confia no cache (proteção contra falso-negativo)
+            setApprovedSynced(true);
           } else {
+            setApprovedSynced(false);
             localStorage.removeItem(cacheKey);
           }
           return;

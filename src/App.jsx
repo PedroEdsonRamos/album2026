@@ -139,14 +139,16 @@ export default function App() {
   const [pendingEmail, setPendingEmail] = useState("");
   const [resetEmail, setResetEmail] = useState("");
 
-  // Detecta tipo de callback pelo hash da URL (Supabase redireciona com #access_token=...&type=...)
+  // Detecta tipo de callback (hash = implicit flow, search = PKCE flow)
   const hash = window.location.hash;
   const hashParams = new URLSearchParams(hash.replace("#", "?"));
-  const callbackType = hashParams.get("type");
+  const searchParams = new URLSearchParams(window.location.search);
+  const callbackType = hashParams.get("type") || searchParams.get("type");
   const hasAccessToken = hash.includes("access_token");
+  const hasTokenHash = searchParams.has("token_hash");
 
-  // Callback de reset de senha → mostra tela de redefinição
-  if (hasAccessToken && callbackType === "recovery") {
+  // Recovery via hash (implicit) ou search params (PKCE) → tela de redefinição
+  if ((hasAccessToken || hasTokenHash) && callbackType === "recovery") {
     return (
       <ResetPasswordConfirmScreen
         onSuccess={() => {
@@ -157,9 +159,9 @@ export default function App() {
     );
   }
 
-  // Callback de confirmação de email → mostra tela de espera
+  // Callback de confirmação de email → apenas signup, nunca recovery
   const isEmailConfirm = (hasAccessToken && callbackType === "signup") ||
-                         window.location.search.includes("token_hash");
+                         (hasTokenHash && callbackType === "signup");
 
   if (isEmailConfirm && auth.loading) {
     return <AuthCallbackScreen />;

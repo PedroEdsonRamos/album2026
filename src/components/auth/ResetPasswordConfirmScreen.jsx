@@ -14,14 +14,17 @@ export function ResetPasswordConfirmScreen({ onSuccess }) {
   const [done, setDone]         = useState(false);
 
   useEffect(() => {
+    // Implicit flow: tokens no hash
     const hash = window.location.hash;
-    if (!hash.includes("access_token")) return;
-    const params = new URLSearchParams(hash.replace("#", "?"));
-    const accessToken = params.get("access_token");
-    const refreshToken = params.get("refresh_token");
-    if (accessToken && refreshToken) {
-      supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+    if (hash.includes("access_token")) {
+      const params = new URLSearchParams(hash.replace("#", "?"));
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
+      if (accessToken && refreshToken) {
+        supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+      }
     }
+    // PKCE flow: Supabase já trocou o token via detectSessionInUrl — nada a fazer
   }, []);
 
   const validate = () => {
