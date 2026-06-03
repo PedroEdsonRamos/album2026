@@ -49,8 +49,8 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum, goToTea
   const [showAll, setShowAll] = useState(false);
   const teamStats = useMemo(() => TEAMS.map((t) => {
     const ts = stickers.filter((s) => s.team === t.id);
-    const o = ts.filter((s) => s.status === "Tenho").length;
-    const legendCount = ts.filter((s) => s.rarity !== "Comum" && s.status === "Tenho").length;
+    const o = ts.filter((s) => s.status === "Tenho" || s.status === "Repetida").length;
+    const legendCount = ts.filter((s) => s.rarity !== "Comum" && (s.status === "Tenho" || s.status === "Repetida")).length;
     return { ...t, total: ts.length, owned: o, pct: Math.round((o / (ts.length || 1)) * 100), legendCount };
   }), [stickers]);
   const sortedTeams = useMemo(() => [...teamStats].sort((a, b) => {

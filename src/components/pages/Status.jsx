@@ -18,11 +18,14 @@ export function Status({ stickers, setStickers, addToast, setPage, onReset }) {
   const [showReset, setShowReset] = useState(false);
   const [displayOwned, setDisplayOwned] = useState(null);
   const total = TOTAL_OFFICIAL;
-  const owned = stickers.filter((s) => s.status === "Tenho").length;
+  const isCollected = (s) => s.status === "Tenho" || s.status === "Repetida";
+  const owned = stickers.filter(isCollected).length;
   const effectiveOwned = displayOwned ?? owned;
   const effectivePct = Math.round((effectiveOwned / total) * 100);
   const missing = total - owned;
-  const dups = stickers.filter((s) => s.status === "Repetida").length;
+  const dups = stickers
+    .filter((s) => s.status === "Repetida")
+    .reduce((acc, s) => acc + (s.duplicates ?? 0), 0);
   const pct = Math.round((owned / total) * 100);
   const [ref, vis] = useInView();
   const pctA = useCounter(vis ? pct : 0, 1200);
@@ -49,7 +52,7 @@ export function Status({ stickers, setStickers, addToast, setPage, onReset }) {
       total: 864,
       owned: stickers.filter(
         (s) =>
-          mainIds.has(s.team) && s.position !== "Escudo" && s.position !== "Foto Equipe" && s.status === "Tenho"
+          mainIds.has(s.team) && s.position !== "Escudo" && s.position !== "Foto Equipe" && isCollected(s)
       ).length,
     },
     {
@@ -57,7 +60,7 @@ export function Status({ stickers, setStickers, addToast, setPage, onReset }) {
       icon: "📸",
       total: 48,
       owned: stickers.filter(
-        (s) => mainIds.has(s.team) && s.position === "Foto Equipe" && s.status === "Tenho"
+        (s) => mainIds.has(s.team) && s.position === "Foto Equipe" && isCollected(s)
       ).length,
     },
     {
@@ -65,26 +68,26 @@ export function Status({ stickers, setStickers, addToast, setPage, onReset }) {
       icon: "🛡️",
       total: 48,
       owned: stickers.filter(
-        (s) => mainIds.has(s.team) && s.position === "Escudo" && s.status === "Tenho"
+        (s) => mainIds.has(s.team) && s.position === "Escudo" && isCollected(s)
       ).length,
     },
     {
       label: "Especiais FWC",
       icon: "🌐",
       total: 20,
-      owned: stickers.filter((s) => s.team === "FWC" && s.status === "Tenho").length,
+      owned: stickers.filter((s) => s.team === "FWC" && isCollected(s)).length,
     },
     {
       label: "Coca-Cola",
       icon: "🥤",
       total: 14,
-      owned: stickers.filter((s) => s.team === "CC" && s.status === "Tenho").length,
+      owned: stickers.filter((s) => s.team === "CC" && isCollected(s)).length,
     },
   ];
 
   const teamDist = ALL_TEAMS.map((t) => {
     const ts = stickers.filter((s) => s.team === t.id);
-    const o = ts.filter((s) => s.status === "Tenho").length;
+    const o = ts.filter(isCollected).length;
     return { ...t, pct: Math.round((o / (ts.length || 1)) * 100) };
   }).sort((a, b) => b.pct - a.pct);
 
