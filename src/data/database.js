@@ -21,25 +21,23 @@ export function buildDatabase() {
     };
   };
 
-  // FWC (20 especiais incluindo capa)
-  FWC_LIST.forEach((f) =>
-    db.push(
-      mk({
-        code: f.n === "00" ? "00" : `FWC${f.n}`,
-        name: f.name,
-        team: "FWC",
-        teamName: "FIFA World Cup",
-        section: f.section ?? "Especiais FIFA",
-        position: "Especial",
-        number: f.n === "00" ? 0 : parseInt(f.n),
-        rarity: f.r ?? "Metalizado",
-        ...(f.country ? { country: f.country, year: f.year } : {}),
-      })
-    )
-  );
+  const mkFwc = (f) => mk({
+    code: f.n === "00" ? "00" : `FWC${f.n}`,
+    name: f.name,
+    team: "FWC",
+    teamName: "FIFA World Cup",
+    section: f.section ?? "Especiais FIFA",
+    position: "Especial",
+    number: f.n === "00" ? 0 : parseInt(f.n),
+    rarity: f.r ?? "Metalizado",
+    ...(f.country ? { country: f.country, year: f.year } : {}),
+  });
+
+  // Capa (00) + Emblemas e Mascotes (FWC1–FWC8) — vêm antes das seleções
+  FWC_LIST.filter((f) => parseInt(f.n) <= 8 || f.n === "00").forEach((f) => db.push(mkFwc(f)));
 
   // 48 seleções × 20
-  TEAMS.forEach((team, ti) => {
+  TEAMS.forEach((team) => {
     const squad = SQUADS[team.id] || DEFAULT_SQUAD;
     const shieldFinish = "Metalizado";
 
@@ -105,6 +103,9 @@ export function buildDatabase() {
       );
     }
   });
+
+  // Momentos Históricos (FWC9–FWC19) — depois das seleções, antes da Coca-Cola
+  FWC_LIST.filter((f) => parseInt(f.n) >= 9).forEach((f) => db.push(mkFwc(f)));
 
   // 14 figurinhas Coca-Cola
   CC_LIST.forEach((cc) =>

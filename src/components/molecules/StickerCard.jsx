@@ -44,14 +44,15 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
   // Compute display name and position label
   const isPlayer = s.team !== "FWC" && s.team !== "CC"
     && s.position !== "Escudo" && s.position !== "Foto Equipe" && s.position !== "Especial";
-  const displayName = s.position === "Foto Equipe"
-    ? `Seleção ${s.teamName} - ${s.number}`
-    : s.team === "CC"
-      ? `${s.name} - ${s.number}`
-      : isPlayer
-        ? `${s.name} - ${s.number}`
-        : s.name;
-  const positionLabel = s.country && s.year
+  const displayNumber = s.code === "00" ? "00" : s.number;
+  const needsNumber = s.position === "Foto Equipe" || s.team === "CC" || isPlayer
+    || s.team === "FWC" || s.position === "Escudo";
+  const displayName = needsNumber
+    ? `${s.name} - ${displayNumber}`
+    : s.name;
+  // Momentos Históricos: país-ano em cima, label embaixo
+  const isMomentoHistorico = s.team === "FWC" && s.country && s.year;
+  const positionLabel = isMomentoHistorico
     ? `${s.country} · ${s.year}`
     : s.position;
   const handleClick = () => {
