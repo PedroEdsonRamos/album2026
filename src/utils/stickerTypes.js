@@ -22,14 +22,14 @@ export const ALLOWED_TYPES = {
   [STICKER_CATEGORY.JOGADOR_COMUM]: ["Comum"],
   [STICKER_CATEGORY.JOGADOR_ES]:    ["Comum", "Lilás", "Bronze", "Prata", "Ouro"],
   [STICKER_CATEGORY.ESCUDO]:        ["Metalizado"],
-  [STICKER_CATEGORY.FOTO_EQUIPE]:   ["Comum"],
+  [STICKER_CATEGORY.FOTO_EQUIPE]:   ["Comum", "McDonalds"],
   [STICKER_CATEGORY.FWC]:           ["Metalizado"],
   [STICKER_CATEGORY.COCA_COLA]:     ["Coca-Cola"],
 };
 
+// Foto Equipe saiu dos fixos — agora tem 2 opções (Comum e McDonalds)
 export const FIXED_TYPE_CATEGORIES = [
   STICKER_CATEGORY.ESCUDO,
-  STICKER_CATEGORY.FOTO_EQUIPE,
   STICKER_CATEGORY.FWC,
   STICKER_CATEGORY.COCA_COLA,
 ];
