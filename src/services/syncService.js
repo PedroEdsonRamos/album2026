@@ -118,7 +118,7 @@ export async function deleteUserAccount(_userId) {
     const { data: { session } } = await supabase.auth.getSession();
 
     if (!session?.access_token) {
-      return { ok: false, error: "Sessão inválida" };
+      return { ok: false, error: "Sessão inválida. Faça login novamente." };
     }
 
     const response = await fetch(
@@ -132,18 +132,32 @@ export async function deleteUserAccount(_userId) {
       }
     );
 
-    const result = await response.json();
-
     if (!response.ok) {
-      console.error("[deleteUserAccount] Erro:", result.error);
-      return { ok: false, error: result.error ?? "Erro ao excluir conta" };
+      let errMsg = "Erro ao excluir conta";
+      try {
+        const result = await response.json();
+        errMsg = result.error ?? errMsg;
+      } catch {}
+      console.error("[deleteUserAccount] Erro:", errMsg);
+      return { ok: false, error: errMsg };
     }
 
     await supabase.auth.signOut();
+
+    // Limpa cache de aprovação de todos os usuários neste dispositivo
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith("album2026-approved-"))
+      .forEach((k) => localStorage.removeItem(k));
+
     return { ok: true };
 
   } catch (e) {
     console.error("[deleteUserAccount] Erro inesperado:", e);
-    return { ok: false, error: "Erro de conexão. Tente novamente." };
+    return {
+      ok: false,
+      error: e.message?.includes("fetch")
+        ? "Sem conexão. Verifique sua internet e tente novamente."
+        : "Erro inesperado. Tente novamente.",
+    };
   }
 }
