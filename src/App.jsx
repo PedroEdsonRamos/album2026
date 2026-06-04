@@ -242,8 +242,8 @@ function AppContent({ auth }) {
     await auth.signOut();
   };
 
-  const goToTeams = useCallback((section = "Todos") => {
-    setTeamsFilter({ section, _ts: Date.now() });
+  const goToTeams = useCallback((section = "Todos", sub = null) => {
+    setTeamsFilter({ section, sub, _ts: Date.now() });
     setSelectedTeam(null);
     setPage("teams");
     window.scrollTo({ top: 0, behavior: "smooth" });

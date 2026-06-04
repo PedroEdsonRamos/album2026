@@ -6,7 +6,9 @@ import { C } from "@/styles/tokens.js";
 
 export function StatCard({ label, value, sub, icon, color, noGlow, showLine, onClick }) {
   const [ref, vis] = useInView();
-  const n = useCounter(vis ? value : 0, 900);
+  const isNumeric = typeof value === "number";
+  const n = useCounter(vis && isNumeric ? value : 0, 900);
+  const displayValue = isNumeric ? n.toLocaleString("pt-BR") : value;
   return (
     <div
       ref={ref}
@@ -43,7 +45,7 @@ export function StatCard({ label, value, sub, icon, color, noGlow, showLine, onC
             {label}
           </div>
           <div style={{ fontSize: noGlow ? 22 : 26, fontWeight: 900, color: "#fff", lineHeight: 1 }}>
-            {n.toLocaleString("pt-BR")}
+            {displayValue}
           </div>
           {sub && <div style={{ fontSize: noGlow ? 10 : 11, color: noGlow ? C.t3 : color, marginTop: 4 }}>{sub}</div>}
         </div>

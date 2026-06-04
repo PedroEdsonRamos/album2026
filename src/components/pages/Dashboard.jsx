@@ -14,29 +14,62 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum, goToTea
   const total = TOTAL_OFFICIAL;
 
   const stats = useMemo(() => {
-    // Códigos únicos coletados (Tenho OU Repetida — cada código conta 1x)
-    const ownedCodes = new Set(
-      stickers
-        .filter((s) => s.status === "Tenho" || s.status === "Repetida")
-        .map((s) => s.code)
+    const isCollected = (s) => s.status === "Tenho" || s.status === "Repetida";
+
+    // COLETADAS: cada código único com status Tenho ou Repetida conta 1x
+    const coletadas = stickers.filter(isCollected).length;
+
+    // REPETIDAS: soma dos excedentes (duplicates) de figurinhas Repetida
+    const repetidas = stickers
+      .filter((s) => s.status === "Repetida")
+      .reduce((acc, s) => acc + (s.duplicates ?? 0), 0);
+
+    // JOGADORES: exclui Foto Equipe, Escudo, FWC e CC
+    const jogadoresTotais = stickers.filter((s) =>
+      s.position !== "Foto Equipe" &&
+      s.position !== "Escudo" &&
+      !s.code.startsWith("FWC") &&
+      s.code !== "00" &&
+      !s.code.startsWith("CC")
     );
-    const isPlayer = (s) =>
-      s.team !== "FWC" && s.team !== "CC" &&
-      s.position !== "Escudo" && s.position !== "Foto Equipe" && s.position !== "Especial";
-    const isFWC = (s) => s.team === "FWC";
-    const isCC  = (s) => s.team === "CC";
+    const jogadoresColetados = jogadoresTotais.filter(isCollected).length;
+
+    // SELEÇÕES: fotos de equipe + escudos
+    const selecoesTotais = stickers.filter(
+      (s) => s.position === "Foto Equipe" || s.position === "Escudo"
+    );
+    const selecoesColetadas = selecoesTotais.filter(isCollected).length;
+
+    // FWC: prefixo FWC + capa "00"
+    const fwcTotais = stickers.filter((s) => s.code.startsWith("FWC") || s.code === "00");
+    const fwcColetadas = fwcTotais.filter(isCollected).length;
+
+    // COCA-COLA: prefixo CC
+    const ccTotais = stickers.filter((s) => s.code.startsWith("CC"));
+    const ccColetadas = ccTotais.filter(isCollected).length;
 
     return {
-      coletadas:      ownedCodes.size,
-      repetidas:      stickers.filter((s) => s.status === "Repetida").length,
-      jogadoresOwned: stickers.filter((s) => ownedCodes.has(s.code) && isPlayer(s)).length,
-      selecoesOwned:  stickers.filter((s) => ownedCodes.has(s.code) && s.position === "Foto Equipe").length,
-      especiaisOwned: stickers.filter((s) => ownedCodes.has(s.code) && (isFWC(s) || isCC(s))).length,
+      coletadas,
+      repetidas,
+      jogadoresColetados,
+      jogadoresTotais: jogadoresTotais.length,
+      selecoesColetadas,
+      selecoesTotais: selecoesTotais.length,
+      fwcColetadas,
+      fwcTotais: fwcTotais.length,
+      ccColetadas,
+      ccTotais: ccTotais.length,
     };
   }, [stickers]);
 
-  const { coletadas, repetidas, jogadoresOwned, especiaisOwned, selecoesOwned } = stats;
-  const owned = coletadas; // alias para compatibilidade com pct e progress bar
+  const {
+    coletadas, repetidas,
+    jogadoresColetados, jogadoresTotais,
+    selecoesColetadas, selecoesTotais,
+    fwcColetadas, fwcTotais,
+    ccColetadas, ccTotais,
+  } = stats;
+  const owned = coletadas;
   const esCollection = getESCollection(stickers);
   const esLilas = esCollection.filter((e) => (e.collectedTypes["Lilás"] ?? 0) > 0).length;
   const esBronze = esCollection.filter((e) => (e.collectedTypes["Bronze"] ?? 0) > 0).length;
@@ -165,31 +198,42 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum, goToTea
             onClick={() => setPage("trocas")}
           />
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 10 }}>
-          <StatCard label="Jogadores" value={jogadoresOwned} sub="incluídos Extra Stickers"
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+          <StatCard label="Jogadores" value={`${jogadoresColetados} / ${jogadoresTotais}`}
+            sub="incluídos extra stickers"
             icon={null} color="#1fc8d1" noGlow
-            onClick={() => goToAlbum({ position: "Jogadores" })} />
-          <StatCard label="Seleções" value={selecoesOwned} sub="fotos equipe"
+            onClick={() => goToTeams()} />
+          <StatCard label="Seleções" value={`${selecoesColetadas} / ${selecoesTotais}`}
+            sub="fotos + escudos"
             icon={null} color={C.amber} noGlow
             onClick={() => goToAlbum({ position: "Foto Equipe" })} />
-          <StatCard label="Especiais" value={especiaisOwned} sub="FWC + Coca-Cola"
-            icon={null} color="#94a3b8" noGlow
-            onClick={() => goToTeams("Extras")} />
         </div>
-        <div style={{
-          display: "flex", alignItems: "center", gap: 8,
-          marginBottom: 8, marginTop: 4,
-          padding: "6px 12px",
-          background: "rgba(168,85,247,0.08)",
-          border: "1px solid rgba(168,85,247,0.2)",
-          borderRadius: 10,
-        }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
+          <StatCard label="FWC" value={`${fwcColetadas} / ${fwcTotais}`}
+            icon={null} color="#94a3b8" noGlow
+            onClick={() => goToTeams("Extras", "FWC")} />
+          <StatCard label="Coca-Cola" value={`${ccColetadas} / ${ccTotais}`}
+            icon={null} color="#f87171" noGlow
+            onClick={() => goToTeams("Extras", "CC")} />
+        </div>
+        <div
+          onClick={() => goToTeams("Extras", "ES")}
+          style={{
+            display: "flex", alignItems: "center", gap: 8,
+            marginBottom: 8, marginTop: 4,
+            padding: "6px 12px",
+            background: "rgba(168,85,247,0.08)",
+            border: "1px solid rgba(168,85,247,0.2)",
+            borderRadius: 10,
+            cursor: "pointer",
+          }}
+        >
           <span style={{ fontSize: 14 }}>⭐</span>
           <span style={{ fontSize: 11, fontWeight: 700, color: "#a855f7", flex: 1 }}>
-            Extra Stickers — por tipo
+            Extra Stickers
           </span>
           <span style={{ fontSize: 10, color: C.t3 }}>
-            {esLilas + esBronze + esPrata + esOuro} de 80 coletados
+            {esLilas + esBronze + esPrata + esOuro} de 80 coletadas
           </span>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6, marginBottom: 20 }}>
