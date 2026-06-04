@@ -353,8 +353,5 @@ export const WHATSAPP_CARD = (
     >
       📱 Falar no WhatsApp
     </a>
-    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 10 }}>
-      (31) 99415-0103
-    </div>
   </div>
 );
