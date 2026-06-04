@@ -41,15 +41,16 @@ function UserMenu({ user, onLogout, onProfile }) {
       {open && (
         <>
           <div
-            onClick={() => setOpen(false)}
-            style={{ position: "fixed", inset: 0, zIndex: 999, background: "transparent" }}
+            onClick={(e) => { e.stopPropagation(); setOpen(false); }}
+            style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 99998, background: "transparent", cursor: "default" }}
           />
           <div
+            onClick={(e) => e.stopPropagation()}
             style={{
               position: "absolute",
               top: "calc(100% + 8px)",
               right: 0,
-              zIndex: 1000,
+              zIndex: 99999,
               background: "#1a1a2e",
               border: "1px solid rgba(255,255,255,0.1)",
               borderRadius: 14,
