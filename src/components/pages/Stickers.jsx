@@ -40,12 +40,19 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
           if (!MY_CODES.has(s.code)) return false;
         } else if (fStatus !== "Todos" && s.status !== fStatus) return false;
         if (fFinish !== "Todos" && rarToFinish(s.rarity) !== fFinish) return false;
-        if (fPosition === "Extra Stickers") { if (!ES_BY_CODE[s.code]) return false; }
-        else if (fPosition === "Jogadores") {
+        if (fPosition === "Extra Stickers") {
+          if (!ES_BY_CODE[s.code]) return false;
+        } else if (fPosition === "Jogadores") {
           if (s.position === "Escudo" || s.position === "Foto Equipe" || s.position === "Especial") return false;
           if (s.team === "FWC" || s.team === "CC") return false;
-        }
-        else if (fPosition !== "Todos" && s.position !== fPosition) return false;
+        } else if (fPosition === "Especial") {
+          const fwcNum = s.code.startsWith("FWC") ? parseInt(s.code.replace("FWC", "")) : NaN;
+          if (!(s.code === "00" || (s.code.startsWith("FWC") && fwcNum <= 8) || s.code.startsWith("CC"))) return false;
+        } else if (fPosition === "Momento Histórico") {
+          if (!s.code.startsWith("FWC")) return false;
+          const num = parseInt(s.code.replace("FWC", ""));
+          if (!(num >= 9 && num <= 19)) return false;
+        } else if (fPosition !== "Todos" && s.position !== fPosition) return false;
         return true;
       }),
     [stickers, selectedTeam, search, fStatus, fFinish, fPosition]
@@ -230,7 +237,7 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
 
       <div style={{ overflowX: "auto", overflowY: "visible", paddingBottom: 4, marginBottom: 14 }}>
         <div style={{ display: "flex", gap: 5, paddingTop: 5, width: "max-content", overflow: "visible" }}>
-          {["Todos", "Jogadores", "Goleiro", "Defensor", "Meio-Campista", "Atacante", "Foto Equipe", "Escudo", "Especial", "Extra Stickers"].map((pos) => (
+          {["Todos", "Jogadores", "Goleiro", "Defensor", "Meio-Campista", "Atacante", "Foto Equipe", "Escudo", "Especial", "Momento Histórico", "Extra Stickers"].map((pos) => (
             <button
               key={pos}
               onClick={() => setFPosition(pos)}
