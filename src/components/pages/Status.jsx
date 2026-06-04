@@ -209,7 +209,7 @@ export function Status({ stickers, setStickers, addToast, setPage, onReset }) {
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontSize: 16, fontWeight: 700, color: C.amber }}>{cost}</div>
-                <div style={{ fontSize: 10, color: C.t3 }}>R$ 7,00 por pacote (7 figurinhas)</div>
+                <div style={{ fontSize: 10, color: C.t3 }}>7,00/pacote</div>
               </div>
             </div>
           </div>
