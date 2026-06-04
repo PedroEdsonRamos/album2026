@@ -34,11 +34,13 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum, goToTea
     );
     const jogadoresColetados = jogadoresTotais.filter(isCollected).length;
 
-    // SELEÇÕES: fotos de equipe + escudos
-    const selecoesTotais = stickers.filter(
-      (s) => s.position === "Foto Equipe" || s.position === "Escudo"
-    );
+    // SELEÇÕES: apenas foto de equipe (posição #13)
+    const selecoesTotais = stickers.filter(s => s.position === "Foto Equipe");
     const selecoesColetadas = selecoesTotais.filter(isCollected).length;
+
+    // ESCUDOS: apenas escudos
+    const escudosTotais = stickers.filter(s => s.position === "Escudo");
+    const escudosColetadas = escudosTotais.filter(isCollected).length;
 
     // FWC: prefixo FWC + capa "00"
     const fwcTotais = stickers.filter((s) => s.code.startsWith("FWC") || s.code === "00");
@@ -55,6 +57,8 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum, goToTea
       jogadoresTotais: jogadoresTotais.length,
       selecoesColetadas,
       selecoesTotais: selecoesTotais.length,
+      escudosColetadas,
+      escudosTotais: escudosTotais.length,
       fwcColetadas,
       fwcTotais: fwcTotais.length,
       ccColetadas,
@@ -66,6 +70,7 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum, goToTea
     coletadas, repetidas,
     jogadoresColetados, jogadoresTotais,
     selecoesColetadas, selecoesTotais,
+    escudosColetadas, escudosTotais,
     fwcColetadas, fwcTotais,
     ccColetadas, ccTotais,
   } = stats;
@@ -178,13 +183,14 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum, goToTea
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+        {/* Linha 1: Coletadas / Repetidas */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           <StatCard
             label="Coletadas"
             value={owned}
             sub={`${pct}% do álbum`}
             icon="check"
-            color={C.green}
+            color="#22c55e"
             showLine={true}
             onClick={() => goToAlbum({ status: "Tenho" })}
           />
@@ -193,50 +199,77 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum, goToTea
             value={repetidas}
             sub="para troca"
             icon="swap"
-            color={C.violet}
+            color="#f59e0b"
             showLine={true}
             onClick={() => setPage("trocas")}
           />
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+        {/* Linha 2: Jogadores / Seleções */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           <StatCard label="Jogadores" value={`${jogadoresColetados} / ${jogadoresTotais}`}
             sub="incluídos extra stickers"
-            icon={null} color="#1fc8d1" noGlow
+            icon={null} color="#1fc8d1" noGlow showLine={true}
             onClick={() => goToTeams()} />
           <StatCard label="Seleções" value={`${selecoesColetadas} / ${selecoesTotais}`}
-            sub="fotos + escudos"
-            icon={null} color={C.amber} noGlow
+            sub="fotos de equipe"
+            icon={null} color="#e2e8f0" noGlow showLine={true}
             onClick={() => goToAlbum({ position: "Foto Equipe" })} />
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
+        {/* Linha 3: Escudos / FWC */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <StatCard label="Escudos" value={`${escudosColetadas} / ${escudosTotais}`}
+            icon={null} color="#94a3b8" noGlow showLine={true}
+            onClick={() => goToAlbum({ position: "Escudo" })} />
           <StatCard label="FWC" value={`${fwcColetadas} / ${fwcTotais}`}
-            icon={null} color="#94a3b8" noGlow
+            icon={null} color="#94a3b8" noGlow showLine={true}
             onClick={() => goToTeams("Extras", "FWC")} />
+        </div>
+        {/* Linha 4: Coca-Cola / Extra Stickers */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           <StatCard label="Coca-Cola" value={`${ccColetadas} / ${ccTotais}`}
-            icon={null} color="#f87171" noGlow
+            icon={null} color="#f40009" noGlow showLine={true}
             onClick={() => goToTeams("Extras", "CC")} />
+          <div
+            onClick={() => goToTeams("Extras", "ES")}
+            style={{
+              background: C.surface,
+              border: "1px solid rgba(168,85,247,0.28)",
+              borderRadius: 14,
+              padding: "12px 14px",
+              cursor: "pointer",
+              position: "relative",
+              overflow: "hidden",
+              backdropFilter: "blur(8px)",
+              boxShadow: "0 4px 16px rgba(168,85,247,0.13)",
+            }}
+          >
+            <div style={{
+              position: "absolute", top: -1, right: -1,
+              width: 56, height: 56,
+              background: "radial-gradient(circle at top right, rgba(168,85,247,0.50) 0%, rgba(168,85,247,0.18) 50%, transparent 72%)",
+              borderRadius: "0 14px 0 0",
+              pointerEvents: "none",
+            }} />
+            <div style={{
+              position: "absolute", top: 0, left: 14, right: 14, height: 1.5,
+              background: "linear-gradient(90deg, transparent 0%, rgba(168,85,247,0.75) 28%, rgba(168,85,247,0.75) 72%, transparent 100%)",
+              borderRadius: 999, pointerEvents: "none",
+            }} />
+            <div style={{ position: "relative", zIndex: 2 }}>
+              <div style={{ fontSize: 11, color: C.t2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
+                Extra Stickers
+              </div>
+              <div style={{ fontSize: 22, fontWeight: 900, color: "#fff", lineHeight: 1 }}>
+                {esLilas + esBronze + esPrata + esOuro}
+              </div>
+              <div style={{ fontSize: 10, color: "#a855f7", marginTop: 4 }}>
+                ⭐ de 80 coletadas
+              </div>
+            </div>
+          </div>
         </div>
-        <div
-          onClick={() => goToTeams("Extras", "ES")}
-          style={{
-            display: "flex", alignItems: "center", gap: 8,
-            marginBottom: 8, marginTop: 4,
-            padding: "6px 12px",
-            background: "rgba(168,85,247,0.08)",
-            border: "1px solid rgba(168,85,247,0.2)",
-            borderRadius: 10,
-            cursor: "pointer",
-          }}
-        >
-          <span style={{ fontSize: 14 }}>⭐</span>
-          <span style={{ fontSize: 11, fontWeight: 700, color: "#a855f7", flex: 1 }}>
-            Extra Stickers
-          </span>
-          <span style={{ fontSize: 10, color: C.t3 }}>
-            {esLilas + esBronze + esPrata + esOuro} de 80 coletadas
-          </span>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6, marginBottom: 20 }}>
+        {/* Mini-cards ES: Lilás / Bronze / Prata / Ouro */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6, marginBottom: 10 }}>
           {[
             { key: "Lilás",  count: esLilas },
             { key: "Bronze", count: esBronze },
