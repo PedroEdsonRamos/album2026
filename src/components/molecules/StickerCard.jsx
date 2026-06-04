@@ -139,10 +139,10 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
           position: "absolute",
           top: 6,
           right: 6,
-          display: "flex",
-          flexDirection: "column",
-          gap: 2,
-          alignItems: "flex-end",
+          display: "grid",
+          gridTemplateColumns: Object.values(s.typeBreakdown).filter((q) => q > 0).length > 2 ? "1fr 1fr" : "1fr",
+          gap: 3,
+          maxWidth: 70,
           zIndex: 1,
         }}>
           {Object.entries(s.typeBreakdown)
@@ -155,13 +155,15 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
                   background: badgeFin.bg,
                   border: `1px solid ${badgeFin.border}`,
                   color: badgeFin.color,
-                  borderRadius: 999,
-                  padding: "1px 7px",
+                  borderRadius: 8,
+                  padding: "1px 6px",
                   fontSize: 9,
                   fontWeight: 700,
+                  textAlign: "center",
                   whiteSpace: "nowrap",
+                  lineHeight: "14px",
                 }}>
-                  {badgeFin.label} {qty}x
+                  {qty}x
                 </span>
               );
             })}
@@ -214,6 +216,7 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
           marginBottom: 5,
           minHeight: 28,
           position: "relative",
+          paddingRight: dup && s.typeBreakdown ? 80 : 0,
         }}
       >
         {displayName}
@@ -245,7 +248,6 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
           }}
         >
           {fin.label}
-          {dup ? ` ${totalTenho}x` : ""}
         </span>
       </div>
     </div>
