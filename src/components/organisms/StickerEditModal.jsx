@@ -122,7 +122,7 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
         <div style={{ display: "flex", gap: 6, marginBottom: 18 }}>
           {["Faltando", "Tenho", "Repetida"].map((st) => {
             const active = sticker.status === st;
-            const col = st === "Tenho" ? C.green : st === "Repetida" ? C.violet : C.red;
+            const col = st === "Tenho" ? C.green : st === "Repetida" ? "#f59e0b" : C.red;
             return (
               <button
                 key={st}

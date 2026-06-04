@@ -128,8 +128,8 @@ export function Trades({ stickers, addToast, goToAlbum, setPage, setTeamFilter }
           disabled={sharing}
           style={{
             display: "flex", alignItems: "center", gap: 6,
-            background: C.violetDim, border: `1px solid ${C.violet}55`,
-            color: C.violet, borderRadius: 10, padding: "8px 14px",
+            background: "rgba(245,158,11,0.18)", border: "1px solid rgba(245,158,11,0.35)",
+            color: "#f59e0b", borderRadius: 10, padding: "8px 14px",
             fontSize: 12, fontWeight: 700, cursor: sharing ? "not-allowed" : "pointer",
             fontFamily: "inherit", opacity: sharing ? 0.6 : 1,
           }}
