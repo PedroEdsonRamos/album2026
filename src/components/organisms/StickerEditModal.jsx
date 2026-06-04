@@ -209,16 +209,13 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
             </>
           ) : sticker.status !== "Repetida" ? (
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {Object.entries(FINISH).map(([key, fin]) => {
+              {Object.entries(FINISH).filter(([key]) => isTypeAllowed(sticker, key)).map(([key, fin]) => {
                 const active = rarToFinish(sticker.rarity) === key;
-                const allowed = isTypeAllowed(sticker, key);
                 return (
                   <button
                     key={key}
-                    onClick={() => allowed && onChange((p) => ({ ...p, rarity: RARITY_MAP[key] || "Comum" }))}
-                    title={!allowed ? `Tipo não permitido para ${CATEGORY_LABEL[category]}` : undefined}
+                    onClick={() => onChange((p) => ({ ...p, rarity: RARITY_MAP[key] || "Comum" }))}
                     onMouseEnter={(e) => {
-                      if (!allowed) return;
                       e.currentTarget.style.filter = "brightness(1.15)";
                       e.currentTarget.style.transform = "translateY(-2px)";
                       e.currentTarget.style.boxShadow = `0 6px 16px ${fin.glow}`;
@@ -239,10 +236,9 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
                       padding: "10px 6px",
                       fontSize: 11,
                       fontWeight: 700,
-                      cursor: allowed ? "pointer" : "not-allowed",
+                      cursor: "pointer",
                       fontFamily: "inherit",
                       transition: "all .18s",
-                      opacity: allowed ? 1 : 0.35,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
