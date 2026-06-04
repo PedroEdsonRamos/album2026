@@ -48,13 +48,13 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
   const needsNumber = s.position === "Foto Equipe" || s.team === "CC" || isPlayer
     || s.team === "FWC" || s.position === "Escudo";
   const displayName = needsNumber
-    ? `${s.name} - ${displayNumber}`
+    ? s.position === "Foto Equipe"
+      ? `${team.name} - ${displayNumber}`
+      : `${s.name} - ${displayNumber}`
     : s.name;
-  // Momentos Históricos: país-ano em cima, label embaixo
+  // Momentos Históricos: país-ano em cima, label embaixo (invertido)
   const isMomentoHistorico = s.team === "FWC" && s.country && s.year;
-  const positionLabel = isMomentoHistorico
-    ? `${s.country} · ${s.year}`
-    : s.position;
+  const positionLabel = isMomentoHistorico ? "Momento Histórico" : s.position;
   const handleClick = () => {
     if (onToggle) onToggle(s.id);
     else if (onClick) onClick(s);
@@ -209,17 +209,30 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
       </div>
       <div
         style={{
-          fontSize: 11,
-          fontWeight: 700,
-          color: owned || dup ? C.t1 : C.t4,
-          lineHeight: 1.25,
           marginBottom: 5,
           minHeight: 28,
           position: "relative",
           paddingRight: dup && s.typeBreakdown ? 80 : 0,
         }}
       >
-        {displayName}
+        {isMomentoHistorico ? (
+          <div style={{ fontSize: 11, fontWeight: 700, color: owned || dup ? C.t1 : C.t4, lineHeight: 1.25 }}>
+            {s.country} - {s.year}
+          </div>
+        ) : isPlayer ? (
+          <>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", fontWeight: 700, lineHeight: 1.2 }}>
+              {displayNumber}
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: owned || dup ? C.t1 : C.t4, lineHeight: 1.2 }}>
+              {s.name}
+            </div>
+          </>
+        ) : (
+          <div style={{ fontSize: 11, fontWeight: 700, color: owned || dup ? C.t1 : C.t4, lineHeight: 1.25 }}>
+            {displayName}
+          </div>
+        )}
       </div>
       <div
         style={{
