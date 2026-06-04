@@ -85,7 +85,7 @@ export function QuickSearch({ stickers, onClose, onGoTo }) {
                 borderRadius: 12,
                 padding: "14px 14px 14px 38px",
                 color: "#fff",
-                fontSize: 15,
+                fontSize: 16,
                 outline: "none",
                 boxSizing: "border-box",
                 fontFamily: "inherit",

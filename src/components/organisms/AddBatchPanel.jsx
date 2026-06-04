@@ -149,7 +149,7 @@ export function AddBatchPanel({ stickers, setStickers, addToast }) {
         rows={7}
         placeholder={"BRA1, 2, 3, 10\nESP1-5\nARG17:L, FRA5, 6, 7"}
         style={{ width: "100%", background: C.surfaceHi, border: `1px solid ${hasErrors && hasInput ? C.red + "88" : C.borderHi}`, borderRadius: 12,
-          padding: "14px 16px", color: "#fff", fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: "monospace", resize: "vertical", lineHeight: 1.6 }}
+          padding: "14px 16px", color: "#fff", fontSize: 16, outline: "none", boxSizing: "border-box", fontFamily: "monospace", resize: "vertical", lineHeight: 1.6 }}
       />
 
       <div style={{ fontSize: 11, color: C.t3, margin: "6px 0" }}>

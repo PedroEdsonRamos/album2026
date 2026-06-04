@@ -156,7 +156,7 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
             borderRadius: 10,
             padding: "10px 12px 10px 36px",
             color: "#fff",
-            fontSize: 13,
+            fontSize: 16,
             outline: "none",
             boxSizing: "border-box",
             fontFamily: "inherit",

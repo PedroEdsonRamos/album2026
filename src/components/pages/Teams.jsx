@@ -203,7 +203,7 @@ export function Teams({ stickers, setPage, setTeamFilter, goToAlbum, initialSect
             borderRadius: 12,
             padding: "10px 14px 10px 36px",
             color: "#fff",
-            fontSize: 13,
+            fontSize: 16,
             outline: "none",
             boxSizing: "border-box",
             fontFamily: "inherit",

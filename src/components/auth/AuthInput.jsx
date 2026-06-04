@@ -44,7 +44,7 @@ export function AuthInput({
             border: `1px solid ${error ? "rgba(248,113,113,0.6)" : "rgba(255,255,255,0.1)"}`,
             borderRadius: 12,
             padding: isPassword ? "13px 44px 13px 16px" : "13px 16px",
-            fontSize: 14,
+            fontSize: 16,
             color: "#fff",
             fontFamily: "inherit",
             outline: "none",

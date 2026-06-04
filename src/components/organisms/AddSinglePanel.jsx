@@ -122,7 +122,7 @@ export function AddSinglePanel({ stickers, setStickers, addToast }) {
             placeholder="Ex: BRA10, FWC6, CC1..."
             style={{
               flex: 1, background: C.surfaceHi, border: `1px solid ${C.borderHi}`,
-              borderRadius: 12, padding: "14px 16px", color: "#fff", fontSize: 15,
+              borderRadius: 12, padding: "14px 16px", color: "#fff", fontSize: 16,
               outline: "none", boxSizing: "border-box", fontFamily: "monospace",
               letterSpacing: "0.05em",
             }}

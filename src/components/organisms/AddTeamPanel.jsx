@@ -82,7 +82,7 @@ export function AddTeamPanel({ stickers, setStickers }) {
         </div>
         <input value={teamSearch} onChange={(e) => setTeamSearch(e.target.value)} placeholder="Buscar seleção (ex: Brasil, USA, Áustria)..."
           style={{ width: "100%", background: C.surfaceHi, border: `1px solid ${C.borderHi}`, borderRadius: 10,
-            padding: "10px 36px 10px 36px", color: "#fff", fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
+            padding: "10px 36px 10px 36px", color: "#fff", fontSize: 16, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
         {teamSearch && (
           <button onClick={() => setTeamSearch("")}
             style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: C.t3, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 4 }}>
@@ -125,7 +125,7 @@ export function AddTeamPanel({ stickers, setStickers }) {
       </div>
       <textarea value={teamNums} onChange={(e) => setTeamNums(e.target.value)} rows={4} placeholder={"Ex: 1, 2, 3, 5\nou intervalos: 7-12"}
         style={{ width: "100%", background: C.surfaceHi, border: `1px solid ${C.borderHi}`, borderRadius: 12,
-          padding: "14px 16px", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box", fontFamily: "monospace", resize: "vertical", lineHeight: 1.6 }} />
+          padding: "14px 16px", color: "#fff", fontSize: 16, outline: "none", boxSizing: "border-box", fontFamily: "monospace", resize: "vertical", lineHeight: 1.6 }} />
       <div style={{ fontSize: 11, color: C.t3, margin: "6px 0 14px" }}>
         {previewNums.length} figurinha(s): {previewNums.slice(0, 8).map((n) => `${teamSel}${n}`).join(", ")}{previewNums.length > 8 ? "..." : ""}
       </div>
