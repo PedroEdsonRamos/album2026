@@ -83,6 +83,7 @@ export function Teams({ stickers, setPage, setTeamFilter, goToAlbum, initialSect
   useEffect(() => {
     if (initialSection?._ts && initialSection.section) {
       setGrp(initialSection.section);
+      if (initialSection.sub) setExtrasTab(initialSection.sub);
     }
   }, [initialSection?._ts]);
 
@@ -107,9 +108,16 @@ export function Teams({ stickers, setPage, setTeamFilter, goToAlbum, initialSect
     });
   }, [stickers, grp, search, sortTeams]);
 
-  const fwcOwned = stickers.filter((s) => s.team === "FWC" && s.status === "Tenho").length;
-  const ccOwned = stickers.filter((s) => s.team === "CC" && s.status === "Tenho").length;
+  const isCollected = (s) => s.status === "Tenho" || s.status === "Repetida";
+  const fwcOwned = stickers.filter((s) => s.team === "FWC" && isCollected(s)).length;
+  const fwcTotal = stickers.filter((s) => s.team === "FWC").length;
+  const ccOwned = stickers.filter((s) => s.team === "CC" && isCollected(s)).length;
   const esCount = countESCollected(stickers);
+
+  const emblemasTotal = stickers.filter((s) => s.team === "FWC" && s.section === "Emblemas e Mascotes").length;
+  const emblemasOwned = stickers.filter((s) => s.team === "FWC" && s.section === "Emblemas e Mascotes" && isCollected(s)).length;
+  const historicosTotal = stickers.filter((s) => s.team === "FWC" && s.section === "Momentos Históricos").length;
+  const historicosOwned = stickers.filter((s) => s.team === "FWC" && s.section === "Momentos Históricos" && isCollected(s)).length;
 
   const sectionHeader = (icon, label, count) => (
     <div style={{
@@ -227,7 +235,7 @@ export function Teams({ stickers, setPage, setTeamFilter, goToAlbum, initialSect
                 transition: "all .18s ease",
               }}
             >
-              {g === "Todos" ? "Todos" : g === "Extras" ? "Extras" : `Grupo ${g}`}
+              {g === "Todos" ? "Todos" : g === "Extras" ? "Outras" : `Grupo ${g}`}
             </button>
           ))}
         </div>
@@ -237,7 +245,7 @@ export function Teams({ stickers, setPage, setTeamFilter, goToAlbum, initialSect
         <div>
           <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
             {[
-              { id: "FWC", label: "🌐 FWC", count: `${fwcOwned}/20` },
+              { id: "FWC", label: "🌐 FWC", count: `${fwcOwned}/${fwcTotal}` },
               { id: "CC",  label: "🥤 Coca-Cola", count: `${ccOwned}/14` },
               { id: "ES",  label: "⭐ Extra Stickers", count: `${esCount}/80` },
             ].map((tab) => (
@@ -269,7 +277,7 @@ export function Teams({ stickers, setPage, setTeamFilter, goToAlbum, initialSect
 
           {extrasTab === "FWC" && (
             <div>
-              {sectionHeader("🏆", "Emblemas e Mascotes", "")}
+              {sectionHeader("🏆", "Emblemas e Mascotes", `${emblemasOwned} / ${emblemasTotal}`)}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 16 }}>
                 {stickers
                   .filter((s) => s.team === "FWC" && s.section === "Emblemas e Mascotes")
@@ -282,7 +290,7 @@ export function Teams({ stickers, setPage, setTeamFilter, goToAlbum, initialSect
                     />
                   ))}
               </div>
-              {sectionHeader("📸", "Momentos Históricos", "")}
+              {sectionHeader("📸", "Momentos Históricos", `${historicosOwned} / ${historicosTotal}`)}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                 {stickers
                   .filter((s) => s.team === "FWC" && s.section === "Momentos Históricos")
