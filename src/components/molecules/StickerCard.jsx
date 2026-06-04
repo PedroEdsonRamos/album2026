@@ -7,6 +7,7 @@ import { Icon } from "@/components/atoms/Icon.jsx";
 import { C } from "@/styles/tokens.js";
 
 const RARITY_PRIORITY = ["Ouro", "Prata", "Bronze", "Lilás", "Metalizado", "McDonalds", "Comum", "Coca-Cola"];
+const BADGE_SAFE_ZONE = 76; // px reservados à direita para badges + margem
 const getRarestRarity = (breakdown) => {
   if (!breakdown || Object.keys(breakdown).length === 0) return null;
   for (const r of RARITY_PRIORITY) {
@@ -212,11 +213,18 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
           marginBottom: 5,
           minHeight: 28,
           position: "relative",
-          paddingRight: dup && s.typeBreakdown ? 80 : 0,
         }}
       >
         {isMomentoHistorico ? (
-          <div style={{ fontSize: 11, fontWeight: 700, color: owned || dup ? C.t1 : C.t4, lineHeight: 1.25 }}>
+          <div style={{
+            fontSize: 11, fontWeight: 700,
+            color: owned || dup ? C.t1 : C.t4,
+            lineHeight: 1.25,
+            maxWidth: `calc(100% - ${BADGE_SAFE_ZONE}px)`,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}>
             {s.country} - {s.year}
           </div>
         ) : isPlayer ? (
@@ -224,12 +232,24 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", fontWeight: 700, lineHeight: 1.2 }}>
               {displayNumber}
             </div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: owned || dup ? C.t1 : C.t4, lineHeight: 1.2 }}>
+            <div style={{
+              fontSize: 13, fontWeight: 700,
+              color: owned || dup ? C.t1 : C.t4,
+              lineHeight: 1.2,
+              maxWidth: `calc(100% - ${BADGE_SAFE_ZONE}px)`,
+              wordBreak: "break-word",
+            }}>
               {s.name}
             </div>
           </>
         ) : (
-          <div style={{ fontSize: 11, fontWeight: 700, color: owned || dup ? C.t1 : C.t4, lineHeight: 1.25 }}>
+          <div style={{
+            fontSize: 11, fontWeight: 700,
+            color: owned || dup ? C.t1 : C.t4,
+            lineHeight: 1.25,
+            maxWidth: `calc(100% - ${BADGE_SAFE_ZONE}px)`,
+            wordBreak: "break-word",
+          }}>
             {displayName}
           </div>
         )}
