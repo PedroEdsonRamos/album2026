@@ -24,6 +24,37 @@ const toRgba = (hex, alpha) => {
   return `rgba(${r},${g},${b},${alpha})`;
 };
 
+const FWC_SHORT_DESC = {
+  "00": "Capa do Álbum",
+  "FWC1": "Emblema", "FWC2": "Emblema",
+  "FWC3": "Mascotes",
+  "FWC4": "Slogan",
+  "FWC5": "Bola",
+  "FWC6": "Troféu",
+  "FWC7": "País-Sede", "FWC8": "País-Sede",
+};
+
+function getCardLines(s) {
+  const num = s.code === "00" ? "00" : s.number;
+  if (s.position === "Foto Equipe") {
+    return { number: num, desc: s.teamName, footer: "Foto de Equipe" };
+  }
+  if (s.position === "Escudo") {
+    return { number: num, desc: "Escudo", footer: "Metalizada" };
+  }
+  if (s.team === "FWC" && s.country && s.year) {
+    return { number: num, desc: `${s.year} - ${s.country}`, footer: "Momento Histórico" };
+  }
+  if (s.team === "FWC" || s.code === "00") {
+    return { number: num, desc: FWC_SHORT_DESC[s.code] ?? s.name, footer: "Metalizada" };
+  }
+  if (s.team === "CC") {
+    return { number: num, desc: s.name, footer: "Coca-Cola" };
+  }
+  // Default: Jogador
+  return { number: num, desc: s.name, footer: s.position };
+}
+
 export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
   const [ref, vis] = useInView(0.05);
   const [touched, setTouched] = useState(false);
@@ -32,30 +63,13 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
   const fin = getFinish(displayRarity);
   const owned = s.status === "Tenho";
   const dup = s.status === "Repetida";
-  const hasMultipleTypes = dup && s.typeBreakdown &&
-    Object.keys(s.typeBreakdown).filter((k) => (s.typeBreakdown[k] ?? 0) > 0).length > 1;
   const totalDuplicates = s.typeBreakdown
     ? Object.values(s.typeBreakdown).reduce((a, b) => a + b, 0)
     : s.duplicates ?? 0;
   const isMine = MY_CODES.has(s.code);
   const clickable = !!(onToggle || onClick);
-  // Total copies = 1 colada + excess (duplicates stores excess count)
-  const totalTenho = dup ? 1 + totalDuplicates : 0;
+  const lines = getCardLines(s);
 
-  // Compute display name and position label
-  const isPlayer = s.team !== "FWC" && s.team !== "CC"
-    && s.position !== "Escudo" && s.position !== "Foto Equipe" && s.position !== "Especial";
-  const displayNumber = s.code === "00" ? "00" : s.number;
-  const needsNumber = s.position === "Foto Equipe" || s.team === "CC" || isPlayer
-    || s.team === "FWC" || s.position === "Escudo";
-  const displayName = needsNumber
-    ? s.position === "Foto Equipe"
-      ? `${team.name} - ${displayNumber}`
-      : `${s.name} - ${displayNumber}`
-    : s.name;
-  // Momentos Históricos: país-ano em cima, label embaixo (invertido)
-  const isMomentoHistorico = s.team === "FWC" && s.country && s.year;
-  const positionLabel = isMomentoHistorico ? "Momento Histórico" : s.position;
   const handleClick = () => {
     if (onToggle) onToggle(s.id);
     else if (onClick) onClick(s);
@@ -215,44 +229,18 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
           position: "relative",
         }}
       >
-        {isMomentoHistorico ? (
-          <div style={{
-            fontSize: 11, fontWeight: 700,
-            color: owned || dup ? C.t1 : C.t4,
-            lineHeight: 1.25,
-            maxWidth: `calc(100% - ${BADGE_SAFE_ZONE}px)`,
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}>
-            {s.country} - {s.year}
-          </div>
-        ) : isPlayer ? (
-          <>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", fontWeight: 700, lineHeight: 1.2 }}>
-              {displayNumber}
-            </div>
-            <div style={{
-              fontSize: 13, fontWeight: 700,
-              color: owned || dup ? C.t1 : C.t4,
-              lineHeight: 1.2,
-              maxWidth: `calc(100% - ${BADGE_SAFE_ZONE}px)`,
-              wordBreak: "break-word",
-            }}>
-              {s.name}
-            </div>
-          </>
-        ) : (
-          <div style={{
-            fontSize: 11, fontWeight: 700,
-            color: owned || dup ? C.t1 : C.t4,
-            lineHeight: 1.25,
-            maxWidth: `calc(100% - ${BADGE_SAFE_ZONE}px)`,
-            wordBreak: "break-word",
-          }}>
-            {displayName}
-          </div>
-        )}
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", fontWeight: 700, lineHeight: 1.2 }}>
+          {lines.number}
+        </div>
+        <div style={{
+          fontSize: 13, fontWeight: 700,
+          color: owned || dup ? C.t1 : C.t4,
+          lineHeight: 1.2,
+          maxWidth: `calc(100% - ${BADGE_SAFE_ZONE}px)`,
+          wordBreak: "break-word",
+        }}>
+          {lines.desc}
+        </div>
       </div>
       <div
         style={{
@@ -262,7 +250,7 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
           position: "relative",
         }}
       >
-        <span style={{ fontSize: 9, color: C.t3 }}>{positionLabel}</span>
+        <span style={{ fontSize: 9, color: C.t3 }}>{lines.footer}</span>
         <span
           style={{
             background: fin.bg,
