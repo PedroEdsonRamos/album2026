@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef, lazy, Suspense } from "react";
+import { supabase } from "@/lib/supabase";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus.js";
 import { SkeletonGrid } from "@/components/atoms/SkeletonCard.jsx";
 import { C } from "@/styles/tokens.js";
@@ -133,7 +134,43 @@ function OfflineBanner() {
   );
 }
 
-export default function App() {
+export default function App({ initialRecovery = false }) {
+  const [recoveryMode, setRecoveryMode] = useState(initialRecovery);
+
+  // Estabelece sessão a partir do token no hash (implicit flow)
+  // PKCE flow: Supabase já troca o token via detectSessionInUrl — nada a fazer
+  useEffect(() => {
+    if (!initialRecovery) return;
+    const setupRecovery = async () => {
+      const hash = window.location.hash.replace(/^#/, "");
+      const params = new URLSearchParams(hash);
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
+      if (accessToken && refreshToken) {
+        await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+      }
+      window.history.replaceState(null, "", window.location.pathname);
+    };
+    setupRecovery();
+  }, [initialRecovery]);
+
+  if (recoveryMode) {
+    const exitRecovery = () => {
+      setRecoveryMode(false);
+      window.location.href = window.location.pathname;
+    };
+    return (
+      <ResetPasswordConfirmScreen
+        onSuccess={exitRecovery}
+        onCancel={exitRecovery}
+      />
+    );
+  }
+
+  return <NormalApp />;
+}
+
+function NormalApp() {
   const auth = useAuth();
   const [authScreen, setAuthScreen] = useState("login");
   const [pendingEmail, setPendingEmail] = useState("");
@@ -146,18 +183,6 @@ export default function App() {
   const callbackType = hashParams.get("type") || searchParams.get("type");
   const hasAccessToken = hash.includes("access_token");
   const hasTokenHash = searchParams.has("token_hash");
-
-  // Recovery via hash (implicit) ou search params (PKCE) → tela de redefinição
-  if ((hasAccessToken || hasTokenHash) && callbackType === "recovery") {
-    return (
-      <ResetPasswordConfirmScreen
-        onSuccess={() => {
-          window.history.replaceState(null, "", "/");
-          window.location.reload();
-        }}
-      />
-    );
-  }
 
   // Callback de confirmação de email → apenas signup, nunca recovery
   const isEmailConfirm = (hasAccessToken && callbackType === "signup") ||

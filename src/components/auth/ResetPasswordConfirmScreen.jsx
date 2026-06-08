@@ -1,31 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { AuthLayout } from "./AuthLayout";
 import { AuthButton } from "./AuthButton";
 import { AuthInput } from "./AuthInput";
 import { validatePassword, validatePasswordConfirm, translateAuthError } from "@/utils/authValidation";
 
-export function ResetPasswordConfirmScreen({ onSuccess }) {
+// A sessão de recovery já foi estabelecida no App.jsx antes deste componente renderizar
+export function ResetPasswordConfirmScreen({ onSuccess, onCancel }) {
   const [newPassword, setNewPassword]         = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors]     = useState({});
   const [authError, setAuthError] = useState(null);
   const [loading, setLoading]   = useState(false);
   const [done, setDone]         = useState(false);
-
-  useEffect(() => {
-    // Implicit flow: tokens no hash
-    const hash = window.location.hash;
-    if (hash.includes("access_token")) {
-      const params = new URLSearchParams(hash.replace("#", "?"));
-      const accessToken = params.get("access_token");
-      const refreshToken = params.get("refresh_token");
-      if (accessToken && refreshToken) {
-        supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-      }
-    }
-    // PKCE flow: Supabase já trocou o token via detectSessionInUrl — nada a fazer
-  }, []);
 
   const validate = () => {
     const e = {};
@@ -111,6 +98,22 @@ export function ResetPasswordConfirmScreen({ onSuccess }) {
             <AuthButton onClick={handleReset} loading={loading}>
               Redefinir senha
             </AuthButton>
+
+            {onCancel && (
+              <button
+                onClick={onCancel}
+                disabled={loading}
+                style={{
+                  width: "100%", padding: "12px", background: "transparent",
+                  border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12,
+                  color: "rgba(255,255,255,0.4)", fontSize: 13, fontWeight: 600,
+                  cursor: loading ? "not-allowed" : "pointer", fontFamily: "inherit",
+                  marginTop: 8,
+                }}
+              >
+                Cancelar
+              </button>
+            )}
           </>
         ) : (
           <div style={{ textAlign: "center", padding: "10px 0" }}>
