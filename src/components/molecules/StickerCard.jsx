@@ -37,13 +37,13 @@ const FWC_SHORT_DESC = {
 function getCardLines(s) {
   const num = s.code === "00" ? "00" : s.number;
   if (s.position === "Foto Equipe") {
-    return { number: num, desc: s.teamName, footer: "Foto de Equipe" };
+    return { number: num, desc: `Seleção ${s.teamName}`, footer: "Foto de Equipe" };
   }
   if (s.position === "Escudo") {
     return { number: num, desc: "Escudo", footer: "Metalizada" };
   }
   if (s.team === "FWC" && s.country && s.year) {
-    return { number: num, desc: `${s.year} - ${s.country}`, footer: "Momento Histórico" };
+    return { number: num, desc: `${s.year}\n${s.country}`, footer: "Momento Histórico" };
   }
   if (s.team === "FWC" || s.code === "00") {
     return { number: num, desc: FWC_SHORT_DESC[s.code] ?? s.name, footer: "Metalizada" };
@@ -238,6 +238,7 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
           lineHeight: 1.2,
           maxWidth: `calc(100% - ${BADGE_SAFE_ZONE}px)`,
           wordBreak: "break-word",
+          whiteSpace: "pre-line",
         }}>
           {lines.desc}
         </div>
@@ -250,7 +251,13 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
           position: "relative",
         }}
       >
-        <span style={{ fontSize: 9, color: C.t3 }}>{lines.footer}</span>
+        <span style={{
+          fontSize: 9, color: C.t3,
+          whiteSpace: s.team === "FWC" && s.country && s.year ? "pre-line" : undefined,
+          lineHeight: s.team === "FWC" && s.country && s.year ? 1.2 : undefined,
+        }}>
+          {s.team === "FWC" && s.country && s.year ? "Momento\nHistórico" : lines.footer}
+        </span>
         <span
           style={{
             background: fin.bg,
