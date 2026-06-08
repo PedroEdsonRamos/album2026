@@ -12,6 +12,7 @@ const RARITY_MAP = {
   Ouro: "Ouro",
   Metalizado: "Metalizado",
   "Coca-Cola": "Coca-Cola",
+  McDonalds: "McDonalds",
 };
 
 const FINISH_TO_RARITY = {
@@ -22,6 +23,7 @@ const FINISH_TO_RARITY = {
   Ouro: "Ouro",
   Metalizado: "Metalizado",
   "Coca-Cola": "Coca-Cola",
+  McDonalds: "McDonalds",
 };
 
 const btnStyle = {
