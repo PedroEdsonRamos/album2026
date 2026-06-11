@@ -1,4 +1,5 @@
 import { Component } from "react";
+import * as Sentry from "@sentry/react";
 
 export class ErrorBoundary extends Component {
   constructor(props) {
@@ -12,6 +13,9 @@ export class ErrorBoundary extends Component {
 
   componentDidCatch(error, info) {
     console.error("[ErrorBoundary] Erro capturado:", error, info);
+    if (import.meta.env.PROD) {
+      Sentry.captureException(error, { extra: info });
+    }
   }
 
   handleReload = () => {
