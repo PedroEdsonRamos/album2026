@@ -61,7 +61,7 @@ export function ChangePasswordSection({ auth, addToast }) {
     border: `1px solid ${hasError ? "rgba(248,113,113,0.6)" : "rgba(255,255,255,0.12)"}`,
     borderRadius: 12,
     padding: "12px 16px",
-    fontSize: 14,
+    fontSize: 16,
     color: "#fff",
     fontFamily: "inherit",
     outline: "none",
