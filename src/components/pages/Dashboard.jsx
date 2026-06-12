@@ -218,15 +218,18 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum, goToTea
         {/* Linha 3: Escudos / FWC */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           <StatCard label="Escudos" value={`${escudosColetadas} / ${escudosTotais}`}
+            sub="Escudos das seleções"
             icon={null} color="#94a3b8" noGlow showLine={true}
             onClick={() => goToAlbum({ position: "Escudo" })} />
           <StatCard label="FWC" value={`${fwcColetadas} / ${fwcTotais}`}
+            sub="Emblemas, mascotes e momentos históricos"
             icon={null} color="#94a3b8" noGlow showLine={true}
             onClick={() => goToTeams("Extras", "FWC")} />
         </div>
         {/* Linha 4: Coca-Cola / Extra Stickers */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           <StatCard label="Coca-Cola" value={`${ccColetadas} / ${ccTotais}`}
+            sub="Edição especial Coca-Cola"
             icon={null} color="#f40009" noGlow showLine={true}
             onClick={() => goToTeams("Extras", "CC")} />
           <div
@@ -259,11 +262,12 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum, goToTea
               <div style={{ fontSize: 11, color: C.t2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
                 Extra Stickers
               </div>
-              <div style={{ fontSize: 22, fontWeight: 900, color: "#fff", lineHeight: 1 }}>
-                {esLilas + esBronze + esPrata + esOuro}
+              <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+                <span style={{ fontSize: 22, fontWeight: 800, color: "#fff", lineHeight: 1 }}>{esLilas + esBronze + esPrata + esOuro}</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.35)" }}>/ 80</span>
               </div>
               <div style={{ fontSize: 10, color: "#a855f7", marginTop: 4 }}>
-                ⭐ de 80 coletadas
+                Para colecionar ou colar
               </div>
             </div>
           </div>
@@ -291,8 +295,10 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum, goToTea
                 }}
               >
                 <div style={{ fontSize: 11, color: fin.dimColor, marginBottom: 4, fontWeight: 600 }}>{fin.label}</div>
-                <div style={{ fontSize: 22, fontWeight: 900, color: fin.color }}>{count}</div>
-                <div style={{ fontSize: 10, color: fin.dimColor, marginTop: 2 }}>/20</div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
+                  <span style={{ fontSize: 22, fontWeight: 900, color: fin.color }}>{count}</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: fin.dimColor }}>/20</span>
+                </div>
               </div>
             );
           })}
