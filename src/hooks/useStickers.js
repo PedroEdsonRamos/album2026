@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { buildDatabase } from "@/data/database";
 import { TEAMS } from "@/data/teams";
+import { isFixedType } from "@/utils/stickerTypes";
 import {
   loadUserCollection,
   saveSticker,
@@ -122,7 +123,8 @@ export function useStickers(userId, addToast) {
             ...base,
             status: remote.status,
             duplicates: remote.duplicates,
-            rarity: remote.rarity,
+            // fixed-type stickers (FWC, Escudo, CC) always use the canonical base rarity
+            rarity: isFixedType(base) ? base.rarity : remote.rarity,
             typeBreakdown: remote.type_breakdown ?? undefined,
             obs: remote.obs ?? undefined,
             addedAt: remote.added_at ?? null,
