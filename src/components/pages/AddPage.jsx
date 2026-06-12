@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { usePersistedFilter } from "@/hooks/usePersistedFilter.js";
 import { AddSinglePanel } from "@/components/organisms/AddSinglePanel.jsx";
 import { AddTeamPanel } from "@/components/organisms/AddTeamPanel.jsx";
 import { AddBatchPanel } from "@/components/organisms/AddBatchPanel.jsx";
@@ -11,7 +11,7 @@ const MODES = [
 ];
 
 export function AddPage({ stickers, setStickers, addToast }) {
-  const [mode, setMode] = useState("single");
+  const [mode, setMode] = usePersistedFilter("filter_add_mode", "single");
 
   return (
     <div>

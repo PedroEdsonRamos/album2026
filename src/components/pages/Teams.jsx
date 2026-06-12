@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { usePersistedFilter } from "@/hooks/usePersistedFilter.js";
 import { TEAMS } from "@/data/teams.js";
 import { ES_PLAYERS, ES_RARITY_TYPES } from "@/data/extraStickers.js";
 import { TeamCard } from "@/components/molecules/TeamCard.jsx";
@@ -75,10 +76,10 @@ function ESPlayersGrid({ stickers, goToAlbum }) {
 }
 
 export function Teams({ stickers, setPage, setTeamFilter, goToAlbum, initialSection }) {
-  const [grp, setGrp] = useState("Todos");
+  const [grp, setGrp] = usePersistedFilter("filter_selecoes_grp", "Todos");
   const [search, setSearch] = useState("");
-  const [sortTeams, setSortTeams] = useState("pct");
-  const [extrasTab, setExtrasTab] = useState("FWC");
+  const [sortTeams, setSortTeams] = usePersistedFilter("filter_selecoes_sort", "pct");
+  const [extrasTab, setExtrasTab] = usePersistedFilter("filter_selecoes_extras", "FWC");
 
   useEffect(() => {
     if (initialSection?._ts && initialSection.section) {

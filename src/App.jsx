@@ -266,6 +266,7 @@ function AppContent({ auth }) {
   const handleLogout = async () => {
     if (!confirm("Deseja sair da sua conta?")) return;
     await auth.signOut();
+    sessionStorage.clear();
   };
 
   const goToTeams = useCallback((section = "Todos", sub = null) => {

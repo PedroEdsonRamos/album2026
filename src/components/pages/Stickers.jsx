@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { usePersistedFilter } from "@/hooks/usePersistedFilter.js";
 import { MY_CODES } from "@/data/userCollection.js";
 import { ES_BY_CODE } from "@/data/extraStickers.js";
 import { teamInfo } from "@/utils/teamInfo.js";
@@ -9,13 +10,14 @@ import { StickerEditModal } from "@/components/organisms/StickerEditModal.jsx";
 import { C } from "@/styles/tokens.js";
 
 export function Stickers({ stickers, selectedTeam, setStickers, addToast, initialFilter }) {
-  const [search, setSearch] = useState(initialFilter?.search || "");
-  const [fStatus, setFStatus] = useState(initialFilter?.status || "Todos");
-  const [fFinish, setFFinish] = useState(initialFilter?.finish || "Todos");
-  const [fPosition, setFPosition] = useState("Todos");
+  const [search, setSearch] = useState("");
+  const [fStatus, setFStatus] = usePersistedFilter("filter_album_status", "Todos");
+  const [fFinish, setFFinish] = usePersistedFilter("filter_album_finish", "Todos");
+  const [fPosition, setFPosition] = usePersistedFilter("filter_album_position", "Todos");
 
   useEffect(() => {
-    if (!initialFilter) return;
+    // only apply on explicit programmatic navigation (goToAlbum), not on mount or bottom-nav click
+    if (!initialFilter?._ts) return;
     setSearch(initialFilter.search ?? "");
     setFStatus(initialFilter.status || "Todos");
     setFFinish(initialFilter.finish || "Todos");

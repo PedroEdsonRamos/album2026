@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { usePersistedFilter } from "@/hooks/usePersistedFilter.js";
 import { useInView } from "@/hooks/useInView.js";
 import { useCounter } from "@/hooks/useCounter.js";
 import { TEAMS } from "@/data/teams.js";
@@ -83,8 +84,8 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum, goToTea
   const pct = Math.round((owned / total) * 100);
   const [hRef, hVis] = useInView();
   const pctA = useCounter(hVis ? pct : 0, 1200);
-  const [rankSort, setRankSort] = useState("pct");
-  const [showAll, setShowAll] = useState(false);
+  const [rankSort, setRankSort] = usePersistedFilter("filter_dashboard_ranksort", "pct");
+  const [showAll, setShowAll] = usePersistedFilter("filter_dashboard_showall", false);
   const teamStats = useMemo(() => TEAMS.map((t) => {
     const ts = stickers.filter((s) => s.team === t.id);
     const o = ts.filter((s) => s.status === "Tenho" || s.status === "Repetida").length;
