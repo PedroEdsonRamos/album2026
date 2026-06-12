@@ -40,7 +40,7 @@ function getCardLines(s) {
     return { number: num, desc: `Seleção ${s.teamName}`, footer: "Foto de Equipe" };
   }
   if (s.position === "Escudo") {
-    return { number: num, desc: "Escudo", footer: "Brasão Oficial" };
+    return { number: num, desc: "Escudo", footer: "Brasão\nOficial" };
   }
   if (s.team === "FWC" && s.country && s.year) {
     return { number: num, desc: `${s.year}\n${s.country}`, footer: "Momento Histórico" };
@@ -253,8 +253,8 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
       >
         <span style={{
           fontSize: 9, color: C.t3,
-          whiteSpace: s.team === "FWC" && s.country && s.year ? "pre-line" : undefined,
-          lineHeight: s.team === "FWC" && s.country && s.year ? 1.2 : undefined,
+          whiteSpace: (s.team === "FWC" && s.country && s.year) || s.position === "Escudo" ? "pre-line" : undefined,
+          lineHeight: (s.team === "FWC" && s.country && s.year) || s.position === "Escudo" ? 1.2 : undefined,
         }}>
           {s.team === "FWC" && s.country && s.year ? "Momento\nHistórico" : lines.footer}
         </span>
