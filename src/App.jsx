@@ -20,6 +20,7 @@ const Trades    = lazy(() => import("@/components/pages/Trades.jsx").then(m => (
 const Status    = lazy(() => import("@/components/pages/Status.jsx").then(m => ({ default: m.Status })));
 const Help      = lazy(() => import("@/components/pages/Help.jsx").then(m => ({ default: m.Help })));
 const Profile   = lazy(() => import("@/components/pages/Profile.jsx").then(m => ({ default: m.Profile })));
+const Jogos     = lazy(() => import("@/components/pages/Jogos.jsx").then(m => ({ default: m.Jogos })));
 import { PWAInstallBanner } from "@/components/PWAInstallBanner.jsx";
 import { LoginScreen } from "@/components/auth/LoginScreen.jsx";
 import { SignupScreen } from "@/components/auth/SignupScreen.jsx";
@@ -433,6 +434,7 @@ function AppContent({ auth }) {
               </PageSuspense>
             )}
             {page === "ajuda" && <PageSuspense><Help setPage={setPage} /></PageSuspense>}
+            {page === "jogos" && <PageSuspense><Jogos /></PageSuspense>}
             {page === "profile" && <PageSuspense><Profile auth={auth} stickers={stickers} setPage={setPage} addToast={addToast} /></PageSuspense>}
           </PageTransition>
         </div>

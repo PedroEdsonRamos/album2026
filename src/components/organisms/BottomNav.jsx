@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { id: "trocas", label: "Trocas", icon: "swap" },
   { id: "status", label: "Status", icon: "chart" },
   { id: "ajuda",  label: "Ajuda",  icon: "help-circle" },
+  { id: "jogos",  label: "Jogos",  icon: "ball" },
 ];
 
 export function BottomNav({ page, onNav }) {

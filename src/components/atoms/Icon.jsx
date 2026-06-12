@@ -87,6 +87,12 @@ export function Icon({ name, size = 18 }) {
         d="M19.5 12h-15m0 0 6.75 6.75M4.5 12l6.75-6.75"
       />
     ),
+    ball: (
+      <>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8.5 9.5 10.2l1 3h3l1-3L12 8.5ZM9.5 10.2 6.8 9.5M14.5 10.2l2.7-.7M10.5 13.2l-1 3M13.5 13.2l1 3" />
+      </>
+    ),
   };
   return (
     <svg
