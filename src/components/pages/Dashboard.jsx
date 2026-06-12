@@ -219,7 +219,7 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum, goToTea
         {/* Linha 3: Escudos / FWC */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           <StatCard label="Escudos" value={`${escudosColetadas} / ${escudosTotais}`}
-            sub="escudos das seleções"
+            sub="brasões das seleções"
             icon={null} color="#94a3b8" noGlow showLine={true}
             onClick={() => goToAlbum({ position: "Escudo" })} />
           <StatCard label="FWC" value={`${fwcColetadas} / ${fwcTotais}`}
