@@ -166,7 +166,7 @@ export function Header({
         background: "rgba(12,12,26,0.88)",
         backdropFilter: "blur(16px)",
         borderBottom: `1px solid ${C.border}`,
-        padding: "11px 18px 10px",
+        padding: "40px 18px 10px",
         display: "flex",
         alignItems: "center",
         gap: 12,
