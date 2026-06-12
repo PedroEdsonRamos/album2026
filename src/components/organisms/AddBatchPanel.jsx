@@ -15,25 +15,29 @@ function parseBatchInput(input, allStickers) {
 
   for (const part of parts) {
     const upper = part.toUpperCase();
+    // Detect -MC suffix (McDonalds Foto de Equipe) before other pattern matching
+    const isMc = upper.endsWith("-MC");
+    const cleanUpper = isMc ? upper.slice(0, -3) : upper;
 
-    const fullRange  = upper.match(/^([A-Z]+)(\d+)-(\d+)$/);       // BRA1-5
-    const fullCode   = upper.match(/^([A-Z]+)(\d+)(?::([LBPO]))?$/); // BRA10 or ARG17:L
-    const rangeOnly  = upper.match(/^(\d+)-(\d+)$/);                 // 2-5 (abbreviated)
-    const numOnly    = /^\d+$/.test(upper);                          // 2   (abbreviated)
+    const fullRange  = cleanUpper.match(/^([A-Z]+)(\d+)-(\d+)$/);       // BRA1-5 (no -MC on ranges)
+    const fullCode   = cleanUpper.match(/^([A-Z]+)(\d+)(?::([LBPO]))?$/); // BRA10 or ARG17:L
+    const rangeOnly  = cleanUpper.match(/^(\d+)-(\d+)$/);                 // 2-5 (abbreviated)
+    const numOnly    = /^\d+$/.test(cleanUpper);                          // 2   (abbreviated)
 
-    if (fullRange) {
+    if (fullRange && !isMc) {
       const [, prefix, startStr, endStr] = fullRange;
       lastPrefix = prefix;
       for (let i = parseInt(startStr); i <= parseInt(endStr); i++) expandedTokens.push(`${prefix}${i}`);
     } else if (fullCode) {
       const [, prefix, num, suffix] = fullCode;
       lastPrefix = prefix;
-      expandedTokens.push(suffix ? `${prefix}${num}:${suffix}` : `${prefix}${num}`);
-    } else if (rangeOnly && lastPrefix) {
+      const base = suffix ? `${prefix}${num}:${suffix}` : `${prefix}${num}`;
+      expandedTokens.push(isMc ? `${base}|MC` : base);
+    } else if (rangeOnly && lastPrefix && !isMc) {
       const [, startStr, endStr] = rangeOnly;
       for (let i = parseInt(startStr); i <= parseInt(endStr); i++) expandedTokens.push(`${lastPrefix}${i}`);
     } else if (numOnly && lastPrefix) {
-      expandedTokens.push(`${lastPrefix}${upper}`);
+      expandedTokens.push(isMc ? `${lastPrefix}${cleanUpper}|MC` : `${lastPrefix}${cleanUpper}`);
     } else {
       expandedTokens.push(upper); // unknown — let sticker lookup fail with a clear error
     }
@@ -43,18 +47,28 @@ function parseBatchInput(input, allStickers) {
   const results = [], errors = [];
 
   uniqueTokens.forEach((token) => {
-    const colonIdx = token.indexOf(":");
-    const code = colonIdx >= 0 ? token.slice(0, colonIdx) : token;
-    const suffix = colonIdx >= 0 ? token.slice(colonIdx + 1) : undefined;
+    const isMc = token.endsWith("|MC");
+    const cleanToken = isMc ? token.slice(0, -3) : token;
+    const colonIdx = cleanToken.indexOf(":");
+    const code = colonIdx >= 0 ? cleanToken.slice(0, colonIdx) : cleanToken;
+    const suffix = colonIdx >= 0 ? cleanToken.slice(colonIdx + 1) : undefined;
+    const displayToken = isMc ? `${code}-MC` : cleanToken;
     const sticker = allStickers.find((s) => s.code === code);
-    if (!sticker) { errors.push({ token, reason: `Código "${code}" não encontrado` }); return; }
+    if (!sticker) { errors.push({ token: displayToken, reason: `Código "${code}" não encontrado` }); return; }
+    if (isMc) {
+      if (sticker.position !== "Foto Equipe") {
+        errors.push({ token: displayToken, reason: `"${code}" não é Foto de Equipe — sufixo -MC inválido` }); return;
+      }
+      results.push({ sticker, rarity: "McDonalds" });
+      return;
+    }
     const category = getStickerCategory(sticker);
     if (suffix) {
       if (category !== STICKER_CATEGORY.JOGADOR_ES) {
-        errors.push({ token, reason: `"${code}" não é Extra Sticker — sufixo :${suffix} não permitido` }); return;
+        errors.push({ token: cleanToken, reason: `"${code}" não é Extra Sticker — sufixo :${suffix} não permitido` }); return;
       }
       if (!SUFFIX_TO_RARITY[suffix]) {
-        errors.push({ token, reason: `Sufixo ":${suffix}" inválido. Use :L, :B, :P ou :O` }); return;
+        errors.push({ token: cleanToken, reason: `Sufixo ":${suffix}" inválido. Use :L, :B, :P ou :O` }); return;
       }
     }
     results.push({ sticker, rarity: suffix ? SUFFIX_TO_RARITY[suffix] : getDefaultRarity(sticker) });
@@ -124,6 +138,7 @@ export function AddBatchPanel({ stickers, setStickers, addToast }) {
           <li>Range: <strong style={{ color: C.t1, fontFamily: "monospace" }}>ESP1-5</strong> → ESP1, ESP2, ESP3, ESP4, ESP5</li>
           <li>Misto: <strong style={{ color: C.t1, fontFamily: "monospace" }}>ARG17, FRA5, 6, 7</strong> → ARG17, FRA5, FRA6, FRA7</li>
           <li>Extra Sticker: <strong style={{ color: C.t1, fontFamily: "monospace" }}>ARG17:L</strong> (Lilás) · <strong style={{ color: C.t1, fontFamily: "monospace" }}>:B</strong> Bronze · <strong style={{ color: C.t1, fontFamily: "monospace" }}>:P</strong> Prata · <strong style={{ color: C.t1, fontFamily: "monospace" }}>:O</strong> Ouro</li>
+          <li>Foto de Equipe Mc Donald's: <strong style={{ color: C.t1, fontFamily: "monospace" }}>BRA13-MC</strong> lança como Mc Donald's</li>
         </ol>
       </div>
 
@@ -152,8 +167,13 @@ export function AddBatchPanel({ stickers, setStickers, addToast }) {
           padding: "14px 16px", color: "#fff", fontSize: 16, outline: "none", boxSizing: "border-box", fontFamily: "monospace", resize: "vertical", lineHeight: 1.6 }}
       />
 
-      <div style={{ fontSize: 11, color: C.t3, margin: "6px 0" }}>
-        {parsed.results.length} código(s) válido(s) detectado(s)
+      <div style={{ fontSize: 11, color: C.t3, margin: "6px 0", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <span>{parsed.results.length} código(s) válido(s) detectado(s)</span>
+        {parsed.results.filter((r) => r.rarity === "McDonalds").length > 0 && (
+          <span style={{ background: "rgba(252,196,36,0.12)", border: "1px solid rgba(252,196,36,0.4)", color: "#fcc424", borderRadius: 8, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>
+            {parsed.results.filter((r) => r.rarity === "McDonalds").length}× Mc Donald's
+          </span>
+        )}
       </div>
 
       {hasInput && hasErrors && (

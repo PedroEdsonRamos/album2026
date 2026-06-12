@@ -6,11 +6,16 @@ import { C } from "@/styles/tokens.js";
 function expandNums(str) {
   const out = [];
   str.split(/[\n,;]+/).map((s) => s.trim()).filter(Boolean).forEach((p) => {
+    const mcMatch = p.match(/^(\d+)-MC$/i);
+    if (mcMatch) { out.push({ num: +mcMatch[1], isMc: true }); return; }
     const r = p.match(/^(\d+)\s*-\s*(\d+)$/);
-    if (r) { const a = +r[1], b = +r[2]; for (let i = Math.min(a,b); i <= Math.max(a,b); i++) out.push(i); }
-    else if (/^\d+$/.test(p)) out.push(+p);
+    if (r) { const a = +r[1], b = +r[2]; for (let i = Math.min(a,b); i <= Math.max(a,b); i++) out.push({ num: i, isMc: false }); }
+    else if (/^\d+$/.test(p)) out.push({ num: +p, isMc: false });
   });
-  return [...new Set(out)];
+  // deduplicate by num (last occurrence wins, isMc takes priority)
+  const map = new Map();
+  out.forEach((o) => { const prev = map.get(o.num); map.set(o.num, (!prev || o.isMc) ? o : prev); });
+  return [...map.values()];
 }
 
 function ResultBox({ result }) {
@@ -45,11 +50,17 @@ export function AddTeamPanel({ stickers, setStickers }) {
     setTimeout(() => {
       let added = 0, dups = 0, notFound = 0;
       const upd = { ...Object.fromEntries(stickers.map((s) => [s.id, s])) };
-      nums.forEach((n) => {
-        const m = stickers.find((s) => s.code === `${teamSel}${n}`.toUpperCase());
+      nums.forEach(({ num, isMc }) => {
+        const m = stickers.find((s) => s.code === `${teamSel}${num}`.toUpperCase());
         if (!m) { notFound++; return; }
-        if (m.status === "Tenho") { dups++; upd[m.id] = { ...upd[m.id], status: "Repetida", duplicates: (upd[m.id].duplicates||0)+1 }; }
-        else { added++; upd[m.id] = { ...upd[m.id], status: "Tenho", addedAt: new Date().toISOString() }; }
+        const rarity = (isMc && m.position === "Foto Equipe") ? "McDonalds" : (m.rarity || "Comum");
+        if (m.status === "Tenho") {
+          dups++;
+          upd[m.id] = { ...upd[m.id], status: "Repetida", duplicates: (upd[m.id].duplicates||0)+1 };
+        } else {
+          added++;
+          upd[m.id] = { ...upd[m.id], status: "Tenho", rarity, addedAt: new Date().toISOString() };
+        }
       });
       setStickers((prev) => prev.map((s) => upd[s.id] || s));
       setResult({ added, dups, notFound });
@@ -71,6 +82,9 @@ export function AddTeamPanel({ stickers, setStickers }) {
         </ol>
         <div style={{ marginTop: 8, fontSize: 11, color: C.amber }}>
           ⭐ Para Extra Stickers, use o modo <strong>Individual</strong> e escolha o tipo (Lilás, Bronze, Prata ou Ouro).
+        </div>
+        <div style={{ marginTop: 6, fontSize: 11, color: C.t2 }}>
+          🍔 Foto de Equipe Mc Donald's: adicione <strong style={{ color: C.t1, fontFamily: "monospace" }}>-MC</strong> ao número (ex: <strong style={{ color: C.t1, fontFamily: "monospace" }}>13-MC</strong>)
         </div>
       </div>
       <label style={{ fontSize: 11, fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.08em", display: "block", marginBottom: 8 }}>
@@ -127,7 +141,7 @@ export function AddTeamPanel({ stickers, setStickers }) {
         style={{ width: "100%", background: C.surfaceHi, border: `1px solid ${C.borderHi}`, borderRadius: 12,
           padding: "14px 16px", color: "#fff", fontSize: 16, outline: "none", boxSizing: "border-box", fontFamily: "monospace", resize: "vertical", lineHeight: 1.6 }} />
       <div style={{ fontSize: 11, color: C.t3, margin: "6px 0 14px" }}>
-        {previewNums.length} figurinha(s): {previewNums.slice(0, 8).map((n) => `${teamSel}${n}`).join(", ")}{previewNums.length > 8 ? "..." : ""}
+        {previewNums.length} figurinha(s): {previewNums.slice(0, 8).map(({ num, isMc }) => `${teamSel}${num}${isMc ? "-MC" : ""}`).join(", ")}{previewNums.length > 8 ? "..." : ""}
       </div>
       <button onClick={handleTeamBatch} disabled={!teamNums.trim() || adding}
         style={{ width: "100%", background: teamNums.trim()?`linear-gradient(135deg,${C.amber},${C.amberLt})`:C.surface,
