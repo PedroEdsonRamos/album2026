@@ -110,7 +110,13 @@ export function TeamCard({ team, stickers, onSelect }) {
         >
           <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{team.name}</span>
           {legendCounts.length > 0 && (
-            <div style={{ display: "flex", gap: 3, marginLeft: "auto", flexShrink: 0 }}>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 3,
+              marginLeft: "auto",
+              flexShrink: 0,
+            }}>
               {legendCounts.map(({ key, fin, cnt }) => (
                 <span
                   key={key}
@@ -123,6 +129,7 @@ export function TeamCard({ team, stickers, onSelect }) {
                     fontSize: 9,
                     fontWeight: 700,
                     lineHeight: "14px",
+                    textAlign: "center",
                   }}
                 >
                   {cnt}
@@ -152,7 +159,7 @@ export function TeamCard({ team, stickers, onSelect }) {
         <div style={{ display: "flex", gap: 8, fontSize: 10 }}>
           <span style={{ color: C.green }}>✓ {owned}</span>
           <span style={{ color: C.red }}>· {missing} faltam</span>
-          {duplicates > 0 && <span style={{ color: C.violet }}>· {duplicates} rep.</span>}
+          {duplicates > 0 && <span style={{ color: "#f59e0b" }}>· {duplicates} rep.</span>}
         </div>
       </div>
     </div>
