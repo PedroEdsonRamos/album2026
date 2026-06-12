@@ -40,7 +40,7 @@ function getCardLines(s) {
     return { number: num, desc: `Seleção ${s.teamName}`, footer: "Foto de Equipe" };
   }
   if (s.position === "Escudo") {
-    return { number: num, desc: "Escudo", footer: "Metalizada" };
+    return { number: num, desc: "Escudo", footer: "Brasão Oficial" };
   }
   if (s.team === "FWC" && s.country && s.year) {
     return { number: num, desc: `${s.year}\n${s.country}`, footer: "Momento Histórico" };
