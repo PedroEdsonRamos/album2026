@@ -207,7 +207,7 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum, goToTea
         {/* Linha 2: Jogadores / Seleções */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           <StatCard label="Jogadores" value={`${jogadoresColetados} / ${jogadoresTotais}`}
-            sub="incluídos extra stickers"
+            sub="jogadores de campo"
             icon={null} color="#1fc8d1" noGlow showLine={true}
             onClick={() => goToTeams()} />
           <StatCard label="Seleções" value={`${selecoesColetadas} / ${selecoesTotais}`}
@@ -218,18 +218,18 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum, goToTea
         {/* Linha 3: Escudos / FWC */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           <StatCard label="Escudos" value={`${escudosColetadas} / ${escudosTotais}`}
-            sub="Escudos das seleções"
+            sub="escudos das seleções"
             icon={null} color="#94a3b8" noGlow showLine={true}
             onClick={() => goToAlbum({ position: "Escudo" })} />
           <StatCard label="FWC" value={`${fwcColetadas} / ${fwcTotais}`}
-            sub="Emblemas, mascotes e momentos históricos"
+            sub="especiais FIFA"
             icon={null} color="#94a3b8" noGlow showLine={true}
             onClick={() => goToTeams("Extras", "FWC")} />
         </div>
         {/* Linha 4: Coca-Cola / Extra Stickers */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           <StatCard label="Coca-Cola" value={`${ccColetadas} / ${ccTotais}`}
-            sub="Edição especial Coca-Cola"
+            sub="edição especial coca-cola"
             icon={null} color="#f40009" noGlow showLine={true}
             onClick={() => goToTeams("Extras", "CC")} />
           <div
@@ -267,7 +267,7 @@ export function Dashboard({ stickers, setPage, setTeamFilter, goToAlbum, goToTea
                 <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.35)" }}>/ 80</span>
               </div>
               <div style={{ fontSize: 10, color: "#a855f7", marginTop: 4 }}>
-                Para colecionar ou colar
+                para colecionar ou colar
               </div>
             </div>
           </div>

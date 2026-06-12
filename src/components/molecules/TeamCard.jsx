@@ -3,7 +3,7 @@ import { FINISH } from "@/styles/finishes.js";
 import { toRgba } from "@/components/atoms/CardGlow.jsx";
 import { RANK_BAR, C } from "@/styles/tokens.js";
 
-const FINISH_TO_RARITY = { "Lilás": "Lilás", Bronze: "Bronze", Prata: "Prata", Ouro: "Gold" };
+const FINISH_TO_RARITY = { "Lilás": "Lilás", Bronze: "Bronze", Prata: "Prata", Ouro: "Ouro" };
 
 export function TeamCard({ team, stickers, onSelect }) {
   const [ref, vis] = useInView();
