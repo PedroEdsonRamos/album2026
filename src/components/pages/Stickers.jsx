@@ -45,9 +45,11 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
         } else if (fPosition === "Jogadores") {
           if (s.position === "Escudo" || s.position === "Foto Equipe" || s.position === "Especial") return false;
           if (s.team === "FWC" || s.team === "CC") return false;
-        } else if (fPosition === "Especial") {
+        } else if (fPosition === "Mascotes e Emblemas") {
           const fwcNum = s.code.startsWith("FWC") ? parseInt(s.code.replace("FWC", "")) : NaN;
-          if (!(s.code === "00" || (s.code.startsWith("FWC") && fwcNum <= 8) || s.code.startsWith("CC"))) return false;
+          if (!(s.code === "00" || (s.code.startsWith("FWC") && fwcNum <= 8))) return false;
+        } else if (fPosition === "Coca-Cola") {
+          if (!s.code.startsWith("CC")) return false;
         } else if (fPosition === "Momento Histórico") {
           if (!s.code.startsWith("FWC")) return false;
           const num = parseInt(s.code.replace("FWC", ""));
@@ -166,7 +168,7 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
 
       <div style={{ overflowX: "auto", overflowY: "visible", paddingBottom: 4, marginBottom: 8 }}>
         <div style={{ display: "flex", gap: 5, paddingTop: 5, width: "max-content", overflow: "visible" }}>
-          {["Todos", "Minhas", "Tenho", "Faltando", "Repetida"].map((f) => (
+          {["Todos", "Tenho", "Faltando", "Repetida"].map((f) => (
             <button
               key={f}
               onClick={() => setFStatus(f)}
@@ -194,7 +196,7 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
 
       <div style={{ overflowX: "auto", overflowY: "visible", paddingBottom: 4, marginBottom: 8 }}>
         <div style={{ display: "flex", gap: 5, paddingTop: 5, width: "max-content", overflow: "visible" }}>
-          {["Todos", ...Object.keys(FINISH)].map((f) => {
+          {["Todos", ...Object.keys(FINISH).filter((k) => k !== "Coca-Cola")].map((f) => {
             const fin = FINISH[f];
             const isActive = fFinish === f;
             return (
@@ -237,7 +239,7 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
 
       <div style={{ overflowX: "auto", overflowY: "visible", paddingBottom: 4, marginBottom: 14 }}>
         <div style={{ display: "flex", gap: 5, paddingTop: 5, width: "max-content", overflow: "visible" }}>
-          {["Todos", "Jogadores", "Goleiro", "Defensor", "Meio-Campista", "Atacante", "Foto Equipe", "Escudo", "Especial", "Momento Histórico", "Extra Stickers"].map((pos) => (
+          {["Todos", "Jogadores", "Goleiro", "Defensor", "Meio-Campista", "Atacante", "Foto Equipe", "Escudo", "Mascotes e Emblemas", "Coca-Cola", "Momento Histórico", "Extra Stickers"].map((pos) => (
             <button
               key={pos}
               onClick={() => setFPosition(pos)}
