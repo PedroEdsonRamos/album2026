@@ -40,13 +40,13 @@ function getCardLines(s) {
     return { number: num, desc: `Seleção ${s.teamName}`, footer: "Foto de Equipe" };
   }
   if (s.position === "Escudo") {
-    return { number: num, desc: "Escudo", footer: "Metalizada" };
+    return { number: num, desc: "Escudo", footer: "" };
   }
   if (s.team === "FWC" && s.country && s.year) {
     return { number: num, desc: `${s.year}\n${s.country}`, footer: "Momento Histórico" };
   }
   if (s.team === "FWC" || s.code === "00") {
-    return { number: num, desc: FWC_SHORT_DESC[s.code] ?? s.name, footer: "Metalizada" };
+    return { number: num, desc: FWC_SHORT_DESC[s.code] ?? s.name, footer: "Mascotes e Emblemas" };
   }
   if (s.team === "CC") {
     return { number: num, desc: s.name, footer: "Coca-Cola" };
