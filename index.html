@@ -54,6 +54,26 @@
     }
   </style>
 
+  <!-- Fallback: tela branca ao voltar de app externo no PWA standalone -->
+  <script>
+    (function() {
+      var hiddenAt = null;
+      document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+          hiddenAt = Date.now();
+        } else if (hiddenAt && (Date.now() - hiddenAt) > 500) {
+          hiddenAt = null;
+          setTimeout(function() {
+            var body = document.body;
+            if (body && body.children.length === 0) {
+              window.location.reload();
+            }
+          }, 800);
+        }
+      });
+    })();
+  </script>
+
   <!-- Segurança -->
   <meta http-equiv="X-Content-Type-Options" content="nosniff" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />

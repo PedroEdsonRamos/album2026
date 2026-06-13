@@ -1,13 +1,17 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { ALL_TEAMS } from "@/data/teams.js";
 import { teamInfo } from "@/utils/teamInfo.js";
 import { getFinish } from "@/styles/finishes.js";
 import { Icon } from "@/components/atoms/Icon.jsx";
 import { C } from "@/styles/tokens.js";
+import { useAppVisibility } from "@/hooks/useAppVisibility.js";
+import { useForceUpdate } from "@/hooks/useForceUpdate.js";
 
 export function Trades({ stickers, addToast, goToAlbum, setPage, setTeamFilter }) {
   const [collapsed, setCollapsed] = useState({});
   const [sharing, setSharing] = useState(false);
+  const forceUpdate = useForceUpdate();
+  useAppVisibility(useCallback(() => { forceUpdate(); }, [forceUpdate]));
 
   const withSharing = (fn) => () => {
     setSharing(true);

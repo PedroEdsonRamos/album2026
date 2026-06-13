@@ -1,4 +1,6 @@
 import { useState, useCallback, useEffect, useRef, lazy, Suspense } from "react";
+import { useAppVisibility } from "@/hooks/useAppVisibility.js";
+import { useForceUpdate } from "@/hooks/useForceUpdate.js";
 import { supabase } from "@/lib/supabase";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus.js";
 import { SkeletonGrid } from "@/components/atoms/SkeletonCard.jsx";
@@ -246,6 +248,8 @@ function NormalApp() {
 
 function AppContent({ auth }) {
   const online = useOnlineStatus();
+  const forceUpdate = useForceUpdate();
+  useAppVisibility(useCallback(() => { forceUpdate(); }, [forceUpdate]));
   const [page, setPage] = useState("dashboard");
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [toasts, setToasts] = useState([]);
