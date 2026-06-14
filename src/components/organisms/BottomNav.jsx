@@ -1,4 +1,5 @@
 import { Icon } from "@/components/atoms/Icon.jsx";
+import { BallIcon } from "@/components/icons/BallIcon.jsx";
 import { C } from "@/styles/tokens.js";
 
 const NAV_ITEMS = [
@@ -9,7 +10,7 @@ const NAV_ITEMS = [
   { id: "trocas", label: "Trocas", icon: "swap" },
   { id: "status", label: "Status", icon: "chart" },
   { id: "ajuda",  label: "Ajuda",  icon: "help-circle" },
-  { id: "jogos",  label: "Jogos",  icon: "ball" },
+  { id: "jogos",  label: "Jogos",  icon: <BallIcon size={20} /> },
 ];
 
 export function BottomNav({ page, onNav }) {
@@ -59,7 +60,9 @@ export function BottomNav({ page, onNav }) {
                 transition: "background 0.2s",
               }}
             >
-              <Icon name={item.icon} size={20} />
+              {typeof item.icon === "string"
+                ? <Icon name={item.icon} size={20} />
+                : item.icon}
             </div>
             <span style={{ fontSize: 10, fontWeight: active ? 700 : 400 }}>{item.label}</span>
           </button>
