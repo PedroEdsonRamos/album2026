@@ -62,14 +62,14 @@ export function Jogos() {
 function SegmentedControl({ tab, onChange }) {
   return (
     <div style={{
-      display: "flex", gap: 0, background: "rgba(255,255,255,0.06)",
-      borderRadius: 14, margin: "16px 16px 0", padding: 3,
+      display: "flex", gap: 8, margin: "16px 16px 0", padding: 0,
     }}>
       {[{ id: "cronograma", label: "Cronograma" }, { id: "classificacao", label: "Classificação" }].map(o => (
         <button key={o.id} onClick={() => onChange(o.id)} style={{
-          flex: 1, padding: "10px 0", borderRadius: 11, border: "none",
-          background: tab === o.id ? "#f59e0b" : "transparent",
-          color: tab === o.id ? "#000" : "rgba(255,255,255,0.55)",
+          flex: 1, padding: "12px 0", borderRadius: 12,
+          border: tab === o.id ? "1px solid #f59e0b" : "1px solid rgba(255,255,255,0.12)",
+          background: tab === o.id ? "linear-gradient(135deg, #f59e0b, #fbbf24)" : "rgba(255,255,255,0.04)",
+          color: tab === o.id ? "#000" : "rgba(255,255,255,0.6)",
           fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit",
           transition: "all 0.2s",
         }}>{o.label}</button>
