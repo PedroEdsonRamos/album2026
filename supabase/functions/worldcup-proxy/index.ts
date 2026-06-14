@@ -5,6 +5,7 @@ const corsHeaders = {
 };
 
 const HIGHLIGHTLY_BASE = "https://soccer.highlightly.net";
+const HIGHLIGHTLY_HOST = "soccer.highlightly.net";
 const LEAGUE_ID = 1635;
 const SEASON = 2026;
 
@@ -47,7 +48,10 @@ Deno.serve(async (req) => {
     const url = `${HIGHLIGHTLY_BASE}/${endpoint}?${queryParams.toString()}`;
 
     const response = await fetch(url, {
-      headers: { "x-api-key": apiKey },
+      headers: {
+        "x-rapidapi-key": apiKey,
+        "x-rapidapi-host": HIGHLIGHTLY_HOST,
+      },
     });
 
     if (!response.ok) {
