@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getFixtures, getStandings, formatBrasilia, getMatchStatus } from "@/services/apiFootball";
+import { getFixtures, getStandings, formatBrasilia, getMatchStatus, getScore } from "@/services/worldcup";
 
 // Chaveamento oficial Copa 2026 — Round of 32 (12 grupos, top-2 + 8 melhores terceiros)
 const BRACKET_R32 = [
@@ -17,6 +17,13 @@ function formatRound(round) {
     .replace("Semi-finals", "SF")
     .replace("3rd Place Final", "3°")
     .replace("Final", "FIN");
+}
+
+// Letra do grupo (A–L) a partir do nome vindo da Highlightly ("... Group A"),
+// com fallback pela ordem (12 grupos da Copa vêm em ordem A→L).
+function groupLetter(group, idx) {
+  const match = (group?.name ?? "").match(/group\s+([a-l])/i);
+  return (match ? match[1] : String.fromCharCode(65 + idx)).toUpperCase();
 }
 
 export function Jogos() {
@@ -76,7 +83,7 @@ function CronogramaView({ fixtures }) {
 
   const grouped = {};
   fixtures.forEach(f => {
-    const { dateKey, date } = formatBrasilia(f.fixture.date);
+    const { dateKey, date } = formatBrasilia(f.date);
     if (!grouped[dateKey]) grouped[dateKey] = { label: date, items: [] };
     grouped[dateKey].items.push(f);
   });
@@ -98,8 +105,8 @@ function CronogramaView({ fixtures }) {
                 {isToday ? "HOJE — " : ""}{label}
               </div>
               {items
-                .sort((a, b) => new Date(a.fixture.date) - new Date(b.fixture.date))
-                .map(f => <MatchCard key={f.fixture.id} fixture={f} />)
+                .sort((a, b) => new Date(a.date) - new Date(b.date))
+                .map(f => <MatchCard key={f.id} fixture={f} />)
               }
             </div>
           );
@@ -108,13 +115,12 @@ function CronogramaView({ fixtures }) {
   );
 }
 
-function MatchCard({ fixture: f }) {
-  const { time } = formatBrasilia(f.fixture.date);
-  const status = getMatchStatus(f);
+function MatchCard({ fixture: m }) {
+  const { time } = formatBrasilia(m.date);
+  const status = getMatchStatus(m);
   const isLive = status.type === "live";
   const isFinished = status.type === "finished";
-  const hg = f.goals.home;
-  const ag = f.goals.away;
+  const { home: hg, away: ag } = getScore(m);
 
   return (
     <div style={{
@@ -137,7 +143,7 @@ function MatchCard({ fixture: f }) {
 
       <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8 }}>
         <div style={{ flex: 1, textAlign: "right" }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>{f.teams.home.name}</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>{m.homeTeam?.name ?? "—"}</div>
         </div>
         <div style={{
           minWidth: 64, textAlign: "center",
@@ -147,12 +153,12 @@ function MatchCard({ fixture: f }) {
           {(isFinished || isLive) ? `${hg ?? 0} – ${ag ?? 0}` : "×"}
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>{f.teams.away.name}</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>{m.awayTeam?.name ?? "—"}</div>
         </div>
       </div>
 
       <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", fontWeight: 600, minWidth: 32, textAlign: "right" }}>
-        {formatRound(f.league.round)}
+        {formatRound(m.round)}
       </div>
     </div>
   );
@@ -160,7 +166,7 @@ function MatchCard({ fixture: f }) {
 
 function ClassificacaoView({ standings, fixtures }) {
   const [view, setView] = useState("grupos");
-  const groups = standings[0]?.league?.standings ?? [];
+  const groups = standings ?? [];
 
   return (
     <div>
@@ -190,7 +196,7 @@ function GruposView({ groups }) {
             fontSize: 12, fontWeight: 700, letterSpacing: "0.15em",
             color: "#f59e0b", textTransform: "uppercase", marginBottom: 8,
           }}>
-            {group[0]?.group ?? `Grupo ${idx + 1}`}
+            {`Group ${groupLetter(group, idx)}`}
           </div>
           <div style={{
             display: "grid", gridTemplateColumns: "1fr 26px 26px 26px 26px 30px 34px",
@@ -201,10 +207,12 @@ function GruposView({ groups }) {
               <span key={h} style={{ textAlign: h === "Time" ? "left" : "center" }}>{h}</span>
             ))}
           </div>
-          {group.map((team, tIdx) => {
+          {(group.standings ?? []).map((row, tIdx) => {
             const advances = tIdx < 2;
+            const t = row.total ?? {};
+            const gd = (t.scoredGoals ?? 0) - (t.receivedGoals ?? 0);
             return (
-              <div key={team.team.id} style={{
+              <div key={row.team?.id ?? tIdx} style={{
                 display: "grid", gridTemplateColumns: "1fr 26px 26px 26px 26px 30px 34px",
                 gap: 4,
                 background: tIdx % 2 === 0 ? "rgba(255,255,255,0.03)" : "transparent",
@@ -216,17 +224,17 @@ function GruposView({ groups }) {
                     fontSize: 12, fontWeight: 700, minWidth: 14,
                     color: advances ? "#22c55e" : "rgba(255,255,255,0.35)",
                   }}>{tIdx + 1}</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>{team.team.name}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>{row.team?.name}</span>
                 </div>
-                {[team.all.played, team.all.win, team.all.draw, team.all.lose,
-                  (team.goalsDiff > 0 ? `+${team.goalsDiff}` : team.goalsDiff),
+                {[t.games, t.wins, t.draws, t.loses,
+                  (gd > 0 ? `+${gd}` : gd),
                 ].map((v, i) => (
                   <span key={i} style={{ textAlign: "center", fontSize: 13, color: "rgba(255,255,255,0.6)" }}>{v}</span>
                 ))}
                 <span style={{
                   textAlign: "center", fontSize: 14, fontWeight: 800,
                   color: advances ? "#22c55e" : "#fff",
-                }}>{team.points}</span>
+                }}>{row.points}</span>
               </div>
             );
           })}
@@ -247,15 +255,15 @@ function GruposView({ groups }) {
 
 function ChaveamentoView({ groups }) {
   const classified = {};
-  groups.forEach(group => {
-    const letter = group[0]?.group?.replace("Group ", "") ?? "";
-    group.forEach((team, idx) => {
+  groups.forEach((group, gIdx) => {
+    const letter = groupLetter(group, gIdx);
+    (group.standings ?? []).forEach((row, idx) => {
       const rank = idx + 1;
       if (rank <= 3) {
         classified[`${rank}${letter}`] = {
-          name: team.team.name,
-          confirmed: team.all.played >= 3,
-          points: team.points,
+          name: row.team?.name,
+          confirmed: (row.total?.games ?? 0) >= 3,
+          points: row.points,
         };
       }
     });
