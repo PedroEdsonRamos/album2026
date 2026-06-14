@@ -1,10 +1,5 @@
 /**
- * Serviço de dados da Copa 2026 — via Highlightly Football API
- * Chama a Edge Function worldcup-proxy do Supabase (a key fica segura no servidor).
- *
- * Estrutura real da Highlightly (soccer.highlightly.net):
- *   /matches    → { data: [ { id, date, round, homeTeam, awayTeam, state }, ... ], pagination }
- *   /standings  → { groups: [ { name, standings: [ { position, team, points, total } ] } ], league }
+ * Serviço de dados da Copa 2026 — via Highlightly (Edge Function proxy)
  */
 import { supabase } from "@/lib/supabase";
 
@@ -21,9 +16,6 @@ function setCache(key, data, ttlMs) {
   cache.set(key, { data, expiresAt: Date.now() + ttlMs });
 }
 
-/**
- * Chama a Edge Function worldcup-proxy. A key da Highlightly nunca chega ao frontend.
- */
 async function proxyFetch(endpoint, params = {}) {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error("Não autenticado");
@@ -45,7 +37,7 @@ async function proxyFetch(endpoint, params = {}) {
   return result;
 }
 
-// Converte UTC para horário de Brasília (UTC-3)
+// UTC → Brasília (UTC-3)
 export function toBrasilia(utcStr) {
   const d = new Date(utcStr);
   return new Date(d.getTime() + (-3) * 60 * 60 * 1000);
@@ -61,56 +53,40 @@ export function formatBrasilia(utcStr) {
   };
 }
 
-/**
- * Placar atual de uma partida. A Highlightly entrega como string "3 - 1".
- * Retorna { home, away } com números, ou null quando ainda não há placar.
- */
-export function getScore(match) {
-  const current = match?.state?.score?.current;
-  if (typeof current !== "string") return { home: null, away: null };
-  const [h, a] = current.split("-").map((s) => parseInt(s.trim(), 10));
-  return {
-    home: Number.isFinite(h) ? h : null,
-    away: Number.isFinite(a) ? a : null,
-  };
+// Data de hoje em Brasília (apenas YYYY-MM-DD)
+export function todayKeyBrasilia() {
+  return formatBrasilia(new Date().toISOString()).dateKey;
 }
 
 /**
- * Todos os fixtures da Copa 2026.
- * A Highlightly pagina (limit ~100); a Copa tem 104 jogos, então percorremos as páginas.
- * Cache: 5min se houver jogo ao vivo, 30min caso contrário.
+ * Fixtures (matches) da Copa 2026
+ * Cache: 5min se ao vivo, 30min se não
  */
 export async function getFixtures() {
   const key = "fixtures_all";
   const cached = getCached(key);
   if (cached) return cached;
 
-  const limit = 100;
-  const all = [];
-  let offset = 0;
+  const response = await proxyFetch("matches");
+  const matches = response.data ?? response.matches ?? response;
 
-  for (let page = 0; page < 6; page++) {
-    const res = await proxyFetch("matches", { limit: String(limit), offset: String(offset) });
-    const batch = res?.data ?? (Array.isArray(res) ? res : []);
-    all.push(...batch);
-
-    const total = res?.pagination?.totalCount;
-    offset += limit;
-
-    const reachedTotal = total != null && all.length >= total;
-    const lastPage = batch.length < limit;
-    if (reachedTotal || lastPage) break;
+  if (!Array.isArray(matches)) {
+    console.error("Estrutura inesperada de matches:", response);
+    return [];
   }
 
-  const hasLive = all.some((m) => getMatchStatus(m).type === "live");
-  setCache(key, all, hasLive ? 5 * 60 * 1000 : 30 * 60 * 1000);
-  return all;
+  const hasLive = matches.some(m => {
+    const s = (m.state?.description ?? m.status ?? "").toUpperCase();
+    return ["IN_PLAY","LIVE","HALFTIME","FIRST_HALF","SECOND_HALF","ET","P"].includes(s);
+  });
+  setCache(key, matches, hasLive ? 5 * 60 * 1000 : 30 * 60 * 1000);
+  return matches;
 }
 
 /**
- * Standings da Copa 2026 (12 grupos).
- * Retorna o array de grupos: [ { name, standings: [...] }, ... ].
- * Cache: 1 hora.
+ * Standings — retorna { groups, thirdPlaceTable }
+ * Highlightly: { groups: [{name, standings}], league }
+ * Último grupo "Group Stage" é o agregado dos 3os lugares
  */
 export async function getStandings() {
   const key = "standings";
@@ -118,39 +94,51 @@ export async function getStandings() {
   if (cached) return cached;
 
   const response = await proxyFetch("standings");
-  const groups = response?.groups ?? (Array.isArray(response) ? response : []);
+  const allGroups = response.groups ?? [];
+  const realGroups = allGroups.filter(g => g.name !== "Group Stage");
+  const thirdPlaceTable = allGroups.find(g => g.name === "Group Stage")?.standings ?? [];
 
-  setCache(key, groups, 60 * 60 * 1000);
-  return groups;
+  const result = { groups: realGroups, thirdPlaceTable };
+  setCache(key, result, 60 * 60 * 1000);
+  return result;
 }
 
 /**
- * Status do jogo em pt-BR a partir de match.state.description.
- * A Highlightly usa frases em inglês ("Second half", "Finished", "Not started"),
- * então a detecção é por palavra-chave (robusta a variações de capitalização/formato).
+ * Status do jogo em pt-BR
  */
 export function getMatchStatus(match) {
-  const desc = (match?.state?.description ?? "").toLowerCase();
-  const clock = match?.state?.clock;
-  const has = (...keys) => keys.some((k) => desc.includes(k));
+  const status = (match.state?.description ?? match.status ?? "SCHEDULED").toUpperCase();
+  const minute = match.state?.clock ?? match.minute ?? "";
 
-  // Encerrados primeiro — "after extra time"/"after penalties" contêm "extra"/"penalt"
-  if (has("finished", "full time", "full-time", "ended", "after extra", "after penalt", "awarded", "walkover")) {
-    return { label: "Encerrado", type: "finished" };
+  if (["IN_PLAY","LIVE","FIRST_HALF","SECOND_HALF"].includes(status)) {
+    return { label: minute ? `${minute}'` : "AO VIVO", type: "live" };
+  }
+  if (status === "HALFTIME" || status === "HT") return { label: "Intervalo", type: "live" };
+  if (status === "EXTRA_TIME" || status === "ET") return { label: `Prorr. ${minute}'`, type: "live" };
+  if (status === "PENALTIES" || status === "P") return { label: "Pênaltis", type: "live" };
+  if (["FINISHED","FT","AET","PEN"].includes(status)) return { label: "Encerrado", type: "finished" };
+  if (status === "POSTPONED" || status === "PST") return { label: "Adiado", type: "postponed" };
+  if (status === "CANCELLED" || status === "CANC") return { label: "Cancelado", type: "cancelled" };
+
+  // Fallback: detection by keyword for Highlightly descriptions
+  const desc = status.toLowerCase();
+  const has = (...keys) => keys.some(k => desc.includes(k));
+  if (has("finished", "full time", "ended", "after extra", "after penalt")) return { label: "Encerrado", type: "finished" };
+  if (has("penalt")) return { label: "Pênaltis", type: "live" };
+  if (has("extra")) return { label: minute ? `Prorr. ${minute}'` : "Prorrogação", type: "live" };
+  if (has("halftime", "half time", "break", "interval")) return { label: "Intervalo", type: "live" };
+  if (has("first half", "second half", "in play", "live", "playing")) {
+    return { label: minute ? `${minute}'` : "AO VIVO", type: "live" };
   }
   if (has("postpone")) return { label: "Adiado", type: "postponed" };
   if (has("cancel")) return { label: "Cancelado", type: "cancelled" };
 
-  // Fases ao vivo
-  if (has("penalt")) return { label: "Pênaltis", type: "live" };
-  if (has("extra")) return { label: clock ? `Prorr. ${clock}'` : "Prorrogação", type: "live" };
-  if (has("halftime", "half time", "half-time", "break", "interval")) {
-    return { label: "Intervalo", type: "live" };
-  }
-  if (has("first half", "second half", "1st half", "2nd half", "in play", "live", "playing")) {
-    return { label: clock ? `${clock}'` : "AO VIVO", type: "live" };
-  }
-
-  // Não iniciado / agendado / TBD / padrão
   return { label: "Agendado", type: "scheduled" };
+}
+
+/**
+ * Extrai data do match (lida com múltiplas estruturas possíveis)
+ */
+export function getMatchDate(match) {
+  return match.date ?? match.fixture?.date ?? match.kickoff ?? null;
 }
