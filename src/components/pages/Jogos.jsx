@@ -504,113 +504,170 @@ function ClassificacaoView({ standings }) {
 }
 
 /* ============== GRUPOS ============== */
-function GruposView({ standings }) {
+function GruposView({ standings, groupFilter = "todos" }) {
   const groups = standings?.groups ?? [];
+  const filtered = groupFilter === "todos"
+    ? groups
+    : groups.filter(g => g.name === `Group ${groupFilter}`);
 
   return (
     <div style={{ padding: "16px 16px 0" }}>
-      {groups.map((group, idx) => (
-        <div key={idx} style={{ marginBottom: 24 }}>
-          <div style={{
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: "0.18em",
-            color: "#f59e0b",
-            textTransform: "uppercase",
-            marginBottom: 10,
-            paddingLeft: 4,
-          }}>
-            {group.name}
-          </div>
-
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 26px 26px 26px 26px 32px 36px",
-            gap: 4,
-            fontSize: 10,
-            color: "rgba(255,255,255,0.35)",
-            fontWeight: 600,
-            padding: "0 12px 6px",
-            letterSpacing: "0.05em",
-          }}>
-            {["Time","J","V","E","D","SG","Pts"].map(h => (
-              <span key={h} style={{ textAlign: h === "Time" ? "left" : "center" }}>{h}</span>
-            ))}
-          </div>
-
-          {(group.standings ?? []).map((row, tIdx) => {
-            const advances = tIdx < 2;
-            const t = row.total ?? {};
-            const sg = (t.scoredGoals ?? 0) - (t.receivedGoals ?? 0);
-
-            return (
-              <div key={row.team?.id ?? tIdx} style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 26px 26px 26px 26px 32px 36px",
-                gap: 4,
-                background: tIdx % 2 === 0 ? "rgba(255,255,255,0.03)" : "transparent",
-                borderRadius: 8,
-                padding: "10px 12px",
-                borderLeft: advances
-                  ? "2px solid rgba(34,197,94,0.6)"
-                  : "2px solid transparent",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{
-                    fontSize: 12,
-                    fontWeight: 700,
-                    minWidth: 14,
-                    color: advances ? "#22c55e" : "rgba(255,255,255,0.4)",
-                  }}>{row.position ?? tIdx + 1}</span>
-                  {row.team?.logo && (
-                    <img
-                      src={row.team.logo}
-                      alt=""
-                      style={{ width: 18, height: 18, objectFit: "contain" }}
-                      onError={e => { e.currentTarget.style.display = "none"; }}
-                    />
-                  )}
-                  <span style={{
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: "#fff",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}>{row.team?.name}</span>
-                </div>
-                <span style={{ textAlign: "center", fontSize: 13, color: "rgba(255,255,255,0.6)" }}>{t.games ?? 0}</span>
-                <span style={{ textAlign: "center", fontSize: 13, color: "rgba(255,255,255,0.6)" }}>{t.wins ?? 0}</span>
-                <span style={{ textAlign: "center", fontSize: 13, color: "rgba(255,255,255,0.6)" }}>{t.draws ?? 0}</span>
-                <span style={{ textAlign: "center", fontSize: 13, color: "rgba(255,255,255,0.6)" }}>{t.loses ?? 0}</span>
-                <span style={{ textAlign: "center", fontSize: 13, color: "rgba(255,255,255,0.6)" }}>{sg > 0 ? `+${sg}` : sg}</span>
-                <span style={{
-                  textAlign: "center",
-                  fontSize: 14,
-                  fontWeight: 800,
-                  color: advances ? "#22c55e" : "#fff",
-                }}>{row.points ?? 0}</span>
-              </div>
-            );
-          })}
-        </div>
+      {filtered.map((group, idx) => (
+        <GroupTable key={idx} group={group} />
       ))}
 
+      <Legend />
+    </div>
+  );
+}
+
+function GroupTable({ group }) {
+  const columns = "minmax(0, 1fr) 24px 24px 24px 24px 32px 32px";
+  const standings = group.standings ?? [];
+
+  return (
+    <div style={{ marginBottom: 28 }}>
+      {/* Cabeçalho do grupo */}
       <div style={{
-        display: "flex",
-        gap: 16,
-        padding: "4px 12px 24px",
         fontSize: 11,
-        color: "rgba(255,255,255,0.4)",
+        fontWeight: 700,
+        letterSpacing: "0.18em",
+        color: "#f59e0b",
+        textTransform: "uppercase",
+        marginBottom: 10,
+        paddingLeft: 4,
       }}>
-        <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{
-            width: 10, height: 10, borderRadius: 2,
-            background: "rgba(34,197,94,0.6)", display: "inline-block",
-          }}/>
-          Classificados (top 2)
-        </span>
+        {group.name}
       </div>
+
+      {/* Container da tabela com overflow controlado */}
+      <div style={{
+        background: "rgba(255,255,255,0.02)",
+        borderRadius: 12,
+        overflow: "hidden",
+      }}>
+        {/* Header da tabela */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: columns,
+          gap: 6,
+          fontSize: 10,
+          color: "rgba(255,255,255,0.4)",
+          fontWeight: 700,
+          padding: "10px 12px 6px",
+          letterSpacing: "0.05em",
+          borderBottom: "1px solid rgba(255,255,255,0.04)",
+        }}>
+          <span style={{ textAlign: "left" }}>SELEÇÃO</span>
+          <span style={{ textAlign: "center" }}>J</span>
+          <span style={{ textAlign: "center" }}>V</span>
+          <span style={{ textAlign: "center" }}>E</span>
+          <span style={{ textAlign: "center" }}>D</span>
+          <span style={{ textAlign: "center" }}>SG</span>
+          <span style={{ textAlign: "center" }}>P</span>
+        </div>
+
+        {/* Linhas */}
+        {standings.map((row, tIdx) => {
+          const advances = tIdx < 2;
+          const t = row.total ?? {};
+          const sg = (t.scoredGoals ?? 0) - (t.receivedGoals ?? 0);
+
+          return (
+            <div key={row.team?.id ?? tIdx} style={{
+              display: "grid",
+              gridTemplateColumns: columns,
+              gap: 6,
+              padding: "10px 12px",
+              borderLeft: advances
+                ? "2px solid rgba(34,197,94,0.5)"
+                : "2px solid transparent",
+              borderBottom: tIdx < standings.length - 1
+                ? "1px solid rgba(255,255,255,0.03)"
+                : "none",
+              alignItems: "center",
+            }}>
+              {/* Coluna do time: posição + logo + nome (com ellipsis) */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                <span style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: advances ? "#22c55e" : "rgba(255,255,255,0.4)",
+                  minWidth: 12,
+                  flexShrink: 0,
+                }}>{row.position ?? tIdx + 1}</span>
+
+                {row.team?.logo && (
+                  <img
+                    src={row.team.logo}
+                    alt=""
+                    style={{ width: 18, height: 18, objectFit: "contain", flexShrink: 0 }}
+                    onError={(e) => { e.currentTarget.style.display = "none"; }}
+                  />
+                )}
+
+                <span style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "#fff",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  minWidth: 0,
+                  flex: 1,
+                }}>{row.team?.name}</span>
+              </div>
+
+              {/* Estatísticas - tamanho fixo, nunca crescem */}
+              <span style={cellStyle}>{t.games ?? 0}</span>
+              <span style={cellStyle}>{t.wins ?? 0}</span>
+              <span style={cellStyle}>{t.draws ?? 0}</span>
+              <span style={cellStyle}>{t.loses ?? 0}</span>
+              <span style={{
+                ...cellStyle,
+                color: sg > 0 ? "#22c55e" : sg < 0 ? "rgba(239,68,68,0.7)" : cellStyle.color,
+                fontWeight: 700,
+              }}>{sg > 0 ? `+${sg}` : sg}</span>
+              <span style={{
+                ...cellStyle,
+                fontSize: 13,
+                fontWeight: 800,
+                color: advances ? "#22c55e" : "#fff",
+              }}>{row.points ?? 0}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+const cellStyle = {
+  textAlign: "center",
+  fontSize: 12,
+  color: "rgba(255,255,255,0.7)",
+};
+
+function Legend() {
+  return (
+    <div style={{
+      display: "flex",
+      gap: 12,
+      padding: "4px 12px 24px",
+      fontSize: 10,
+      color: "rgba(255,255,255,0.35)",
+      flexWrap: "wrap",
+    }}>
+      <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+        <span style={{
+          width: 8, height: 8, borderRadius: 2,
+          background: "rgba(34,197,94,0.5)",
+        }}/>
+        Classificados (1º e 2º)
+      </span>
+      <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+        J=Jogos · V=Vitórias · E=Empates · D=Derrotas · SG=Saldo · P=Pontos
+      </span>
     </div>
   );
 }
