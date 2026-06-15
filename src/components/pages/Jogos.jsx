@@ -198,36 +198,9 @@ function CronogramaView({ fixtures, onSelectMatch }) {
       />
 
       <div style={{ padding: "12px 16px 0" }}>
-      {/* HOJE */}
-      {todayMatches.length > 0 && (
-        <div ref={hojeRef} style={{ marginBottom: 28 }}>
-          <SectionHeader label="HOJE" highlight />
-          {todayMatches.map(m => <MatchCard key={getMatchId(m)} fixture={m} onClick={onSelectMatch} />)}
-        </div>
-      )}
-
-      {/* PRÓXIMOS */}
-      {futureGroups.length > 0 && (
-        <div>
-          {futureGroups.map((group, idx) => (
-            <div
-              key={group.key}
-              ref={idx === 0 && todayMatches.length === 0 ? proximaRef : null}
-              style={{ marginBottom: 24 }}
-            >
-              <SectionHeader
-                label={group.label}
-                badge={idx === 0 && todayMatches.length === 0 ? "PRÓXIMA RODADA" : null}
-              />
-              {group.items.map(m => <MatchCard key={getMatchId(m)} fixture={m} onClick={onSelectMatch} />)}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* PASSADOS (colapsável) */}
+      {/* PASSADOS (colapsável, no topo) */}
       {pastGroups.length > 0 && (
-        <div style={{ marginTop: 16 }}>
+        <div style={{ marginBottom: 20 }}>
           <button
             onClick={() => setShowPast(!showPast)}
             style={{
@@ -248,7 +221,7 @@ function CronogramaView({ fixtures, onSelectMatch }) {
               transition: "all 0.2s",
             }}
           >
-            <span>Jogos anteriores ({pastGroups.reduce((acc, g) => acc + g.items.length, 0)})</span>
+            <span>{showPast ? "Ocultar" : "Ver"} jogos anteriores ({pastGroups.reduce((acc, g) => acc + g.items.length, 0)})</span>
             <span style={{
               transform: showPast ? "rotate(180deg)" : "rotate(0)",
               transition: "transform 0.2s",
@@ -258,14 +231,44 @@ function CronogramaView({ fixtures, onSelectMatch }) {
 
           {showPast && (
             <div style={{ marginTop: 12 }}>
-              {pastGroups.map(group => (
-                <div key={group.key} style={{ marginBottom: 20 }}>
-                  <SectionHeader label={group.label} muted />
-                  {group.items.map(m => <MatchCard key={getMatchId(m)} fixture={m} onClick={onSelectMatch} />)}
-                </div>
-              ))}
+              {pastGroups
+                .slice()
+                .sort((a, b) => a.key.localeCompare(b.key))
+                .map(group => (
+                  <div key={group.key} style={{ marginBottom: 20 }}>
+                    <SectionHeader label={group.label} muted />
+                    {group.items.map(m => <MatchCard key={getMatchId(m)} fixture={m} onClick={onSelectMatch} />)}
+                  </div>
+                ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* HOJE (no meio, destacado) */}
+      {todayMatches.length > 0 && (
+        <div ref={hojeRef} style={{ marginBottom: 28 }}>
+          <SectionHeader label="HOJE" highlight />
+          {todayMatches.map(m => <MatchCard key={getMatchId(m)} fixture={m} onClick={onSelectMatch} />)}
+        </div>
+      )}
+
+      {/* PRÓXIMOS (embaixo) */}
+      {futureGroups.length > 0 && (
+        <div>
+          {futureGroups.map((group, idx) => (
+            <div
+              key={group.key}
+              ref={idx === 0 && todayMatches.length === 0 ? proximaRef : null}
+              style={{ marginBottom: 24 }}
+            >
+              <SectionHeader
+                label={group.label}
+                badge={idx === 0 && todayMatches.length === 0 ? "PRÓXIMA RODADA" : null}
+              />
+              {group.items.map(m => <MatchCard key={getMatchId(m)} fixture={m} onClick={onSelectMatch} />)}
+            </div>
+          ))}
         </div>
       )}
 
