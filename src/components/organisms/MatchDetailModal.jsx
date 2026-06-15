@@ -1,8 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState } from "react";
 import {
   formatBrasilia, getMatchStatus, getMatchDate,
   getLiveEvents, getMatchStatistics, getLineups, getHighlights,
-  getHeadToHead, getLastFiveGames,
+  getHeadToHead, getLastFiveGames, extractScore,
 } from "@/services/worldcup";
 import { ResumoTab } from "@/components/organisms/matchDetail/ResumoTab";
 import { ConfrontoTab } from "@/components/organisms/matchDetail/ConfrontoTab";
@@ -13,76 +13,82 @@ import { InfoTab } from "@/components/organisms/matchDetail/InfoTab";
 import { LoadingTab, EmptyTab, hasValidStats } from "@/components/organisms/matchDetail/_shared";
 
 export function MatchDetailModal({ match, onClose }) {
-  const [tab, setTab] = useState(null);
-  const [tabData, setTabData] = useState({
-    events: null, stats: null, lineups: null,
-    highlights: null, h2h: null, homeForm: null, awayForm: null,
-  });
-  const [loading, setLoading] = useState(true);
-
-  const status = match ? getMatchStatus(match) : null;
-  const isScheduled = status?.type === "scheduled";
-  const matchId = match?.id ?? match?.fixture?.id;
-  const homeId = match?.homeTeam?.id ?? match?.teams?.home?.id;
-  const awayId = match?.awayTeam?.id ?? match?.teams?.away?.id;
-  const hasVenue = !!(match?.venue?.name || match?.fixture?.venue?.name);
-
-  // Carrega todos os dados em paralelo (cache compartilhado torna isso barato)
-  useEffect(() => {
-    if (!matchId) return;
-    let mounted = true;
-    setLoading(true);
-    setTab(null);
-
-    const safe = (p) => p.then((r) => r?.data ?? r ?? []).catch(() => []);
-
-    Promise.all([
-      isScheduled ? Promise.resolve([]) : safe(getLiveEvents(matchId)),
-      isScheduled ? Promise.resolve([]) : safe(getMatchStatistics(matchId)),
-      safe(getLineups(matchId)),
-      isScheduled ? Promise.resolve([]) : safe(getHighlights(matchId)),
-      isScheduled && homeId && awayId ? safe(getHeadToHead(homeId, awayId)) : Promise.resolve([]),
-      isScheduled && homeId ? safe(getLastFiveGames(homeId)) : Promise.resolve([]),
-      isScheduled && awayId ? safe(getLastFiveGames(awayId)) : Promise.resolve([]),
-    ]).then(([events, stats, lineups, highlights, h2h, homeForm, awayForm]) => {
-      if (!mounted) return;
-      setTabData({ events, stats, lineups, highlights, h2h, homeForm, awayForm });
-      setLoading(false);
-    });
-
-    return () => { mounted = false; };
-  }, [matchId, isScheduled, homeId, awayId]);
-
-  // Tabs disponíveis = apenas as que têm dado
-  const availableTabs = useMemo(() => {
-    if (loading) return [];
-    const tabs = [];
-
-    if (isScheduled) {
-      if (tabData.h2h?.length > 0 || tabData.homeForm?.length > 0 || tabData.awayForm?.length > 0) {
-        tabs.push({ id: "confronto", label: "Confronto" });
-      }
-      if (tabData.lineups?.length > 0) tabs.push({ id: "escalacoes", label: "Escalações" });
-    } else {
-      if (tabData.events?.length > 0) tabs.push({ id: "resumo", label: "Resumo" });
-      if (hasValidStats(tabData.stats)) tabs.push({ id: "estatisticas", label: "Estatísticas" });
-      if (tabData.lineups?.length > 0) tabs.push({ id: "escalacoes", label: "Escalações" });
-      if (tabData.highlights?.length > 0) tabs.push({ id: "highlights", label: "Vídeos" });
-    }
-
-    if (hasVenue) tabs.push({ id: "info", label: "Estádio" });
-
-    return tabs;
-  }, [loading, tabData, isScheduled, hasVenue]);
-
-  // Seleciona primeira tab disponível automaticamente
-  useEffect(() => {
-    if (availableTabs.length > 0 && !tab) {
-      setTab(availableTabs[0].id);
-    }
-  }, [availableTabs, tab]);
+  const [section, setSection] = useState(null);
+  const [sectionData, setSectionData] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   if (!match) return null;
+
+  const status = getMatchStatus(match);
+  const isScheduled = status.type === "scheduled";
+  const matchId = match.id ?? match.fixture?.id;
+  const homeId = match.homeTeam?.id ?? match.teams?.home?.id;
+  const awayId = match.awayTeam?.id ?? match.teams?.away?.id;
+
+  const options = isScheduled
+    ? [
+        { id: "confronto", label: "Histórico de confrontos", icon: "⚔️" },
+        { id: "escalacoes", label: "Escalações prováveis", icon: "📋" },
+        { id: "info", label: "Estádio", icon: "🏟️" },
+      ]
+    : [
+        { id: "resumo", label: "Resumo do jogo", icon: "📊" },
+        { id: "estatisticas", label: "Estatísticas", icon: "📈" },
+        { id: "escalacoes", label: "Escalações", icon: "📋" },
+        { id: "highlights", label: "Melhores momentos", icon: "🎬" },
+        { id: "info", label: "Estádio", icon: "🏟️" },
+      ];
+
+  async function handleSelectSection(sectionId) {
+    setSection(sectionId);
+    setLoading(true);
+    setSectionData(null);
+
+    const safe = (p) => p.then(r => r?.data ?? r ?? []).catch(() => []);
+
+    try {
+      let data;
+      switch (sectionId) {
+        case "resumo":
+          data = await safe(getLiveEvents(matchId));
+          break;
+        case "estatisticas":
+          data = await safe(getMatchStatistics(matchId));
+          break;
+        case "escalacoes":
+          data = await safe(getLineups(matchId));
+          break;
+        case "highlights":
+          data = await safe(getHighlights(matchId));
+          break;
+        case "confronto":
+          if (homeId && awayId) {
+            const [h2h, hf, af] = await Promise.all([
+              safe(getHeadToHead(homeId, awayId)),
+              safe(getLastFiveGames(homeId)),
+              safe(getLastFiveGames(awayId)),
+            ]);
+            data = { h2h, homeForm: hf, awayForm: af };
+          } else {
+            data = { h2h: [], homeForm: [], awayForm: [] };
+          }
+          break;
+        case "info":
+          data = "venue";
+          break;
+        default:
+          data = null;
+      }
+      setSectionData(data);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleBack() {
+    setSection(null);
+    setSectionData(null);
+  }
 
   return (
     <>
@@ -125,40 +131,26 @@ export function MatchDetailModal({ match, onClose }) {
         }}/>
 
         {/* Cabeçalho fixo */}
-        <ModalHeader match={match} status={status} onClose={onClose} />
+        <ModalHeader
+          match={match}
+          status={status}
+          onClose={onClose}
+          onBack={section ? handleBack : null}
+        />
 
-        {loading ? (
-          <LoadingTab message="Carregando detalhes..." />
-        ) : availableTabs.length === 0 ? (
-          <EmptyTab message="Nenhum detalhe disponível para esta partida ainda." />
-        ) : (
-          <>
-            {/* Tabs */}
-            <ModalTabs tabs={availableTabs} value={tab} onChange={setTab} />
-
-            {/* Conteúdo scrollável */}
-            <div style={{
-              flex: 1,
-              overflowY: "auto",
-              padding: "16px 16px 80px",
-              WebkitOverflowScrolling: "touch",
-            }}>
-              {tab === "resumo" && <ResumoTab events={tabData.events} />}
-              {tab === "confronto" && (
-                <ConfrontoTab
-                  match={match}
-                  h2h={tabData.h2h}
-                  homeForm={tabData.homeForm}
-                  awayForm={tabData.awayForm}
-                />
-              )}
-              {tab === "estatisticas" && <EstatisticasTab stats={tabData.stats} />}
-              {tab === "escalacoes" && <EscalacoesTab lineups={tabData.lineups} />}
-              {tab === "highlights" && <HighlightsTab highlights={tabData.highlights} />}
-              {tab === "info" && <InfoTab match={match} />}
-            </div>
-          </>
-        )}
+        {/* Conteúdo: menu OU seção carregada */}
+        <div style={{
+          flex: 1,
+          overflowY: "auto",
+          padding: "16px 16px 80px",
+          WebkitOverflowScrolling: "touch",
+        }}>
+          {section === null && <OptionsMenu options={options} onSelect={handleSelectSection} />}
+          {section && loading && <LoadingTab message="Carregando..." />}
+          {section && !loading && sectionData !== null && (
+            <SectionContent section={section} data={sectionData} match={match} />
+          )}
+        </div>
       </div>
 
       <style>{`
@@ -177,7 +169,7 @@ export function MatchDetailModal({ match, onClose }) {
 }
 
 /* =========== CABEÇALHO =========== */
-function ModalHeader({ match, status, onClose }) {
+function ModalHeader({ match, status, onClose, onBack }) {
   const isLive = status.type === "live";
   const isFinished = status.type === "finished";
   const dateStr = getMatchDate(match);
@@ -186,22 +178,44 @@ function ModalHeader({ match, status, onClose }) {
   const homeTeam = match.homeTeam ?? match.teams?.home ?? {};
   const awayTeam = match.awayTeam ?? match.teams?.away ?? {};
 
-  const homeScore = match.state?.score?.current?.[0] ?? match.homeScore ?? match.goals?.home;
-  const awayScore = match.state?.score?.current?.[1] ?? match.awayScore ?? match.goals?.away;
-  const hasScore = homeScore !== undefined && homeScore !== null;
+  const score = extractScore(match);
+  const hasScore = score !== null;
 
   return (
     <div style={{ padding: "0 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-        <span style={{
-          fontSize: 11,
-          fontWeight: 700,
-          letterSpacing: "0.15em",
-          color: "rgba(255,255,255,0.4)",
-          textTransform: "uppercase",
-        }}>
-          {date} · {time}
-        </span>
+        {onBack ? (
+          <button
+            onClick={onBack}
+            style={{
+              background: "rgba(255,255,255,0.08)",
+              border: "none",
+              borderRadius: 999,
+              padding: "6px 12px 6px 8px",
+              color: "#fff",
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: "pointer",
+              fontFamily: "inherit",
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            <span style={{ fontSize: 16 }}>‹</span>
+            <span>Voltar</span>
+          </button>
+        ) : (
+          <span style={{
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: "0.15em",
+            color: "rgba(255,255,255,0.4)",
+            textTransform: "uppercase",
+          }}>
+            {date} · {time}
+          </span>
+        )}
         <button
           onClick={onClose}
           style={{
@@ -239,7 +253,7 @@ function ModalHeader({ match, status, onClose }) {
               lineHeight: 1,
               letterSpacing: "0.02em",
             }}>
-              {homeScore} <span style={{ color: "rgba(255,255,255,0.3)" }}>–</span> {awayScore}
+              {score.home} <span style={{ color: "rgba(255,255,255,0.3)" }}>–</span> {score.away}
             </div>
           ) : (
             <div style={{ fontSize: 22, fontWeight: 700, color: "rgba(255,255,255,0.3)" }}>×</div>
@@ -316,35 +330,89 @@ function TeamHeader({ team, reverse }) {
   );
 }
 
-/* =========== TABS =========== */
-function ModalTabs({ tabs, value, onChange }) {
+/* =========== MENU DE OPÇÕES =========== */
+function OptionsMenu({ options, onSelect }) {
   return (
-    <div style={{
-      display: "flex",
-      overflowX: "auto",
-      borderBottom: "1px solid rgba(255,255,255,0.06)",
-      padding: "0 8px",
-      WebkitOverflowScrolling: "touch",
-    }}>
-      {tabs.map(t => (
-        <button
-          key={t.id}
-          onClick={() => onChange(t.id)}
-          style={{
-            padding: "12px 16px",
-            background: "transparent",
-            border: "none",
-            borderBottom: value === t.id ? "2px solid #f59e0b" : "2px solid transparent",
-            color: value === t.id ? "#fbbf24" : "rgba(255,255,255,0.5)",
-            fontSize: 13,
-            fontWeight: 700,
-            cursor: "pointer",
-            fontFamily: "inherit",
-            transition: "all 0.2s",
-            whiteSpace: "nowrap",
-          }}
-        >{t.label}</button>
-      ))}
+    <div>
+      <div style={{
+        fontSize: 11,
+        fontWeight: 700,
+        letterSpacing: "0.15em",
+        color: "rgba(255,255,255,0.4)",
+        textTransform: "uppercase",
+        marginBottom: 12,
+        paddingLeft: 2,
+      }}>
+        O que deseja ver?
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {options.map(opt => (
+          <button
+            key={opt.id}
+            onClick={() => onSelect(opt.id)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              width: "100%",
+              padding: "12px 14px",
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 12,
+              color: "#fff",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "inherit",
+              transition: "all 0.15s",
+              textAlign: "left",
+            }}
+            onTouchStart={(e) => { e.currentTarget.style.background = "rgba(245,158,11,0.08)"; }}
+            onTouchEnd={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
+          >
+            <span style={{ fontSize: 18, width: 32, textAlign: "center" }}>{opt.icon}</span>
+            <span style={{ flex: 1 }}>{opt.label}</span>
+            <span style={{ fontSize: 16, color: "rgba(255,255,255,0.3)" }}>›</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
+}
+
+/* =========== DESPACHO DE SEÇÃO =========== */
+function SectionContent({ section, data, match }) {
+  if (section === "resumo") {
+    if (!data?.length) return <EmptyTab message="Sem eventos registrados nesta partida." />;
+    return <ResumoTab events={data} />;
+  }
+  if (section === "estatisticas") {
+    if (!hasValidStats(data)) return <EmptyTab message="Estatísticas não disponíveis." />;
+    return <EstatisticasTab stats={data} />;
+  }
+  if (section === "escalacoes") {
+    if (!data?.length) return <EmptyTab message="Escalações ainda não disponíveis." />;
+    return <EscalacoesTab lineups={data} />;
+  }
+  if (section === "highlights") {
+    if (!data?.length) return <EmptyTab message="Melhores momentos ainda não publicados." />;
+    return <HighlightsTab highlights={data} />;
+  }
+  if (section === "confronto") {
+    const hasAny = data.h2h?.length || data.homeForm?.length || data.awayForm?.length;
+    if (!hasAny) return <EmptyTab message="Sem dados de confrontos anteriores." />;
+    return (
+      <ConfrontoTab
+        match={match}
+        h2h={data.h2h}
+        homeForm={data.homeForm}
+        awayForm={data.awayForm}
+      />
+    );
+  }
+  if (section === "info") {
+    return <InfoTab match={match} />;
+  }
+  return null;
 }

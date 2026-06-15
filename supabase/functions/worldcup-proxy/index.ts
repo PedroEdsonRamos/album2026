@@ -52,13 +52,13 @@ function buildCacheKey(endpoint: string, params: Record<string, unknown>) {
 async function getFromCache(supabase: any, key: string) {
   const { data, error } = await supabase
     .from("api_cache")
-    .select("data, expires_at")
+    .select("data, expires_at, created_at")
     .eq("cache_key", key)
     .gt("expires_at", new Date().toISOString())
     .maybeSingle();
 
   if (error || !data) return null;
-  return data.data;
+  return { payload: data.data, cachedAt: data.created_at };
 }
 
 async function saveToCache(supabase: any, key: string, data: any, ttlSeconds: number) {
@@ -131,10 +131,10 @@ Deno.serve(async (req) => {
     const cacheKey = buildCacheKey(endpoint, { ...params, ...finalParams });
 
     // 1. Tenta cache primeiro
-    const cached = await getFromCache(supabase, cacheKey);
-    if (cached) {
+    const cacheResult = await getFromCache(supabase, cacheKey);
+    if (cacheResult) {
       return new Response(
-        JSON.stringify({ ...cached, _cached: true }),
+        JSON.stringify({ ...cacheResult.payload, _cached: true, _cachedAt: cacheResult.cachedAt }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -173,10 +173,11 @@ Deno.serve(async (req) => {
     }
 
     // 3. Salva no cache (não bloqueia resposta)
+    const cachedAt = new Date().toISOString();
     saveToCache(supabase, cacheKey, data, ttl).catch(() => {});
 
     return new Response(
-      JSON.stringify(data),
+      JSON.stringify({ ...data, _cachedAt: cachedAt }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err: any) {

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import {
   getFixtures, getStandings, formatBrasilia, getMatchStatus,
-  todayKeyBrasilia, getMatchDate
+  todayKeyBrasilia, getMatchDate, extractScore,
 } from "@/services/worldcup";
 import { BallIcon } from "@/components/icons/BallIcon.jsx";
 import { MatchDetailModal } from "@/components/organisms/MatchDetailModal";
@@ -410,19 +410,17 @@ function SectionHeader({ label, highlight, muted, badge }) {
           boxShadow: "0 2px 8px rgba(245,158,11,0.3)",
         }}>HOJE</span>
       )}
-      <span style={{
-        fontSize: 11,
-        fontWeight: 700,
-        letterSpacing: "0.18em",
-        textTransform: "uppercase",
-        color: highlight
-          ? "#fff"
-          : muted
-            ? "rgba(255,255,255,0.3)"
-            : "rgba(255,255,255,0.5)",
-      }}>
-        {label}
-      </span>
+      {!highlight && (
+        <span style={{
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: "0.18em",
+          textTransform: "uppercase",
+          color: muted ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.5)",
+        }}>
+          {label}
+        </span>
+      )}
       {badge && (
         <span style={{
           fontSize: 9,
@@ -451,23 +449,15 @@ function MatchCard({ fixture: m, onClick }) {
 
   const homeTeam = m.homeTeam ?? m.teams?.home ?? {};
   const awayTeam = m.awayTeam ?? m.teams?.away ?? {};
-  const homeName = homeTeam.name ?? "—";
-  const awayName = awayTeam.name ?? "—";
-  const homeLogo = homeTeam.logo;
-  const awayLogo = awayTeam.logo;
 
-  const homeScore = m.state?.score?.current?.[0]
-    ?? m.homeScore ?? m.score?.home ?? m.goals?.home;
-  const awayScore = m.state?.score?.current?.[1]
-    ?? m.awayScore ?? m.score?.away ?? m.goals?.away;
+  const score = extractScore(m);
+  const hasScore = score !== null;
 
-  const hasScore = homeScore !== undefined && awayScore !== undefined && homeScore !== null;
+  const homeWon = hasScore && Number(score.home) > Number(score.away);
+  const awayWon = hasScore && Number(score.away) > Number(score.home);
 
   const round = m.round ?? m.group ?? m.league?.round ?? "";
   const roundLabel = formatRound(round);
-
-  const homeWon = hasScore && Number(homeScore) > Number(awayScore);
-  const awayWon = hasScore && Number(awayScore) > Number(homeScore);
 
   return (
     <div
@@ -483,82 +473,102 @@ function MatchCard({ fixture: m, onClick }) {
           : "rgba(255,255,255,0.04)",
         border: `1px solid ${isLive ? "rgba(245,158,11,0.4)" : "rgba(255,255,255,0.08)"}`,
         borderRadius: 14,
-        padding: "12px 14px",
+        padding: "12px 14px 10px",
         marginBottom: 8,
         boxShadow: isLive ? "0 4px 20px rgba(245,158,11,0.15)" : "none",
         cursor: "pointer",
         transition: "transform 0.15s",
+      }}
+    >
+      {/* TOPO: Status / Horário (centralizado) */}
+      <div style={{
+        textAlign: "center",
+        marginBottom: 10,
+        fontSize: 11,
+        fontWeight: 700,
+        letterSpacing: "0.06em",
+        color: isLive ? "#f59e0b" : "rgba(255,255,255,0.45)",
       }}>
-      {/* LINHA 1: Casa | Placar | Visitante */}
+        {isLive ? (
+          <div>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+              <span style={{
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                background: "#f59e0b",
+                boxShadow: "0 0 6px #f59e0b",
+                animation: "pulse 1.5s ease-in-out infinite",
+                display: "inline-block",
+              }}/>
+              {status.label}
+            </span>
+            {m._cachedAt && (
+              <div style={{
+                fontSize: 9,
+                fontWeight: 600,
+                color: "rgba(255,255,255,0.35)",
+                marginTop: 2,
+                letterSpacing: "0.03em",
+              }}>
+                Atualizado às {formatBrasilia(m._cachedAt).time}
+              </div>
+            )}
+          </div>
+        ) : isFinished ? (
+          <span style={{ textTransform: "uppercase" }}>Encerrado</span>
+        ) : (
+          time
+        )}
+      </div>
+
+      {/* CENTRO: Times (vertical) + Placar */}
       <div style={{
         display: "grid",
         gridTemplateColumns: "1fr auto 1fr",
-        gap: 10,
+        gap: 8,
         alignItems: "center",
-        marginBottom: 8,
       }}>
-        <TeamSide name={homeName} logo={homeLogo} align="right" won={isFinished && homeWon} />
+        <TeamCol team={homeTeam} won={homeWon} />
 
-        <div style={{ minWidth: 64, textAlign: "center", padding: "0 4px" }}>
+        <div style={{ minWidth: 72, textAlign: "center", padding: "0 4px" }}>
           {hasScore ? (
             <div style={{
-              fontSize: 22,
+              fontSize: 24,
               fontWeight: 800,
               color: "#fff",
               lineHeight: 1,
-              letterSpacing: "0.02em",
+              letterSpacing: "0.04em",
+              whiteSpace: "nowrap",
             }}>
-              {homeScore} <span style={{ color: "rgba(255,255,255,0.3)", fontWeight: 600 }}>–</span> {awayScore}
+              {score.home}
+              <span style={{ color: "rgba(255,255,255,0.3)", fontWeight: 600, margin: "0 6px" }}>–</span>
+              {score.away}
             </div>
           ) : (
-            <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", padding: "4px 0" }}>
-              {time}
-            </div>
+            <div style={{ fontSize: 18, color: "rgba(255,255,255,0.35)", fontWeight: 700 }}>×</div>
           )}
         </div>
 
-        <TeamSide name={awayName} logo={awayLogo} align="left" won={isFinished && awayWon} />
+        <TeamCol team={awayTeam} won={awayWon} />
       </div>
 
-      {/* LINHA 2: Status / Rodada (meta-info) */}
-      <div style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        gap: 8,
-        fontSize: 10,
-        color: "rgba(255,255,255,0.45)",
-        fontWeight: 600,
-        letterSpacing: "0.05em",
-      }}>
-        {isLive && (
-          <span style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 4,
-            color: "#f59e0b",
-            fontWeight: 700,
-            fontSize: 10,
-          }}>
-            <span style={{
-              width: 6,
-              height: 6,
-              borderRadius: "50%",
-              background: "#f59e0b",
-              boxShadow: "0 0 6px #f59e0b",
-              animation: "pulse 1.5s ease-in-out infinite",
-            }}/>
-            {status.label}
-          </span>
-        )}
-        {isFinished && <span style={{ textTransform: "uppercase" }}>Encerrado</span>}
-        {roundLabel && (
-          <>
-            {(isLive || isFinished) && <span style={{ opacity: 0.4 }}>·</span>}
-            <span style={{ textTransform: "uppercase" }}>{roundLabel}</span>
-          </>
-        )}
-      </div>
+      {/* RODAPÉ: Rodada */}
+      {roundLabel && (
+        <div style={{
+          textAlign: "center",
+          marginTop: 8,
+          paddingTop: 8,
+          borderTop: "1px solid rgba(255,255,255,0.04)",
+          fontSize: 10,
+          fontWeight: 600,
+          letterSpacing: "0.08em",
+          color: "rgba(255,255,255,0.35)",
+          textTransform: "uppercase",
+        }}>
+          {roundLabel}
+        </div>
+      )}
 
       <style>{`
         @keyframes pulse {
@@ -570,35 +580,43 @@ function MatchCard({ fixture: m, onClick }) {
   );
 }
 
-function TeamSide({ name, logo, align, won }) {
+function TeamCol({ team, won }) {
   return (
     <div style={{
       display: "flex",
-      flexDirection: align === "right" ? "row" : "row-reverse",
+      flexDirection: "column",
       alignItems: "center",
-      gap: 8,
-      justifyContent: "flex-end",
+      gap: 6,
       minWidth: 0,
     }}>
+      {team?.logo ? (
+        <img
+          src={team.logo}
+          alt=""
+          style={{ width: 36, height: 36, objectFit: "contain" }}
+          onError={(e) => { e.currentTarget.style.display = "none"; }}
+        />
+      ) : (
+        <div style={{
+          width: 36,
+          height: 36,
+          borderRadius: "50%",
+          background: "rgba(255,255,255,0.05)",
+        }}/>
+      )}
       <span style={{
-        fontSize: 13,
+        fontSize: 12,
         fontWeight: won ? 800 : 600,
         color: won ? "#fff" : "rgba(255,255,255,0.85)",
-        textAlign: align,
+        textAlign: "center",
         whiteSpace: "nowrap",
         overflow: "hidden",
         textOverflow: "ellipsis",
-        minWidth: 0,
-        flex: 1,
-      }}>{name}</span>
-      {logo && (
-        <img
-          src={logo}
-          alt=""
-          style={{ width: 22, height: 22, objectFit: "contain", flexShrink: 0 }}
-          onError={(e) => { e.currentTarget.style.display = "none"; }}
-        />
-      )}
+        maxWidth: "100%",
+        lineHeight: 1.2,
+      }}>
+        {team?.name ?? "—"}
+      </span>
     </div>
   );
 }

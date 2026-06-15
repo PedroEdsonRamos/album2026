@@ -69,18 +69,21 @@ export async function getFixtures() {
 
   const response = await proxyFetch("matches");
   const matches = response.data ?? response.matches ?? response;
+  const cachedAt = response._cachedAt;
 
   if (!Array.isArray(matches)) {
     console.error("Estrutura inesperada de matches:", response);
     return [];
   }
 
-  const hasLive = matches.some(m => {
+  const enriched = matches.map(m => ({ ...m, _cachedAt: cachedAt }));
+
+  const hasLive = enriched.some(m => {
     const s = (m.state?.description ?? m.status ?? "").toUpperCase();
     return ["IN_PLAY","LIVE","HALFTIME","FIRST_HALF","SECOND_HALF","ET","P"].includes(s);
   });
-  setCache(key, matches, hasLive ? 5 * 60 * 1000 : 30 * 60 * 1000);
-  return matches;
+  setCache(key, enriched, hasLive ? 5 * 60 * 1000 : 30 * 60 * 1000);
+  return enriched;
 }
 
 /**
@@ -101,6 +104,34 @@ export async function getStandings() {
   const result = { groups: realGroups, thirdPlaceTable };
   setCache(key, result, 60 * 60 * 1000);
   return result;
+}
+
+/**
+ * Extrai placar de forma robusta — lida com múltiplas estruturas da Highlightly
+ */
+export function extractScore(match) {
+  const current = match?.state?.score?.current;
+  if (Array.isArray(current) && current[0] !== undefined && current[1] !== undefined) {
+    return { home: current[0], away: current[1] };
+  }
+
+  const stateScore = match?.state?.score;
+  if (stateScore && stateScore.home !== undefined && stateScore.away !== undefined
+      && stateScore.home !== null && stateScore.away !== null) {
+    return { home: stateScore.home, away: stateScore.away };
+  }
+
+  if (match?.homeScore !== undefined && match?.awayScore !== undefined
+      && match?.homeScore !== null && match?.awayScore !== null) {
+    return { home: match.homeScore, away: match.awayScore };
+  }
+
+  if (match?.goals?.home !== undefined && match?.goals?.away !== undefined
+      && match?.goals?.home !== null && match?.goals?.away !== null) {
+    return { home: match.goals.home, away: match.goals.away };
+  }
+
+  return null;
 }
 
 /**
