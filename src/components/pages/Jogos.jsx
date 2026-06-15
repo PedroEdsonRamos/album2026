@@ -99,12 +99,48 @@ function CronogramaView({ fixtures, onSelectMatch }) {
   const hojeRef = useRef(null);
   const proximaRef = useRef(null);
 
+  const [phaseFilter, setPhaseFilter] = useState("todos");
+  const [groupFilter, setGroupFilter] = useState("todos");
+  const [teamFilter, setTeamFilter] = useState("");
+
+  // Aplica filtros antes de agrupar por data
+  const filtered = useMemo(() => {
+    return fixtures.filter(m => {
+      const round = String(m.round ?? m.group ?? m.league?.round ?? "");
+
+      // Fase
+      if (phaseFilter !== "todos") {
+        if (phaseFilter === "grupos" && !round.includes("Group Stage")) return false;
+        if (phaseFilter === "oitavas" && !round.includes("Round of 16")) return false;
+        if (phaseFilter === "quartas" && !round.includes("Quarter")) return false;
+        if (phaseFilter === "semi" && !round.includes("Semi")) return false;
+        if (phaseFilter === "final" && !round.includes("Final")) return false;
+      }
+
+      // Grupo (só restringe quando há informação de grupo identificável)
+      if (groupFilter !== "todos") {
+        const matchGroup = String(m.group?.name ?? m.group ?? "");
+        if (matchGroup && !matchGroup.endsWith(groupFilter)) return false;
+      }
+
+      // Time (busca por nome)
+      if (teamFilter.trim()) {
+        const q = teamFilter.toLowerCase();
+        const home = (m.homeTeam?.name ?? m.teams?.home?.name ?? "").toLowerCase();
+        const away = (m.awayTeam?.name ?? m.teams?.away?.name ?? "").toLowerCase();
+        if (!home.includes(q) && !away.includes(q)) return false;
+      }
+
+      return true;
+    });
+  }, [fixtures, phaseFilter, groupFilter, teamFilter]);
+
   const { todayMatches, futureGroups, pastGroups } = useMemo(() => {
     const todayMatches = [];
     const futureMap = {};
     const pastMap = {};
 
-    fixtures.forEach(m => {
+    filtered.forEach(m => {
       const dateStr = getMatchDate(m);
       if (!dateStr) return;
       const { dateKey, date } = formatBrasilia(dateStr);
@@ -136,7 +172,7 @@ function CronogramaView({ fixtures, onSelectMatch }) {
     pastGroups.forEach(g => g.items.sort(sortByTime));
 
     return { todayMatches, futureGroups, pastGroups };
-  }, [fixtures, todayKey]);
+  }, [filtered, todayKey]);
 
   const [showPast, setShowPast] = useState(false);
 
@@ -151,7 +187,17 @@ function CronogramaView({ fixtures, onSelectMatch }) {
   }, [todayMatches.length, futureGroups.length]);
 
   return (
-    <div style={{ padding: "20px 16px 0" }}>
+    <div style={{ padding: "8px 0 0" }}>
+      <FilterBar
+        phaseFilter={phaseFilter}
+        setPhaseFilter={setPhaseFilter}
+        groupFilter={groupFilter}
+        setGroupFilter={setGroupFilter}
+        teamFilter={teamFilter}
+        setTeamFilter={setTeamFilter}
+      />
+
+      <div style={{ padding: "12px 16px 0" }}>
       {/* HOJE */}
       {todayMatches.length > 0 && (
         <div ref={hojeRef} style={{ marginBottom: 28 }}>
@@ -229,7 +275,109 @@ function CronogramaView({ fixtures, onSelectMatch }) {
           message="Nenhum jogo encontrado."
         />
       )}
+      </div>
     </div>
+  );
+}
+
+/* ============== FILTROS ============== */
+function FilterBar({ phaseFilter, setPhaseFilter, groupFilter, setGroupFilter, teamFilter, setTeamFilter }) {
+  return (
+    <div style={{ padding: "12px 16px 0" }}>
+      {/* Busca por time */}
+      <input
+        type="text"
+        placeholder="Buscar seleção..."
+        value={teamFilter}
+        onChange={(e) => setTeamFilter(e.target.value)}
+        style={{
+          width: "100%",
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 10,
+          padding: "10px 14px",
+          color: "#fff",
+          fontSize: 13,
+          fontFamily: "inherit",
+          outline: "none",
+          marginBottom: 10,
+          boxSizing: "border-box",
+        }}
+      />
+
+      {/* Chips de fase */}
+      <div style={{
+        display: "flex",
+        gap: 6,
+        overflowX: "auto",
+        paddingBottom: 8,
+        WebkitOverflowScrolling: "touch",
+      }}>
+        {[
+          { id: "todos", label: "Todos" },
+          { id: "grupos", label: "Grupos" },
+          { id: "oitavas", label: "Oitavas" },
+          { id: "quartas", label: "Quartas" },
+          { id: "semi", label: "Semi" },
+          { id: "final", label: "Final" },
+        ].map(opt => (
+          <FilterChip
+            key={opt.id}
+            active={phaseFilter === opt.id}
+            onClick={() => setPhaseFilter(opt.id)}
+          >{opt.label}</FilterChip>
+        ))}
+      </div>
+
+      {/* Chips de grupo - só se fase = grupos ou todos */}
+      {(phaseFilter === "todos" || phaseFilter === "grupos") && (
+        <div style={{
+          display: "flex",
+          gap: 6,
+          overflowX: "auto",
+          paddingBottom: 8,
+          WebkitOverflowScrolling: "touch",
+        }}>
+          <FilterChip
+            active={groupFilter === "todos"}
+            onClick={() => setGroupFilter("todos")}
+          >Todos grupos</FilterChip>
+          {["A","B","C","D","E","F","G","H","I","J","K","L"].map(g => (
+            <FilterChip
+              key={g}
+              active={groupFilter === g}
+              onClick={() => setGroupFilter(g)}
+            >{g}</FilterChip>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FilterChip({ active, onClick, children }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: "6px 14px",
+        borderRadius: 999,
+        border: active
+          ? "1px solid rgba(245,158,11,0.5)"
+          : "1px solid rgba(255,255,255,0.1)",
+        background: active
+          ? "rgba(245,158,11,0.12)"
+          : "rgba(255,255,255,0.04)",
+        color: active ? "#fbbf24" : "rgba(255,255,255,0.55)",
+        fontWeight: 700,
+        fontSize: 11,
+        cursor: "pointer",
+        fontFamily: "inherit",
+        transition: "all 0.2s",
+        whiteSpace: "nowrap",
+        flexShrink: 0,
+      }}
+    >{children}</button>
   );
 }
 
@@ -466,6 +614,7 @@ function formatRound(round) {
 /* ============== CLASSIFICAÇÃO ============== */
 function ClassificacaoView({ standings }) {
   const [view, setView] = useState("grupos");
+  const [groupFilter, setGroupFilter] = useState("todos");
 
   return (
     <div>
@@ -497,7 +646,30 @@ function ClassificacaoView({ standings }) {
         ))}
       </div>
 
-      {view === "grupos" && <GruposView standings={standings} />}
+      {view === "grupos" && (
+        <>
+          <div style={{
+            display: "flex",
+            gap: 6,
+            overflowX: "auto",
+            padding: "12px 16px 8px",
+            WebkitOverflowScrolling: "touch",
+          }}>
+            <FilterChip
+              active={groupFilter === "todos"}
+              onClick={() => setGroupFilter("todos")}
+            >Todos</FilterChip>
+            {["A","B","C","D","E","F","G","H","I","J","K","L"].map(g => (
+              <FilterChip
+                key={g}
+                active={groupFilter === g}
+                onClick={() => setGroupFilter(g)}
+              >Grupo {g}</FilterChip>
+            ))}
+          </div>
+          <GruposView standings={standings} groupFilter={groupFilter} />
+        </>
+      )}
       {view === "chaveamento" && <ChaveamentoView standings={standings} />}
     </div>
   );
