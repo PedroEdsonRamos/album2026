@@ -313,13 +313,10 @@ function MatchCard({ fixture: m, onClick }) {
   const hasScore = homeScore !== undefined && awayScore !== undefined && homeScore !== null;
 
   const round = m.round ?? m.group ?? m.league?.round ?? "";
-  const roundLabel = String(round)
-    .replace("Group Stage - ", "J")
-    .replace("Round of ", "R")
-    .replace("Quarter-finals", "QF")
-    .replace("Semi-finals", "SF")
-    .replace("3rd Place Final", "3°")
-    .replace("Final", "FIN");
+  const roundLabel = formatRound(round);
+
+  const homeWon = hasScore && Number(homeScore) > Number(awayScore);
+  const awayWon = hasScore && Number(awayScore) > Number(homeScore);
 
   return (
     <div
@@ -327,107 +324,90 @@ function MatchCard({ fixture: m, onClick }) {
       onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.98)"; }}
       onMouseUp={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
       onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
+      onTouchStart={(e) => { e.currentTarget.style.transform = "scale(0.98)"; }}
+      onTouchEnd={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
       style={{
         background: isLive
-          ? "linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.04))"
+          ? "linear-gradient(135deg, rgba(245,158,11,0.10), rgba(245,158,11,0.04))"
           : "rgba(255,255,255,0.04)",
         border: `1px solid ${isLive ? "rgba(245,158,11,0.4)" : "rgba(255,255,255,0.08)"}`,
-        borderRadius: 16,
-        padding: "14px 16px",
+        borderRadius: 14,
+        padding: "12px 14px",
         marginBottom: 8,
-        display: "flex",
-        alignItems: "center",
-        gap: 12,
         boxShadow: isLive ? "0 4px 20px rgba(245,158,11,0.15)" : "none",
         cursor: "pointer",
         transition: "transform 0.15s",
       }}>
-      {/* Status / horário */}
+      {/* LINHA 1: Casa | Placar | Visitante */}
       <div style={{
-        minWidth: 54,
-        textAlign: "center",
-        fontSize: 13,
-        fontWeight: 700,
-        color: isLive ? "#f59e0b" : isFinished ? "rgba(255,255,255,0.4)" : "#fff",
+        display: "grid",
+        gridTemplateColumns: "1fr auto 1fr",
+        gap: 10,
+        alignItems: "center",
+        marginBottom: 8,
       }}>
-        {isFinished ? "FIM" : isLive ? (
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+        <TeamSide name={homeName} logo={homeLogo} align="right" won={isFinished && homeWon} />
+
+        <div style={{ minWidth: 64, textAlign: "center", padding: "0 4px" }}>
+          {hasScore ? (
+            <div style={{
+              fontSize: 22,
+              fontWeight: 800,
+              color: "#fff",
+              lineHeight: 1,
+              letterSpacing: "0.02em",
+            }}>
+              {homeScore} <span style={{ color: "rgba(255,255,255,0.3)", fontWeight: 600 }}>–</span> {awayScore}
+            </div>
+          ) : (
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", padding: "4px 0" }}>
+              {time}
+            </div>
+          )}
+        </div>
+
+        <TeamSide name={awayName} logo={awayLogo} align="left" won={isFinished && awayWon} />
+      </div>
+
+      {/* LINHA 2: Status / Rodada (meta-info) */}
+      <div style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        gap: 8,
+        fontSize: 10,
+        color: "rgba(255,255,255,0.45)",
+        fontWeight: 600,
+        letterSpacing: "0.05em",
+      }}>
+        {isLive && (
+          <span style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 4,
+            color: "#f59e0b",
+            fontWeight: 700,
+            fontSize: 10,
+          }}>
             <span style={{
-              width: 7,
-              height: 7,
+              width: 6,
+              height: 6,
               borderRadius: "50%",
               background: "#f59e0b",
-              boxShadow: "0 0 8px #f59e0b",
+              boxShadow: "0 0 6px #f59e0b",
               animation: "pulse 1.5s ease-in-out infinite",
             }}/>
-            <span style={{ fontSize: 11 }}>{status.label}</span>
+            {status.label}
           </span>
-        ) : time}
+        )}
+        {isFinished && <span style={{ textTransform: "uppercase" }}>Encerrado</span>}
+        {roundLabel && (
+          <>
+            {(isLive || isFinished) && <span style={{ opacity: 0.4 }}>·</span>}
+            <span style={{ textTransform: "uppercase" }}>{roundLabel}</span>
+          </>
+        )}
       </div>
-
-      {/* Times + placar */}
-      <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 8 }}>
-        <div style={{
-          flex: 1,
-          minWidth: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "flex-end",
-          gap: 8,
-        }}>
-          <span style={{
-            fontSize: 14, fontWeight: 700, color: "#fff", textAlign: "right",
-            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0,
-          }}>
-            {homeName}
-          </span>
-          {homeLogo && (
-            <img
-              src={homeLogo}
-              alt=""
-              style={{ width: 22, height: 22, objectFit: "contain" }}
-              onError={e => { e.currentTarget.style.display = "none"; }}
-            />
-          )}
-        </div>
-
-        <div style={{
-          minWidth: 64,
-          textAlign: "center",
-          fontSize: hasScore ? 20 : 14,
-          fontWeight: 800,
-          color: hasScore ? "#fff" : "rgba(255,255,255,0.25)",
-          letterSpacing: hasScore ? "0.02em" : "normal",
-        }}>
-          {hasScore ? `${homeScore} – ${awayScore}` : "×"}
-        </div>
-
-        <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 8 }}>
-          {awayLogo && (
-            <img
-              src={awayLogo}
-              alt=""
-              style={{ width: 22, height: 22, objectFit: "contain" }}
-              onError={e => { e.currentTarget.style.display = "none"; }}
-            />
-          )}
-          <span style={{
-            fontSize: 14, fontWeight: 700, color: "#fff",
-            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0,
-          }}>{awayName}</span>
-        </div>
-      </div>
-
-      {/* Round */}
-      {roundLabel && (
-        <div style={{
-          fontSize: 10,
-          color: "rgba(255,255,255,0.3)",
-          fontWeight: 600,
-          minWidth: 32,
-          textAlign: "right",
-        }}>{roundLabel}</div>
-      )}
 
       <style>{`
         @keyframes pulse {
@@ -437,6 +417,50 @@ function MatchCard({ fixture: m, onClick }) {
       `}</style>
     </div>
   );
+}
+
+function TeamSide({ name, logo, align, won }) {
+  return (
+    <div style={{
+      display: "flex",
+      flexDirection: align === "right" ? "row" : "row-reverse",
+      alignItems: "center",
+      gap: 8,
+      justifyContent: "flex-end",
+      minWidth: 0,
+    }}>
+      <span style={{
+        fontSize: 13,
+        fontWeight: won ? 800 : 600,
+        color: won ? "#fff" : "rgba(255,255,255,0.85)",
+        textAlign: align,
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        minWidth: 0,
+        flex: 1,
+      }}>{name}</span>
+      {logo && (
+        <img
+          src={logo}
+          alt=""
+          style={{ width: 22, height: 22, objectFit: "contain", flexShrink: 0 }}
+          onError={(e) => { e.currentTarget.style.display = "none"; }}
+        />
+      )}
+    </div>
+  );
+}
+
+function formatRound(round) {
+  return String(round)
+    .replace("Group Stage - ", "Rodada ")
+    .replace("Round of 32", "R32")
+    .replace("Round of 16", "Oitavas")
+    .replace("Quarter-finals", "Quartas")
+    .replace("Semi-finals", "Semifinal")
+    .replace("3rd Place Final", "3º lugar")
+    .replace("Final", "Final");
 }
 
 /* ============== CLASSIFICAÇÃO ============== */
