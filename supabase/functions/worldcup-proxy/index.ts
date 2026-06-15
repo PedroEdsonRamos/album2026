@@ -11,16 +11,36 @@ const HIGHLIGHTLY_HOST = "soccer.highlightly.net";
 const LEAGUE_ID = 1635;
 const SEASON = 2026;
 
-// Endpoints permitidos + TTL de cache em segundos
-const ENDPOINT_CONFIG: Record<string, { ttl: number; ttlLive?: number }> = {
-  "matches":         { ttl: 1800, ttlLive: 120 },   // 30min, 2min se há live
-  "standings":       { ttl: 1800 },                  // 30 min
-  "lineups":         { ttl: 3600 },                  // 1 hora
-  "statistics":      { ttl: 120 },                   // 2 min (durante jogo) ou final
-  "live-events":     { ttl: 30 },                    // 30 segundos
-  "head-2-head":     { ttl: 604800 },                // 7 dias (raramente muda)
-  "last-five-games": { ttl: 86400 },                 // 24 horas
-  "highlights":      { ttl: 600 },                   // 10 min
+// Endpoints permitidos + configuração de cache/montagem de URL
+// - ttl / ttlLive: cache em segundos
+// - pathParam: se houver, o valor desse param vai no PATH (não na query)
+// - scopeToLeague: se true, adiciona leagueId+season na query
+const ENDPOINT_CONFIG: Record<string, {
+  ttl: number;
+  ttlLive?: number;
+  pathParam?: string;
+  scopeToLeague: boolean;
+}> = {
+  "matches":         { ttl: 1800, ttlLive: 120, scopeToLeague: true },   // 30min, 2min se há live
+  "standings":       { ttl: 1800, scopeToLeague: true },                  // 30 min
+  "lineups":         { ttl: 3600, pathParam: "matchId", scopeToLeague: false },  // 1 hora
+  "statistics":      { ttl: 120, pathParam: "matchId", scopeToLeague: false },   // 2 min (durante jogo) ou final
+  "live-events":     { ttl: 30, pathParam: "matchId", scopeToLeague: false },    // 30 segundos
+  "head-2-head":     { ttl: 604800, scopeToLeague: false },               // 7 dias (raramente muda)
+  "last-five-games": { ttl: 86400, pathParam: "teamId", scopeToLeague: false },  // 24 horas
+  "highlights":      { ttl: 600, scopeToLeague: false },                  // 10 min
+};
+
+// Prefixo de path de cada endpoint na Highlightly
+const ENDPOINT_PATHS: Record<string, string> = {
+  "matches": "/matches",
+  "standings": "/standings",
+  "lineups": "/lineups",
+  "statistics": "/statistics",
+  "live-events": "/live-events",
+  "head-2-head": "/head-2-head",
+  "last-five-games": "/last-five-games",
+  "highlights": "/highlights",
 };
 
 function buildCacheKey(endpoint: string, params: Record<string, unknown>) {
@@ -80,9 +100,35 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Sempre adiciona leagueId e season
-    const fullParams = { leagueId: LEAGUE_ID, season: SEASON, ...params };
-    const cacheKey = buildCacheKey(endpoint, fullParams);
+    // Monta os params finais conforme o tipo de endpoint
+    const finalParams: Record<string, string> = {};
+    let pathSuffix = "";
+
+    if (config.pathParam) {
+      const pathValue = params[config.pathParam];
+      if (pathValue === undefined || pathValue === null || pathValue === "") {
+        return new Response(
+          JSON.stringify({ error: `Parâmetro ${config.pathParam} obrigatório` }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      pathSuffix = `/${pathValue}`;
+      // Demais params (exceto o pathParam) vão na query
+      Object.entries(params).forEach(([k, v]) => {
+        if (k !== config.pathParam) finalParams[k] = String(v);
+      });
+    } else {
+      Object.entries(params).forEach(([k, v]) => { finalParams[k] = String(v); });
+    }
+
+    // leagueId+season só onde faz sentido
+    if (config.scopeToLeague) {
+      finalParams.leagueId = String(LEAGUE_ID);
+      finalParams.season = String(SEASON);
+    }
+
+    // Cache key inclui todos os params relevantes (inclusive o pathParam)
+    const cacheKey = buildCacheKey(endpoint, { ...params, ...finalParams });
 
     // 1. Tenta cache primeiro
     const cached = await getFromCache(supabase, cacheKey);
@@ -94,10 +140,9 @@ Deno.serve(async (req) => {
     }
 
     // 2. Cache miss → busca na API
-    const queryParams = new URLSearchParams(
-      Object.entries(fullParams).map(([k, v]) => [k, String(v)])
-    );
-    const url = `${HIGHLIGHTLY_BASE}/${endpoint}?${queryParams.toString()}`;
+    let url = `${HIGHLIGHTLY_BASE}${ENDPOINT_PATHS[endpoint]}${pathSuffix}`;
+    const queryString = new URLSearchParams(finalParams).toString();
+    if (queryString) url += `?${queryString}`;
 
     const apiResponse = await fetch(url, {
       headers: {
