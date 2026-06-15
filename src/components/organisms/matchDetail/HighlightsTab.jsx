@@ -1,19 +1,6 @@
-import { useState, useEffect } from "react";
-import { getHighlights } from "@/services/worldcup";
-import { LoadingTab, EmptyTab } from "@/components/organisms/matchDetail/_shared";
-
 /* Vídeos de melhores momentos */
-export function HighlightsTab({ match }) {
-  const [highlights, setHighlights] = useState(null);
-
-  useEffect(() => {
-    getHighlights(match.id ?? match.fixture?.id)
-      .then(d => setHighlights(d?.data ?? d ?? []))
-      .catch(() => setHighlights([]));
-  }, [match.id, match.fixture?.id]);
-
-  if (highlights === null) return <LoadingTab />;
-  if (!highlights.length) return <EmptyTab message="Vídeos ainda não disponíveis." />;
+export function HighlightsTab({ highlights }) {
+  if (!highlights?.length) return null;
 
   return (
     <div>

@@ -1,19 +1,8 @@
-import { useState, useEffect } from "react";
-import { getMatchStatistics } from "@/services/worldcup";
-import { LoadingTab, EmptyTab, SectionLabel } from "@/components/organisms/matchDetail/_shared";
+import { SectionLabel, hasValidStats } from "@/components/organisms/matchDetail/_shared";
 
 /* Estatísticas comparativas da partida */
-export function EstatisticasTab({ match }) {
-  const [stats, setStats] = useState(null);
-
-  useEffect(() => {
-    getMatchStatistics(match.id ?? match.fixture?.id)
-      .then(d => setStats(d?.data ?? d ?? []))
-      .catch(() => setStats([]));
-  }, [match.id, match.fixture?.id]);
-
-  if (stats === null) return <LoadingTab />;
-  if (!stats.length) return <EmptyTab message="Estatísticas indisponíveis." />;
+export function EstatisticasTab({ stats }) {
+  if (!hasValidStats(stats)) return null;
 
   // A estrutura geralmente é [{ team, statistics: [...]}], dois itens
   const homeStats = stats[0]?.statistics ?? [];

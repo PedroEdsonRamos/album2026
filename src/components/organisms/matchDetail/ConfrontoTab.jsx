@@ -1,38 +1,24 @@
-import { useState, useEffect } from "react";
-import { getHeadToHead, getLastFiveGames, getMatchDate } from "@/services/worldcup";
-import { LoadingTab, SectionLabel } from "@/components/organisms/matchDetail/_shared";
+import { getMatchDate } from "@/services/worldcup";
+import { SectionLabel } from "@/components/organisms/matchDetail/_shared";
 
 /* Confronto direto + forma recente (jogo futuro) */
-export function ConfrontoTab({ match }) {
-  const homeId = match.homeTeam?.id ?? match.teams?.home?.id;
-  const awayId = match.awayTeam?.id ?? match.teams?.away?.id;
-
-  const [h2h, setH2h] = useState(null);
-  const [homeForm, setHomeForm] = useState(null);
-  const [awayForm, setAwayForm] = useState(null);
-
-  useEffect(() => {
-    if (!homeId || !awayId) return;
-    Promise.all([
-      getHeadToHead(homeId, awayId).catch(() => null),
-      getLastFiveGames(homeId).catch(() => null),
-      getLastFiveGames(awayId).catch(() => null),
-    ]).then(([h, hf, af]) => {
-      setH2h(h?.data ?? h ?? []);
-      setHomeForm(hf?.data ?? hf ?? []);
-      setAwayForm(af?.data ?? af ?? []);
-    });
-  }, [homeId, awayId]);
-
-  if (h2h === null) return <LoadingTab message="Carregando histórico..." />;
+export function ConfrontoTab({ match, h2h, homeForm, awayForm }) {
+  const hasH2h = h2h?.length > 0;
+  const hasHomeForm = homeForm?.length > 0;
+  const hasAwayForm = awayForm?.length > 0;
+  if (!hasH2h && !hasHomeForm && !hasAwayForm) return null;
 
   return (
     <div>
-      <SectionLabel>Forma recente</SectionLabel>
-      <FormRow team={match.homeTeam ?? match.teams?.home} games={homeForm ?? []} />
-      <FormRow team={match.awayTeam ?? match.teams?.away} games={awayForm ?? []} />
+      {(hasHomeForm || hasAwayForm) && (
+        <>
+          <SectionLabel>Forma recente</SectionLabel>
+          <FormRow team={match.homeTeam ?? match.teams?.home} games={homeForm ?? []} />
+          <FormRow team={match.awayTeam ?? match.teams?.away} games={awayForm ?? []} />
+        </>
+      )}
 
-      {h2h.length > 0 && (
+      {hasH2h && (
         <>
           <SectionLabel style={{ marginTop: 24 }}>Últimos confrontos</SectionLabel>
           {h2h.slice(0, 5).map((g, idx) => (

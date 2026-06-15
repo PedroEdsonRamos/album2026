@@ -36,6 +36,20 @@ export function EmptyTab({ message }) {
   );
 }
 
+// Estatística válida = ao menos 1 item com valor não-vazio
+export function hasValidStats(stats) {
+  if (!stats || stats.length === 0) return false;
+  return stats.some((team) =>
+    (team.statistics ?? []).some(
+      (s) =>
+        s.value !== null &&
+        s.value !== undefined &&
+        s.value !== "" &&
+        s.value !== "0"
+    )
+  );
+}
+
 export function SectionLabel({ children, style }) {
   return (
     <div style={{

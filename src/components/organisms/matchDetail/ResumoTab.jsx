@@ -1,21 +1,8 @@
-import { useState, useEffect } from "react";
-import { getLiveEvents } from "@/services/worldcup";
-import { LoadingTab, EmptyTab, SectionLabel } from "@/components/organisms/matchDetail/_shared";
+import { SectionLabel } from "@/components/organisms/matchDetail/_shared";
 
 /* Linha do tempo de eventos (jogo encerrado/ao vivo) */
-export function ResumoTab({ match }) {
-  const [events, setEvents] = useState(null);
-
-  useEffect(() => {
-    let mounted = true;
-    getLiveEvents(match.id ?? match.fixture?.id).then(data => {
-      if (mounted) setEvents(data?.data ?? data ?? []);
-    }).catch(() => mounted && setEvents([]));
-    return () => { mounted = false; };
-  }, [match.id, match.fixture?.id]);
-
-  if (events === null) return <LoadingTab />;
-  if (!events.length) return <EmptyTab message="Sem eventos registrados." />;
+export function ResumoTab({ events }) {
+  if (!events?.length) return null;
 
   return (
     <div>

@@ -1,19 +1,8 @@
-import { useState, useEffect } from "react";
-import { getLineups } from "@/services/worldcup";
-import { LoadingTab, EmptyTab, SectionLabel } from "@/components/organisms/matchDetail/_shared";
+import { SectionLabel } from "@/components/organisms/matchDetail/_shared";
 
 /* Escalações (titulares + reservas + formação) */
-export function EscalacoesTab({ match }) {
-  const [lineups, setLineups] = useState(null);
-
-  useEffect(() => {
-    getLineups(match.id ?? match.fixture?.id)
-      .then(d => setLineups(d?.data ?? d ?? []))
-      .catch(() => setLineups([]));
-  }, [match.id, match.fixture?.id]);
-
-  if (lineups === null) return <LoadingTab />;
-  if (!lineups.length) return <EmptyTab message="Escalações ainda não disponíveis." />;
+export function EscalacoesTab({ lineups }) {
+  if (!lineups?.length) return null;
 
   return (
     <div>

@@ -1,37 +1,86 @@
-import { useState, useEffect } from "react";
-import { formatBrasilia, getMatchStatus, getMatchDate } from "@/services/worldcup";
+import { useState, useEffect, useMemo } from "react";
+import {
+  formatBrasilia, getMatchStatus, getMatchDate,
+  getLiveEvents, getMatchStatistics, getLineups, getHighlights,
+  getHeadToHead, getLastFiveGames,
+} from "@/services/worldcup";
 import { ResumoTab } from "@/components/organisms/matchDetail/ResumoTab";
 import { ConfrontoTab } from "@/components/organisms/matchDetail/ConfrontoTab";
 import { EstatisticasTab } from "@/components/organisms/matchDetail/EstatisticasTab";
 import { EscalacoesTab } from "@/components/organisms/matchDetail/EscalacoesTab";
 import { HighlightsTab } from "@/components/organisms/matchDetail/HighlightsTab";
 import { InfoTab } from "@/components/organisms/matchDetail/InfoTab";
+import { LoadingTab, EmptyTab, hasValidStats } from "@/components/organisms/matchDetail/_shared";
 
 export function MatchDetailModal({ match, onClose }) {
-  const [tab, setTab] = useState("resumo");
+  const [tab, setTab] = useState(null);
+  const [tabData, setTabData] = useState({
+    events: null, stats: null, lineups: null,
+    highlights: null, h2h: null, homeForm: null, awayForm: null,
+  });
+  const [loading, setLoading] = useState(true);
 
   const status = match ? getMatchStatus(match) : null;
   const isScheduled = status?.type === "scheduled";
+  const matchId = match?.id ?? match?.fixture?.id;
+  const homeId = match?.homeTeam?.id ?? match?.teams?.home?.id;
+  const awayId = match?.awayTeam?.id ?? match?.teams?.away?.id;
+  const hasVenue = !!(match?.venue?.name || match?.fixture?.venue?.name);
 
-  // Tabs dinâmicas conforme status do jogo
-  const tabs = isScheduled
-    ? [
-        { id: "confronto", label: "Confronto" },
-        { id: "escalacoes", label: "Escalações" },
-        { id: "info", label: "Estádio" },
-      ]
-    : [
-        { id: "resumo", label: "Resumo" },
-        { id: "estatisticas", label: "Estatísticas" },
-        { id: "escalacoes", label: "Escalações" },
-        { id: "highlights", label: "Vídeos" },
-      ];
-
-  // Tab inicial: a primeira disponível
-  const firstTabId = tabs[0].id;
+  // Carrega todos os dados em paralelo (cache compartilhado torna isso barato)
   useEffect(() => {
-    setTab(firstTabId);
-  }, [match?.id, firstTabId]);
+    if (!matchId) return;
+    let mounted = true;
+    setLoading(true);
+    setTab(null);
+
+    const safe = (p) => p.then((r) => r?.data ?? r ?? []).catch(() => []);
+
+    Promise.all([
+      isScheduled ? Promise.resolve([]) : safe(getLiveEvents(matchId)),
+      isScheduled ? Promise.resolve([]) : safe(getMatchStatistics(matchId)),
+      safe(getLineups(matchId)),
+      isScheduled ? Promise.resolve([]) : safe(getHighlights(matchId)),
+      isScheduled && homeId && awayId ? safe(getHeadToHead(homeId, awayId)) : Promise.resolve([]),
+      isScheduled && homeId ? safe(getLastFiveGames(homeId)) : Promise.resolve([]),
+      isScheduled && awayId ? safe(getLastFiveGames(awayId)) : Promise.resolve([]),
+    ]).then(([events, stats, lineups, highlights, h2h, homeForm, awayForm]) => {
+      if (!mounted) return;
+      setTabData({ events, stats, lineups, highlights, h2h, homeForm, awayForm });
+      setLoading(false);
+    });
+
+    return () => { mounted = false; };
+  }, [matchId, isScheduled, homeId, awayId]);
+
+  // Tabs disponíveis = apenas as que têm dado
+  const availableTabs = useMemo(() => {
+    if (loading) return [];
+    const tabs = [];
+
+    if (isScheduled) {
+      if (tabData.h2h?.length > 0 || tabData.homeForm?.length > 0 || tabData.awayForm?.length > 0) {
+        tabs.push({ id: "confronto", label: "Confronto" });
+      }
+      if (tabData.lineups?.length > 0) tabs.push({ id: "escalacoes", label: "Escalações" });
+    } else {
+      if (tabData.events?.length > 0) tabs.push({ id: "resumo", label: "Resumo" });
+      if (hasValidStats(tabData.stats)) tabs.push({ id: "estatisticas", label: "Estatísticas" });
+      if (tabData.lineups?.length > 0) tabs.push({ id: "escalacoes", label: "Escalações" });
+      if (tabData.highlights?.length > 0) tabs.push({ id: "highlights", label: "Vídeos" });
+    }
+
+    if (hasVenue) tabs.push({ id: "info", label: "Estádio" });
+
+    return tabs;
+  }, [loading, tabData, isScheduled, hasVenue]);
+
+  // Seleciona primeira tab disponível automaticamente
+  useEffect(() => {
+    if (availableTabs.length > 0 && !tab) {
+      setTab(availableTabs[0].id);
+    }
+  }, [availableTabs, tab]);
 
   if (!match) return null;
 
@@ -78,23 +127,38 @@ export function MatchDetailModal({ match, onClose }) {
         {/* Cabeçalho fixo */}
         <ModalHeader match={match} status={status} onClose={onClose} />
 
-        {/* Tabs */}
-        <ModalTabs tabs={tabs} value={tab} onChange={setTab} />
+        {loading ? (
+          <LoadingTab message="Carregando detalhes..." />
+        ) : availableTabs.length === 0 ? (
+          <EmptyTab message="Nenhum detalhe disponível para esta partida ainda." />
+        ) : (
+          <>
+            {/* Tabs */}
+            <ModalTabs tabs={availableTabs} value={tab} onChange={setTab} />
 
-        {/* Conteúdo scrollável */}
-        <div style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: "16px 16px 80px",
-          WebkitOverflowScrolling: "touch",
-        }}>
-          {tab === "resumo" && <ResumoTab match={match} />}
-          {tab === "confronto" && <ConfrontoTab match={match} />}
-          {tab === "estatisticas" && <EstatisticasTab match={match} />}
-          {tab === "escalacoes" && <EscalacoesTab match={match} />}
-          {tab === "highlights" && <HighlightsTab match={match} />}
-          {tab === "info" && <InfoTab match={match} />}
-        </div>
+            {/* Conteúdo scrollável */}
+            <div style={{
+              flex: 1,
+              overflowY: "auto",
+              padding: "16px 16px 80px",
+              WebkitOverflowScrolling: "touch",
+            }}>
+              {tab === "resumo" && <ResumoTab events={tabData.events} />}
+              {tab === "confronto" && (
+                <ConfrontoTab
+                  match={match}
+                  h2h={tabData.h2h}
+                  homeForm={tabData.homeForm}
+                  awayForm={tabData.awayForm}
+                />
+              )}
+              {tab === "estatisticas" && <EstatisticasTab stats={tabData.stats} />}
+              {tab === "escalacoes" && <EscalacoesTab lineups={tabData.lineups} />}
+              {tab === "highlights" && <HighlightsTab highlights={tabData.highlights} />}
+              {tab === "info" && <InfoTab match={match} />}
+            </div>
+          </>
+        )}
       </div>
 
       <style>{`
