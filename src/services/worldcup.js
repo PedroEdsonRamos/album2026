@@ -142,3 +142,53 @@ export function getMatchStatus(match) {
 export function getMatchDate(match) {
   return match.date ?? match.fixture?.date ?? match.kickoff ?? null;
 }
+
+// ===== NOVOS ENDPOINTS PARA O MODAL =====
+
+/**
+ * Escalações (titulares + reservas + formação)
+ * Cache: 1h server-side
+ */
+export async function getLineups(matchId) {
+  return proxyFetch("lineups", { matchId });
+}
+
+/**
+ * Estatísticas da partida (posse, chutes, faltas, escanteios, etc)
+ * Cache: 2min ao vivo, ou final fixo
+ */
+export async function getMatchStatistics(matchId) {
+  return proxyFetch("statistics", { matchId });
+}
+
+/**
+ * Eventos da partida (gols, cartões, substituições, com minuto)
+ * Cache: 30s ao vivo
+ */
+export async function getLiveEvents(matchId) {
+  return proxyFetch("live-events", { matchId });
+}
+
+/**
+ * Histórico de confrontos diretos entre 2 times
+ * Cache: 7 dias
+ */
+export async function getHeadToHead(teamIdOne, teamIdTwo) {
+  return proxyFetch("head-2-head", { teamIdOne, teamIdTwo });
+}
+
+/**
+ * Últimos 5 jogos de uma seleção (forma recente)
+ * Cache: 24h
+ */
+export async function getLastFiveGames(teamId) {
+  return proxyFetch("last-five-games", { teamId });
+}
+
+/**
+ * Vídeos de melhores momentos
+ * Cache: 10min
+ */
+export async function getHighlights(matchId) {
+  return proxyFetch("highlights", { matchId });
+}

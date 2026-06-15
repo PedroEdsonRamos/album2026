@@ -4,6 +4,7 @@ import {
   todayKeyBrasilia, getMatchDate
 } from "@/services/worldcup";
 import { BallIcon } from "@/components/icons/BallIcon.jsx";
+import { MatchDetailModal } from "@/components/organisms/MatchDetailModal";
 
 // Chaveamento oficial Copa 2026 — Round of 32
 const BRACKET_R32 = [
@@ -19,6 +20,7 @@ export function Jogos() {
   const [standings, setStandings] = useState({ groups: [], thirdPlaceTable: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedMatch, setSelectedMatch] = useState(null);
 
   useEffect(() => { load(); }, []);
 
@@ -41,10 +43,17 @@ export function Jogos() {
       {loading && <Loading />}
       {error && <ErrorState msg={error} onRetry={load} />}
       {!loading && !error && tab === "cronograma" && (
-        <CronogramaView fixtures={fixtures} />
+        <CronogramaView fixtures={fixtures} onSelectMatch={setSelectedMatch} />
       )}
       {!loading && !error && tab === "classificacao" && (
         <ClassificacaoView standings={standings} />
+      )}
+
+      {selectedMatch && (
+        <MatchDetailModal
+          match={selectedMatch}
+          onClose={() => setSelectedMatch(null)}
+        />
       )}
     </div>
   );
@@ -85,7 +94,7 @@ function SegmentedControl({ tab, onChange }) {
 }
 
 /* ============== CRONOGRAMA INTELIGENTE ============== */
-function CronogramaView({ fixtures }) {
+function CronogramaView({ fixtures, onSelectMatch }) {
   const todayKey = todayKeyBrasilia();
   const hojeRef = useRef(null);
   const proximaRef = useRef(null);
@@ -147,7 +156,7 @@ function CronogramaView({ fixtures }) {
       {todayMatches.length > 0 && (
         <div ref={hojeRef} style={{ marginBottom: 28 }}>
           <SectionHeader label="HOJE" highlight />
-          {todayMatches.map(m => <MatchCard key={getMatchId(m)} fixture={m} />)}
+          {todayMatches.map(m => <MatchCard key={getMatchId(m)} fixture={m} onClick={onSelectMatch} />)}
         </div>
       )}
 
@@ -164,7 +173,7 @@ function CronogramaView({ fixtures }) {
                 label={group.label}
                 badge={idx === 0 && todayMatches.length === 0 ? "PRÓXIMA RODADA" : null}
               />
-              {group.items.map(m => <MatchCard key={getMatchId(m)} fixture={m} />)}
+              {group.items.map(m => <MatchCard key={getMatchId(m)} fixture={m} onClick={onSelectMatch} />)}
             </div>
           ))}
         </div>
@@ -206,7 +215,7 @@ function CronogramaView({ fixtures }) {
               {pastGroups.map(group => (
                 <div key={group.key} style={{ marginBottom: 20 }}>
                   <SectionHeader label={group.label} muted />
-                  {group.items.map(m => <MatchCard key={getMatchId(m)} fixture={m} />)}
+                  {group.items.map(m => <MatchCard key={getMatchId(m)} fixture={m} onClick={onSelectMatch} />)}
                 </div>
               ))}
             </div>
@@ -280,7 +289,7 @@ function SectionHeader({ label, highlight, muted, badge }) {
 }
 
 /* ============== MATCH CARD ============== */
-function MatchCard({ fixture: m }) {
+function MatchCard({ fixture: m, onClick }) {
   const dateStr = getMatchDate(m);
   if (!dateStr) return null;
 
@@ -313,19 +322,26 @@ function MatchCard({ fixture: m }) {
     .replace("Final", "FIN");
 
   return (
-    <div style={{
-      background: isLive
-        ? "linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.04))"
-        : "rgba(255,255,255,0.04)",
-      border: `1px solid ${isLive ? "rgba(245,158,11,0.4)" : "rgba(255,255,255,0.08)"}`,
-      borderRadius: 16,
-      padding: "14px 16px",
-      marginBottom: 8,
-      display: "flex",
-      alignItems: "center",
-      gap: 12,
-      boxShadow: isLive ? "0 4px 20px rgba(245,158,11,0.15)" : "none",
-    }}>
+    <div
+      onClick={() => onClick?.(m)}
+      onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.98)"; }}
+      onMouseUp={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
+      style={{
+        background: isLive
+          ? "linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.04))"
+          : "rgba(255,255,255,0.04)",
+        border: `1px solid ${isLive ? "rgba(245,158,11,0.4)" : "rgba(255,255,255,0.08)"}`,
+        borderRadius: 16,
+        padding: "14px 16px",
+        marginBottom: 8,
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        boxShadow: isLive ? "0 4px 20px rgba(245,158,11,0.15)" : "none",
+        cursor: "pointer",
+        transition: "transform 0.15s",
+      }}>
       {/* Status / horário */}
       <div style={{
         minWidth: 54,
@@ -350,15 +366,19 @@ function MatchCard({ fixture: m }) {
       </div>
 
       {/* Times + placar */}
-      <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8 }}>
+      <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 8 }}>
         <div style={{
           flex: 1,
+          minWidth: 0,
           display: "flex",
           alignItems: "center",
           justifyContent: "flex-end",
           gap: 8,
         }}>
-          <span style={{ fontSize: 14, fontWeight: 700, color: "#fff", textAlign: "right" }}>
+          <span style={{
+            fontSize: 14, fontWeight: 700, color: "#fff", textAlign: "right",
+            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0,
+          }}>
             {homeName}
           </span>
           {homeLogo && (
@@ -382,7 +402,7 @@ function MatchCard({ fixture: m }) {
           {hasScore ? `${homeScore} – ${awayScore}` : "×"}
         </div>
 
-        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 8 }}>
           {awayLogo && (
             <img
               src={awayLogo}
@@ -391,7 +411,10 @@ function MatchCard({ fixture: m }) {
               onError={e => { e.currentTarget.style.display = "none"; }}
             />
           )}
-          <span style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>{awayName}</span>
+          <span style={{
+            fontSize: 14, fontWeight: 700, color: "#fff",
+            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0,
+          }}>{awayName}</span>
         </div>
       </div>
 
@@ -659,6 +682,10 @@ function ChaveamentoView({ standings }) {
                   color: team?.confirmed ? "#fff" : "rgba(255,255,255,0.4)",
                   fontStyle: team?.confirmed ? "normal" : "italic",
                   flex: 1,
+                  minWidth: 0,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
                 }}>
                   {team?.name ?? "A definir"}
                 </span>
