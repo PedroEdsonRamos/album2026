@@ -3,9 +3,25 @@ import { Icon } from "@/components/atoms/Icon.jsx";
 import { FIFATrophy } from "@/components/atoms/FIFATrophy.jsx";
 import { SyncIndicator } from "@/components/atoms/SyncIndicator.jsx";
 import { C } from "@/styles/tokens.js";
+import { usePWAInstall } from "@/hooks/usePWAInstall.js";
+import { IOSInstallGuide } from "@/components/organisms/IOSInstallGuide.jsx";
 
 function UserMenu({ user, onLogout, onProfile }) {
   const [open, setOpen] = useState(false);
+  const [showIOSGuide, setShowIOSGuide] = useState(false);
+  const { canInstall, isInstalled, isIOS, promptInstall } = usePWAInstall();
+
+  // Só mostra a opção se NÃO estiver instalado E for possível instalar
+  const showInstallOption = !isInstalled && (canInstall || isIOS);
+
+  async function handleInstallClick() {
+    setOpen(false);
+    if (isIOS) {
+      setShowIOSGuide(true);
+      return;
+    }
+    await promptInstall();
+  }
 
   const initials = (user?.user_metadata?.full_name ?? user?.email ?? "?")
     .split(" ")
@@ -112,6 +128,34 @@ function UserMenu({ user, onLogout, onProfile }) {
               👤 Meu perfil
             </button>
 
+            {showInstallOption && (
+              <button
+                onClick={handleInstallClick}
+                style={{
+                  width: "100%",
+                  textAlign: "left",
+                  background: "none",
+                  border: "none",
+                  color: "#fbbf24",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  padding: "8px 10px",
+                  borderRadius: 8,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = "rgba(245,158,11,0.1)")
+                }
+                onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
+              >
+                📲 Instalar o app
+              </button>
+            )}
+
             <button
               onClick={() => {
                 setOpen(false);
@@ -142,6 +186,10 @@ function UserMenu({ user, onLogout, onProfile }) {
             </button>
           </div>
         </>
+      )}
+
+      {showIOSGuide && (
+        <IOSInstallGuide onClose={() => setShowIOSGuide(false)} />
       )}
     </div>
   );
