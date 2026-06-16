@@ -11,6 +11,7 @@ import { EscalacoesTab } from "@/components/organisms/matchDetail/EscalacoesTab"
 import { HighlightsTab } from "@/components/organisms/matchDetail/HighlightsTab";
 import { InfoTab } from "@/components/organisms/matchDetail/InfoTab";
 import { LoadingTab, EmptyTab, hasValidStats } from "@/components/organisms/matchDetail/_shared";
+import { getTeamName } from "@/data/teamsTranslation";
 
 export function MatchDetailModal({ match, onClose }) {
   const [section, setSection] = useState(null);
@@ -324,7 +325,7 @@ function TeamHeader({ team, reverse }) {
         lineHeight: 1.2,
         minWidth: 0,
       }}>
-        {team.name ?? "—"}
+        {getTeamName(team)}
       </div>
     </div>
   );

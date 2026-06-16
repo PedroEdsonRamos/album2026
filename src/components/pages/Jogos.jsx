@@ -5,6 +5,7 @@ import {
 } from "@/services/worldcup";
 import { BallIcon } from "@/components/icons/BallIcon.jsx";
 import { MatchDetailModal } from "@/components/organisms/MatchDetailModal";
+import { getTeamName } from "@/data/teamsTranslation";
 
 // Chaveamento oficial Copa 2026 — Round of 32
 const BRACKET_R32 = [
@@ -123,11 +124,13 @@ function CronogramaView({ fixtures, onSelectMatch }) {
         if (matchGroup && !matchGroup.endsWith(groupFilter)) return false;
       }
 
-      // Time (busca por nome)
+      // Time (busca por nome — em PT-BR e no nome original da API)
       if (teamFilter.trim()) {
         const q = teamFilter.toLowerCase();
-        const home = (m.homeTeam?.name ?? m.teams?.home?.name ?? "").toLowerCase();
-        const away = (m.awayTeam?.name ?? m.teams?.away?.name ?? "").toLowerCase();
+        const homeT = m.homeTeam ?? m.teams?.home;
+        const awayT = m.awayTeam ?? m.teams?.away;
+        const home = `${getTeamName(homeT)} ${homeT?.name ?? ""}`.toLowerCase();
+        const away = `${getTeamName(awayT)} ${awayT?.name ?? ""}`.toLowerCase();
         if (!home.includes(q) && !away.includes(q)) return false;
       }
 
@@ -615,7 +618,7 @@ function TeamCol({ team, won }) {
         maxWidth: "100%",
         lineHeight: 1.2,
       }}>
-        {team?.name ?? "—"}
+        {getTeamName(team)}
       </span>
     </div>
   );
@@ -808,7 +811,7 @@ function GroupTable({ group }) {
                   textOverflow: "ellipsis",
                   minWidth: 0,
                   flex: 1,
-                }}>{row.team?.name}</span>
+                }}>{getTeamName(row.team)}</span>
               </div>
 
               {/* Estatísticas - tamanho fixo, nunca crescem */}
@@ -876,7 +879,7 @@ function ChaveamentoView({ standings }) {
       const rank = idx + 1;
       if (rank <= 3) {
         classified[`${rank}${letter}`] = {
-          name: row.team?.name,
+          name: getTeamName(row.team),
           logo: row.team?.logo,
           confirmed: (row.total?.games ?? 0) >= 3,
         };

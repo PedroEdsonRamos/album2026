@@ -1,4 +1,5 @@
 import { SectionLabel } from "@/components/organisms/matchDetail/_shared";
+import { getTeamName } from "@/data/teamsTranslation";
 
 /* Escalações (titulares + reservas + formação) */
 export function EscalacoesTab({ lineups }) {
@@ -13,7 +14,7 @@ export function EscalacoesTab({ lineups }) {
               <img src={teamLineup.team.logo} style={{ width: 22, height: 22 }} alt="" />
             )}
             <span style={{ fontSize: 14, fontWeight: 700, color: "#fff", flex: 1, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              {teamLineup.team?.name}
+              {getTeamName(teamLineup.team)}
             </span>
             {teamLineup.formation && (
               <span style={{

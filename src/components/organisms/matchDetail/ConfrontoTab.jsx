@@ -1,5 +1,6 @@
 import { getMatchDate } from "@/services/worldcup";
 import { SectionLabel } from "@/components/organisms/matchDetail/_shared";
+import { getTeamName } from "@/data/teamsTranslation";
 
 /* Confronto direto + forma recente (jogo futuro) */
 export function ConfrontoTab({ match, h2h, homeForm, awayForm }) {
@@ -41,7 +42,7 @@ function FormRow({ team, games }) {
       {team?.logo && (
         <img src={team.logo} style={{ width: 22, height: 22, objectFit: "contain" }} alt="" />
       )}
-      <span style={{ fontSize: 13, color: "#fff", flex: 1, fontWeight: 600 }}>{team?.name}</span>
+      <span style={{ fontSize: 13, color: "#fff", flex: 1, fontWeight: 600 }}>{getTeamName(team)}</span>
       <div style={{ display: "flex", gap: 4 }}>
         {games.slice(0, 5).map((g, idx) => {
           const result = getGameResultLetter(g, team?.id);
@@ -80,8 +81,8 @@ function getGameResultLetter(game, teamId) {
 }
 
 function H2HRow({ game }) {
-  const home = game.homeTeam?.name ?? game.teams?.home?.name;
-  const away = game.awayTeam?.name ?? game.teams?.away?.name;
+  const home = getTeamName(game.homeTeam ?? game.teams?.home);
+  const away = getTeamName(game.awayTeam ?? game.teams?.away);
   const hs = game.homeScore ?? game.goals?.home ?? game.state?.score?.current?.[0];
   const as_ = game.awayScore ?? game.goals?.away ?? game.state?.score?.current?.[1];
   const dateStr = getMatchDate(game);
