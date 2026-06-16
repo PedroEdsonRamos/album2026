@@ -5,7 +5,7 @@ import {
 } from "@/services/worldcup";
 import { BallIcon } from "@/components/icons/BallIcon.jsx";
 import { MatchDetailModal } from "@/components/organisms/MatchDetailModal";
-import { getTeamName } from "@/data/teamsTranslation";
+import { getTeamName, TEAM_NAMES_PT } from "@/data/teamsTranslation";
 
 /**
  * Round of 32 oficial da Copa 2026 — 16 jogos (jogos 73 a 88).
@@ -68,7 +68,7 @@ export function Jogos() {
         <CronogramaView fixtures={fixtures} onSelectMatch={setSelectedMatch} />
       )}
       {!loading && !error && tab === "classificacao" && (
-        <ClassificacaoView standings={standings} />
+        <ClassificacaoView standings={standings} fixtures={fixtures} onSelectMatch={setSelectedMatch} />
       )}
 
       {selectedMatch && (
@@ -657,7 +657,7 @@ function formatRound(round) {
 }
 
 /* ============== CLASSIFICAÇÃO ============== */
-function ClassificacaoView({ standings }) {
+function ClassificacaoView({ standings, fixtures = [], onSelectMatch }) {
   const [view, setView] = useState("grupos");
   const [groupFilter, setGroupFilter] = useState("todos");
 
@@ -715,7 +715,9 @@ function ClassificacaoView({ standings }) {
           <GruposView standings={standings} groupFilter={groupFilter} />
         </>
       )}
-      {view === "chaveamento" && <ChaveamentoView standings={standings} />}
+      {view === "chaveamento" && (
+        <ChaveamentoView standings={standings} fixtures={fixtures} onSelectMatch={onSelectMatch} />
+      )}
     </div>
   );
 }
@@ -962,8 +964,56 @@ function formatSlotLabel(slot) {
   return `${slot[0]}º ${slot[1]}`;
 }
 
-function ChaveamentoView({ standings }) {
+/** Um "time real" da Copa = tem id presente no mapa de tradução (placeholders não têm). */
+function isRealTeam(team) {
+  return !!(team && TEAM_NAMES_PT[team.id]);
+}
+
+function ChaveamentoView({ standings, fixtures = [], onSelectMatch }) {
   const groups = standings?.groups ?? [];
+
+  // Jogos REAIS da Round of 32 vindos da API (só quando os dois times já estão definidos).
+  // Enquanto a fase de grupos não termina, isso fica vazio → cai na projeção abaixo.
+  const realR32 = useMemo(() => {
+    return fixtures
+      .filter(m => {
+        const round = String(m.round ?? m.league?.round ?? "");
+        if (!round.includes("Round of 32")) return false;
+        const home = m.homeTeam ?? m.teams?.home;
+        const away = m.awayTeam ?? m.teams?.away;
+        return isRealTeam(home) && isRealTeam(away);
+      })
+      .sort((a, b) => {
+        const da = new Date(getMatchDate(a) ?? 0) - new Date(getMatchDate(b) ?? 0);
+        if (da !== 0) return da;
+        return (a.id ?? 0) - (b.id ?? 0);
+      });
+  }, [fixtures]);
+
+  // Bracket confirmado: usa os confrontos reais da API
+  if (realR32.length > 0) {
+    return (
+      <div style={{ padding: "16px 16px 24px" }}>
+        <div style={{
+          fontSize: 12,
+          color: "rgba(255,255,255,0.55)",
+          marginBottom: 16,
+          lineHeight: 1.6,
+          background: "rgba(34,197,94,0.06)",
+          borderRadius: 10,
+          padding: "12px 14px",
+          border: "1px solid rgba(34,197,94,0.18)",
+        }}>
+          <strong style={{ color: "#22c55e" }}>Round of 32 confirmada</strong>
+          {" · Confrontos oficiais definidos pela FIFA. Toque em um jogo para ver os detalhes."}
+        </div>
+
+        {realR32.map(m => (
+          <MatchCard key={getMatchId(m)} fixture={m} onClick={onSelectMatch} />
+        ))}
+      </div>
+    );
+  }
 
   // Campeões (1X) e vices (2X)
   const classified = {};
