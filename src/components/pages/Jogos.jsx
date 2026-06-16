@@ -60,7 +60,11 @@ export function Jogos() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", color: "#fff", paddingBottom: 80 }}>
+    // O App envolve cada página em padding lateral de 16px. As seções da aba
+    // Jogos já aplicam seus próprios 16px internos, o que dobrava o recuo.
+    // A margem negativa cancela o padding do wrapper para alinhar a largura/
+    // margens exatamente com as demais abas (ex.: Álbum).
+    <div style={{ minHeight: "100vh", color: "#fff", paddingBottom: 80, marginLeft: -16, marginRight: -16 }}>
       <SegmentedControl tab={tab} onChange={setTab} />
       {loading && <Loading />}
       {error && <ErrorState msg={error} onRetry={load} />}

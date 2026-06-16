@@ -8,7 +8,7 @@ import { getTeamName } from "@/data/teamsTranslation";
 import { getDisplayStats } from "@/data/statsTranslation";
 
 export function MatchDetailModal({ match, onClose }) {
-  const [section, setSection] = useState(null);
+  const [tab, setTab] = useState(null);
   const [available, setAvailable] = useState(null);
   const [checking, setChecking] = useState(true);
   const [data, setData] = useState({});
@@ -23,22 +23,25 @@ export function MatchDetailModal({ match, onClose }) {
     if (!matchId) return;
     let mounted = true;
     setChecking(true);
-    setSection(null);
 
     const safe = (p) => p.then(r => r).catch(() => null);
 
     async function check() {
-      const opts = [];
+      const tabs = [];
       const loaded = {};
 
-      // Jogo futuro: API não entrega stats/lineups úteis → só estádio
       if (isScheduled) {
-        if (hasVenue) opts.push({ id: "info", label: "Estádio", icon: "🏟️" });
-        if (mounted) { setAvailable(opts); setData(loaded); setChecking(false); }
+        // Jogo futuro: API não entrega stats/lineups → só "Informações"
+        tabs.push({ id: "info", label: "Informações" });
+        if (mounted) {
+          setAvailable(tabs);
+          setData(loaded);
+          setTab("info");
+          setChecking(false);
+        }
         return;
       }
 
-      // Jogo ao vivo/encerrado: estatísticas + escalações
       const [statsRaw, lineupsRaw] = await Promise.all([
         safe(getMatchStatistics(matchId)),
         safe(getLineups(matchId)),
@@ -46,22 +49,21 @@ export function MatchDetailModal({ match, onClose }) {
 
       if (hasValidStatistics(statsRaw)) {
         loaded.stats = statsRaw;
-        opts.push({ id: "estatisticas", label: "Estatísticas", icon: "📈" });
+        tabs.push({ id: "estatisticas", label: "Estatísticas" });
       }
 
       const lineups = normalizeLineups(lineupsRaw);
       if (lineups) {
         loaded.lineups = lineups;
-        opts.push({ id: "escalacoes", label: "Escalações", icon: "📋" });
+        tabs.push({ id: "escalacoes", label: "Escalações" });
       }
 
-      if (hasVenue) {
-        opts.push({ id: "info", label: "Estádio", icon: "🏟️" });
-      }
+      tabs.push({ id: "info", label: "Informações" });
 
       if (mounted) {
-        setAvailable(opts);
+        setAvailable(tabs);
         setData(loaded);
+        setTab(tabs[0].id);
         setChecking(false);
       }
     }
@@ -82,40 +84,42 @@ export function MatchDetailModal({ match, onClose }) {
 
       <div style={{
         position: "fixed", bottom: 0, left: 0, right: 0,
-        maxHeight: "92vh", background: "#0c0c1a",
+        height: "88vh",                       // ← altura fixa (resolve scroll do voltar)
+        maxHeight: "88vh",
+        background: "#0c0c1a",
         borderRadius: "20px 20px 0 0", zIndex: 999,
         display: "flex", flexDirection: "column",
         animation: "slideUp 0.3s ease",
         boxShadow: "0 -20px 60px rgba(0,0,0,0.5)",
-        paddingBottom: "env(safe-area-inset-bottom)",
       }}>
+        {/* Handle */}
         <div style={{
           width: 40, height: 4, background: "rgba(255,255,255,0.2)",
           borderRadius: 999, margin: "10px auto", flexShrink: 0,
         }}/>
 
-        <ModalHeader
-          match={match}
-          status={status}
-          onClose={onClose}
-          onBack={section ? () => setSection(null) : null}
-        />
+        {/* Cabeçalho fixo (NÃO scrolla) */}
+        <div style={{ flexShrink: 0 }}>
+          <ModalHeader match={match} status={status} onClose={onClose} />
+        </div>
 
+        {/* Abas deslizáveis (fixas, NÃO scrollam verticalmente) */}
+        {!checking && available && available.length > 0 && (
+          <div style={{ flexShrink: 0 }}>
+            <TabNav tabs={available} value={tab} onChange={setTab} />
+          </div>
+        )}
+
+        {/* Conteúdo scrollável */}
         <div style={{
-          flex: 1, overflowY: "auto", padding: "16px 16px 90px",
+          flex: 1, overflowY: "auto",
+          padding: "16px 16px 40px",
           WebkitOverflowScrolling: "touch",
         }}>
-          {checking && <LoadingSection message="Carregando..." />}
-
-          {!checking && section === null && (
-            available && available.length > 0
-              ? <OptionsMenu options={available} onSelect={(o) => setSection(o.id)} />
-              : <EmptySection message="Sem informações disponíveis para esta partida." />
-          )}
-
-          {section === "estatisticas" && <EstatisticasSection raw={data.stats} />}
-          {section === "escalacoes" && <EscalacoesSection lineups={data.lineups} match={match} />}
-          {section === "info" && <InfoSection venue={venue} match={match} />}
+          {checking && <LoadingSection />}
+          {!checking && tab === "estatisticas" && <EstatisticasSection raw={data.stats} />}
+          {!checking && tab === "escalacoes" && <EscalacoesSection lineups={data.lineups} match={match} />}
+          {!checking && tab === "info" && <InfoSection venue={venue} match={match} status={status} isScheduled={isScheduled} />}
         </div>
       </div>
 
@@ -129,7 +133,47 @@ export function MatchDetailModal({ match, onClose }) {
   );
 }
 
-function ModalHeader({ match, status, onClose, onBack }) {
+function TabNav({ tabs, value, onChange }) {
+  return (
+    <div style={{
+      display: "flex",
+      gap: 8,
+      overflowX: "auto",
+      padding: "12px 16px",
+      borderBottom: "1px solid rgba(255,255,255,0.06)",
+      WebkitOverflowScrolling: "touch",
+      scrollbarWidth: "none",
+    }}>
+      {tabs.map(t => (
+        <button
+          key={t.id}
+          type="button"
+          onClick={() => onChange(t.id)}
+          style={{
+            padding: "8px 16px",
+            borderRadius: 999,
+            border: value === t.id
+              ? "1px solid rgba(245,158,11,0.5)"
+              : "1px solid rgba(255,255,255,0.1)",
+            background: value === t.id
+              ? "rgba(245,158,11,0.12)"
+              : "rgba(255,255,255,0.04)",
+            color: value === t.id ? "#fbbf24" : "rgba(255,255,255,0.55)",
+            fontSize: 13,
+            fontWeight: 700,
+            cursor: "pointer",
+            fontFamily: "inherit",
+            whiteSpace: "nowrap",
+            flexShrink: 0,
+            transition: "all 0.2s",
+          }}
+        >{t.label}</button>
+      ))}
+    </div>
+  );
+}
+
+function ModalHeader({ match, status, onClose }) {
   const dateStr = getMatchDate(match);
   const { date, time } = formatBrasilia(dateStr);
   const homeTeam = match.homeTeam ?? match.teams?.home ?? {};
@@ -148,20 +192,10 @@ function ModalHeader({ match, status, onClose, onBack }) {
   return (
     <div style={{ padding: "0 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-        {onBack ? (
-          <button type="button" onClick={onBack} style={{
-            background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 999,
-            padding: "6px 12px 6px 8px", color: "#fff", fontSize: 12, fontWeight: 700,
-            cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", gap: 4,
-          }}>
-            <span style={{ fontSize: 16 }}>‹</span> Voltar
-          </button>
-        ) : (
-          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em",
-            color: "rgba(255,255,255,0.4)", textTransform: "uppercase" }}>
-            {date} · {time}
-          </span>
-        )}
+        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em",
+          color: "rgba(255,255,255,0.4)", textTransform: "uppercase" }}>
+          {date} · {time}
+        </span>
         <button type="button" onClick={onClose} style={{
           background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 999,
           width: 32, height: 32, color: "#fff", fontSize: 18, cursor: "pointer",
@@ -221,19 +255,9 @@ function EstatisticasSection({ raw }) {
   const displayStats = getDisplayStats(homeStats, awayStats);
   if (!displayStats.length) return <EmptySection message="Estatísticas não disponíveis." />;
 
+  // SEM cabeçalho de times aqui — o ModalHeader já mostra.
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center",
-        marginBottom: 16, padding: "0 4px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          {teams[0].team.logo && <img src={teams[0].team.logo} style={{ width: 20, height: 20 }} alt=""/>}
-          <span style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>{getTeamName(teams[0].team)}</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>{getTeamName(teams[1].team)}</span>
-          {teams[1].team.logo && <img src={teams[1].team.logo} style={{ width: 20, height: 20 }} alt=""/>}
-        </div>
-      </div>
       {displayStats.map((stat, idx) => <StatRow key={idx} stat={stat} />)}
     </div>
   );
@@ -332,14 +356,36 @@ function PlayerRow({ player, muted }) {
   );
 }
 
-function InfoSection({ venue, match }) {
-  const country = match.country ?? null;
+function InfoSection({ venue, match, status, isScheduled }) {
+  const dateStr = getMatchDate(match);
+  const { date, time } = formatBrasilia(dateStr);
+
   return (
     <div>
-      <SectionLabel>Local da partida</SectionLabel>
-      <InfoRow label="Estádio" value={venue?.name ?? "—"} />
+      {isScheduled && (
+        <div style={{
+          background: "rgba(245,158,11,0.08)",
+          border: "1px solid rgba(245,158,11,0.2)",
+          borderRadius: 12,
+          padding: "16px",
+          marginBottom: 20,
+          textAlign: "center",
+        }}>
+          <div style={{ fontSize: 28, marginBottom: 8 }}>⏳</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#fbbf24", marginBottom: 4 }}>
+            Aguardando o início do jogo
+          </div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.5 }}>
+            Estatísticas e escalações estarão disponíveis quando a partida começar.
+          </div>
+        </div>
+      )}
+
+      <SectionLabel>Detalhes da partida</SectionLabel>
+      <InfoRow label="Data" value={date} />
+      <InfoRow label="Horário" value={`${time} (Brasília)`} />
+      {venue?.name && <InfoRow label="Estádio" value={venue.name} />}
       {venue?.city && <InfoRow label="Cidade" value={venue.city} />}
-      {country?.name && <InfoRow label="País" value={country.name} />}
     </div>
   );
 }
@@ -349,32 +395,7 @@ function InfoRow({ label, value }) {
     <div style={{ display: "flex", justifyContent: "space-between",
       padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
       <span style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>{label}</span>
-      <span style={{ fontSize: 13, color: "#fff", fontWeight: 600 }}>{value}</span>
-    </div>
-  );
-}
-
-function OptionsMenu({ options, onSelect }) {
-  return (
-    <div>
-      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.15em",
-        color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: 12, paddingLeft: 2 }}>
-        O que deseja ver?
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {options.map(opt => (
-          <button key={opt.id} type="button" onClick={() => onSelect(opt)} style={{
-            display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "12px 14px",
-            background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 12, color: "#fff", fontSize: 13, fontWeight: 600,
-            cursor: "pointer", fontFamily: "inherit", textAlign: "left",
-          }}>
-            <span style={{ fontSize: 18, width: 28, textAlign: "center" }}>{opt.icon}</span>
-            <span style={{ flex: 1 }}>{opt.label}</span>
-            <span style={{ fontSize: 16, color: "rgba(255,255,255,0.3)" }}>›</span>
-          </button>
-        ))}
-      </div>
+      <span style={{ fontSize: 13, color: "#fff", fontWeight: 600, textAlign: "right" }}>{value}</span>
     </div>
   );
 }
