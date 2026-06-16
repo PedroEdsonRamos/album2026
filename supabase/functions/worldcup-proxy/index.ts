@@ -21,14 +21,10 @@ const ENDPOINT_CONFIG: Record<string, {
   pathParam?: string;
   scopeToLeague: boolean;
 }> = {
-  "matches":         { ttl: 1800, ttlLive: 120, scopeToLeague: true },   // 30min, 2min se há live
-  "standings":       { ttl: 1800, scopeToLeague: true },                  // 30 min
-  "lineups":         { ttl: 3600, pathParam: "matchId", scopeToLeague: false },  // 1 hora
-  "statistics":      { ttl: 120, pathParam: "matchId", scopeToLeague: false },   // 2 min (durante jogo) ou final
-  "live-events":     { ttl: 30, pathParam: "matchId", scopeToLeague: false },    // 30 segundos
-  "head-2-head":     { ttl: 604800, scopeToLeague: false },               // 7 dias (raramente muda)
-  "last-five-games": { ttl: 86400, pathParam: "teamId", scopeToLeague: false },  // 24 horas
-  "highlights":      { ttl: 600, scopeToLeague: false },                  // 10 min
+  "matches":    { ttl: 1800, ttlLive: 120, scopeToLeague: true },   // 30min, 2min se há live
+  "standings":  { ttl: 1800, scopeToLeague: true },                  // 30 min
+  "lineups":    { ttl: 3600, pathParam: "matchId", scopeToLeague: false },  // 1 hora
+  "statistics": { ttl: 120, pathParam: "matchId", scopeToLeague: false },   // 2 min (durante jogo) ou final
 };
 
 // Prefixo de path de cada endpoint na Highlightly
@@ -37,10 +33,6 @@ const ENDPOINT_PATHS: Record<string, string> = {
   "standings": "/standings",
   "lineups": "/lineups",
   "statistics": "/statistics",
-  "live-events": "/live-events",
-  "head-2-head": "/head-2-head",
-  "last-five-games": "/last-five-games",
-  "highlights": "/highlights",
 };
 
 function buildCacheKey(endpoint: string, params: Record<string, unknown>) {

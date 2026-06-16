@@ -182,52 +182,79 @@ export function getMatchDate(match) {
   return match.date ?? match.fixture?.date ?? match.kickoff ?? null;
 }
 
-// ===== NOVOS ENDPOINTS PARA O MODAL =====
+// ===== ENDPOINTS DE DETALHE (apenas os que funcionam) =====
 
 /**
- * Escalações (titulares + reservas + formação)
- * Cache: 1h server-side
- */
-export async function getLineups(matchId) {
-  return proxyFetch("lineups", { matchId });
-}
-
-/**
- * Estatísticas da partida (posse, chutes, faltas, escanteios, etc)
- * Cache: 2min ao vivo, ou final fixo
+ * Estatísticas da partida — retorna objeto { "0": {...}, "1": {...} }
+ * Funciona para jogos ao vivo e encerrados.
  */
 export async function getMatchStatistics(matchId) {
   return proxyFetch("statistics", { matchId });
 }
 
 /**
- * Eventos da partida (gols, cartões, substituições, com minuto)
- * Cache: 30s ao vivo
+ * Escalações — retorna { homeTeam: {...}, awayTeam: {...} }
+ * Funciona para jogos ao vivo e encerrados (vem vazio para futuros).
  */
-export async function getLiveEvents(matchId) {
-  return proxyFetch("live-events", { matchId });
+export async function getLineups(matchId) {
+  return proxyFetch("lineups", { matchId });
 }
 
 /**
- * Histórico de confrontos diretos entre 2 times
- * Cache: 7 dias
+ * Normaliza statistics: objeto {"0","1"} → array [{team, statistics}]
  */
-export async function getHeadToHead(teamIdOne, teamIdTwo) {
-  return proxyFetch("head-2-head", { teamIdOne, teamIdTwo });
+export function normalizeStatistics(raw) {
+  if (!raw) return [];
+  const teams = [];
+  ["0", "1"].forEach(key => {
+    const entry = raw[key];
+    if (entry && entry.team && Array.isArray(entry.statistics)) {
+      teams.push(entry);
+    }
+  });
+  return teams;
+}
+
+export function hasValidStatistics(raw) {
+  const teams = normalizeStatistics(raw);
+  if (teams.length < 2) return false;
+  return teams.some(t =>
+    (t.statistics ?? []).some(s => s.value !== null && s.value !== undefined && s.value !== 0)
+  );
 }
 
 /**
- * Últimos 5 jogos de uma seleção (forma recente)
- * Cache: 24h
+ * Normaliza lineups: { homeTeam, awayTeam } com initialLineup em array de arrays.
+ * Retorna { home, away } já achatado, ou null se vazio.
  */
-export async function getLastFiveGames(teamId) {
-  return proxyFetch("last-five-games", { teamId });
-}
+export function normalizeLineups(raw) {
+  if (!raw || (!raw.homeTeam && !raw.awayTeam)) return null;
 
-/**
- * Vídeos de melhores momentos
- * Cache: 10min
- */
-export async function getHighlights(matchId) {
-  return proxyFetch("highlights", { matchId });
+  function flatten(teamObj) {
+    if (!teamObj) return null;
+    // initialLineup é array de arrays (linhas táticas) → achatar
+    const starters = Array.isArray(teamObj.initialLineup)
+      ? teamObj.initialLineup.flat()
+      : [];
+    const subs = Array.isArray(teamObj.substitutes) ? teamObj.substitutes : [];
+
+    // Se não tem titulares, considera indisponível
+    if (starters.length === 0) return null;
+
+    return {
+      id: teamObj.id,
+      logo: teamObj.logo,
+      formation: teamObj.formation && teamObj.formation !== "Unknown" ? teamObj.formation : null,
+      starters,
+      substitutes: subs,
+    };
+  }
+
+  const home = flatten(raw.homeTeam);
+  const away = flatten(raw.awayTeam);
+
+  // Se ambos vazios, não há escalação
+  if (!home && !away) return null;
+
+  return { home, away };
 }
