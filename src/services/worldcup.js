@@ -4,6 +4,7 @@
 import { supabase } from "@/lib/supabase";
 
 const cache = new Map();
+const inflight = new Map();
 
 function getCached(key) {
   const entry = cache.get(key);
@@ -17,24 +18,38 @@ function setCache(key, data, ttlMs) {
 }
 
 async function proxyFetch(endpoint, params = {}) {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) throw new Error("Não autenticado");
+  const dedupeKey = `${endpoint}:${JSON.stringify(params)}`;
 
-  const response = await fetch(
-    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/worldcup-proxy`,
-    {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${session.access_token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ endpoint, params }),
-    }
-  );
+  if (inflight.has(dedupeKey)) {
+    return inflight.get(dedupeKey);
+  }
 
-  const result = await response.json();
-  if (!response.ok) throw new Error(result.error ?? "Erro no proxy");
-  return result;
+  const promise = (async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error("Não autenticado");
+
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/worldcup-proxy`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ endpoint, params }),
+      }
+    );
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error ?? "Erro no proxy");
+    return result;
+  })();
+
+  inflight.set(dedupeKey, promise);
+  try {
+    return await promise;
+  } finally {
+    inflight.delete(dedupeKey);
+  }
 }
 
 // UTC → Brasília (UTC-3)
