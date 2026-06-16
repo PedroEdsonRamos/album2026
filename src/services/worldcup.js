@@ -107,63 +107,71 @@ export async function getStandings() {
 }
 
 /**
- * Extrai placar de forma robusta — lida com múltiplas estruturas da Highlightly
+ * Extrai placar da partida — Highlightly retorna como string "X - Y"
  */
 export function extractScore(match) {
+  // Tentativa 1: state.score.current como STRING "X - Y"
   const current = match?.state?.score?.current;
+  if (typeof current === "string" && current.includes("-")) {
+    const [home, away] = current.split("-").map(s => s.trim());
+    const h = parseInt(home, 10);
+    const a = parseInt(away, 10);
+    if (!isNaN(h) && !isNaN(a)) {
+      return { home: h, away: a };
+    }
+  }
+
+  // Tentativa 2: state.score.current como array [home, away] (legado)
   if (Array.isArray(current) && current[0] !== undefined && current[1] !== undefined) {
     return { home: current[0], away: current[1] };
   }
 
-  const stateScore = match?.state?.score;
-  if (stateScore && stateScore.home !== undefined && stateScore.away !== undefined
-      && stateScore.home !== null && stateScore.away !== null) {
-    return { home: stateScore.home, away: stateScore.away };
-  }
-
+  // Tentativa 3: campos top-level (formato API-Football antigo)
   if (match?.homeScore !== undefined && match?.awayScore !== undefined
       && match?.homeScore !== null && match?.awayScore !== null) {
     return { home: match.homeScore, away: match.awayScore };
-  }
-
-  if (match?.goals?.home !== undefined && match?.goals?.away !== undefined
-      && match?.goals?.home !== null && match?.goals?.away !== null) {
-    return { home: match.goals.home, away: match.goals.away };
   }
 
   return null;
 }
 
 /**
- * Status do jogo em pt-BR
+ * Status do jogo em pt-BR — mapeia as descrições reais da Highlightly
  */
 export function getMatchStatus(match) {
-  const status = (match.state?.description ?? match.status ?? "SCHEDULED").toUpperCase();
-  const minute = match.state?.clock ?? match.minute ?? "";
+  const desc = (match.state?.description ?? "").toLowerCase();
+  const clock = match.state?.clock;
 
-  if (["IN_PLAY","LIVE","FIRST_HALF","SECOND_HALF"].includes(status)) {
-    return { label: minute ? `${minute}'` : "AO VIVO", type: "live" };
+  // Status ao vivo
+  if (desc === "first half" || desc === "second half") {
+    return { label: clock ? `${clock}'` : "AO VIVO", type: "live" };
   }
-  if (status === "HALFTIME" || status === "HT") return { label: "Intervalo", type: "live" };
-  if (status === "EXTRA_TIME" || status === "ET") return { label: `Prorr. ${minute}'`, type: "live" };
-  if (status === "PENALTIES" || status === "P") return { label: "Pênaltis", type: "live" };
-  if (["FINISHED","FT","AET","PEN"].includes(status)) return { label: "Encerrado", type: "finished" };
-  if (status === "POSTPONED" || status === "PST") return { label: "Adiado", type: "postponed" };
-  if (status === "CANCELLED" || status === "CANC") return { label: "Cancelado", type: "cancelled" };
-
-  // Fallback: detection by keyword for Highlightly descriptions
-  const desc = status.toLowerCase();
-  const has = (...keys) => keys.some(k => desc.includes(k));
-  if (has("finished", "full time", "ended", "after extra", "after penalt")) return { label: "Encerrado", type: "finished" };
-  if (has("penalt")) return { label: "Pênaltis", type: "live" };
-  if (has("extra")) return { label: minute ? `Prorr. ${minute}'` : "Prorrogação", type: "live" };
-  if (has("halftime", "half time", "break", "interval")) return { label: "Intervalo", type: "live" };
-  if (has("first half", "second half", "in play", "live", "playing")) {
-    return { label: minute ? `${minute}'` : "AO VIVO", type: "live" };
+  if (desc === "halftime" || desc === "half time") {
+    return { label: "Intervalo", type: "live" };
   }
-  if (has("postpone")) return { label: "Adiado", type: "postponed" };
-  if (has("cancel")) return { label: "Cancelado", type: "cancelled" };
+  if (desc.includes("extra") && desc.includes("time")) {
+    return { label: clock ? `Prorr. ${clock}'` : "Prorrogação", type: "live" };
+  }
+  if (desc === "penalties" || desc === "penalty shootout") {
+    return { label: "Pênaltis", type: "live" };
+  }
 
+  // Encerrado
+  if (desc === "finished" || desc === "full time") {
+    return { label: "Encerrado", type: "finished" };
+  }
+  if (desc.includes("after extra time") || desc === "aet") {
+    return { label: "Enc. (PE)", type: "finished" };
+  }
+  if (desc.includes("penalty") && desc.includes("end")) {
+    return { label: "Enc. (PEN)", type: "finished" };
+  }
+
+  // Outros
+  if (desc === "postponed") return { label: "Adiado", type: "postponed" };
+  if (desc === "cancelled" || desc === "canceled") return { label: "Cancelado", type: "cancelled" };
+
+  // Default = agendado
   return { label: "Agendado", type: "scheduled" };
 }
 
