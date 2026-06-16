@@ -60,11 +60,7 @@ export function Jogos() {
   }
 
   return (
-    // O App envolve cada página em padding lateral de 16px. As seções da aba
-    // Jogos já aplicam seus próprios 16px internos, o que dobrava o recuo.
-    // A margem negativa cancela o padding do wrapper para alinhar a largura/
-    // margens exatamente com as demais abas (ex.: Álbum).
-    <div style={{ minHeight: "100vh", color: "#fff", paddingBottom: 80, marginLeft: -16, marginRight: -16 }}>
+    <div style={{ minHeight: "100vh", color: "#fff", paddingBottom: 80 }}>
       <SegmentedControl tab={tab} onChange={setTab} />
       {loading && <Loading />}
       {error && <ErrorState msg={error} onRetry={load} />}
@@ -88,7 +84,7 @@ export function Jogos() {
 /* ============== SEGMENTED CONTROL ============== */
 function SegmentedControl({ tab, onChange }) {
   return (
-    <div style={{ display: "flex", gap: 8, margin: "16px 16px 0", padding: 0 }}>
+    <div style={{ display: "flex", gap: 8, margin: "16px 0 0", padding: 0 }}>
       {[
         { id: "cronograma", label: "Cronograma" },
         { id: "classificacao", label: "Classificação" },
@@ -98,17 +94,17 @@ function SegmentedControl({ tab, onChange }) {
           onClick={() => onChange(o.id)}
           style={{
             flex: 1,
-            padding: "12px 0",
-            borderRadius: 12,
+            padding: "8px 0",
+            borderRadius: 10,
             border: tab === o.id
-              ? "1px solid rgba(245,158,11,0.6)"
+              ? "1px solid rgba(245,158,11,0.5)"
               : "1px solid rgba(255,255,255,0.1)",
             background: tab === o.id
-              ? "linear-gradient(135deg, #f59e0b, #fbbf24)"
+              ? "rgba(245,158,11,0.12)"
               : "rgba(255,255,255,0.04)",
-            color: tab === o.id ? "#0c0c1a" : "rgba(255,255,255,0.6)",
+            color: tab === o.id ? "#fbbf24" : "rgba(255,255,255,0.55)",
             fontWeight: 700,
-            fontSize: 14,
+            fontSize: 13,
             cursor: "pointer",
             fontFamily: "inherit",
             transition: "all 0.2s",
@@ -126,30 +122,22 @@ function CronogramaView({ fixtures, onSelectMatch }) {
   const proximaRef = useRef(null);
 
   const [phaseFilter, setPhaseFilter] = useState("todos");
-  const [groupFilter, setGroupFilter] = useState("todos");
   const [teamFilter, setTeamFilter] = useState("");
 
   // Aplica filtros antes de agrupar por data
   const filtered = useMemo(() => {
     return fixtures.filter(m => {
-      const round = String(m.round ?? m.group ?? m.league?.round ?? "");
+      const round = String(m.round ?? m.group ?? m.league?.round ?? "").toLowerCase();
 
-      // Fase
       if (phaseFilter !== "todos") {
-        if (phaseFilter === "grupos" && !round.includes("Group Stage")) return false;
-        if (phaseFilter === "oitavas" && !round.includes("Round of 16")) return false;
-        if (phaseFilter === "quartas" && !round.includes("Quarter")) return false;
-        if (phaseFilter === "semi" && !round.includes("Semi")) return false;
-        if (phaseFilter === "final" && !round.includes("Final")) return false;
+        if (phaseFilter === "grupos" && !round.includes("group")) return false;
+        if (phaseFilter === "r32" && !round.includes("round of 32")) return false;
+        if (phaseFilter === "oitavas" && !round.includes("round of 16")) return false;
+        if (phaseFilter === "quartas" && !round.includes("quarter")) return false;
+        if (phaseFilter === "semi" && !round.includes("semi")) return false;
+        if (phaseFilter === "final" && !(round.includes("final") && !round.includes("semi"))) return false;
       }
 
-      // Grupo (só restringe quando há informação de grupo identificável)
-      if (groupFilter !== "todos") {
-        const matchGroup = String(m.group?.name ?? m.group ?? "");
-        if (matchGroup && !matchGroup.endsWith(groupFilter)) return false;
-      }
-
-      // Time (busca por nome — em PT-BR e no nome original da API)
       if (teamFilter.trim()) {
         const q = teamFilter.toLowerCase();
         const homeT = m.homeTeam ?? m.teams?.home;
@@ -161,7 +149,7 @@ function CronogramaView({ fixtures, onSelectMatch }) {
 
       return true;
     });
-  }, [fixtures, phaseFilter, groupFilter, teamFilter]);
+  }, [fixtures, phaseFilter, teamFilter]);
 
   const { todayMatches, futureGroups, pastGroups } = useMemo(() => {
     const todayMatches = [];
@@ -219,13 +207,16 @@ function CronogramaView({ fixtures, onSelectMatch }) {
       <FilterBar
         phaseFilter={phaseFilter}
         setPhaseFilter={setPhaseFilter}
-        groupFilter={groupFilter}
-        setGroupFilter={setGroupFilter}
         teamFilter={teamFilter}
         setTeamFilter={setTeamFilter}
       />
 
-      <div style={{ padding: "12px 16px 0" }}>
+      <div style={{ padding: "12px 0 0" }}>
+      {filtered.length === 0 && (
+        <div style={{ padding: "40px 0", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
+          Nenhum jogo encontrado com esses filtros.
+        </div>
+      )}
       {/* PASSADOS (colapsável, no topo) */}
       {pastGroups.length > 0 && (
         <div style={{ marginBottom: 20 }}>
@@ -312,10 +303,9 @@ function CronogramaView({ fixtures, onSelectMatch }) {
 }
 
 /* ============== FILTROS ============== */
-function FilterBar({ phaseFilter, setPhaseFilter, groupFilter, setGroupFilter, teamFilter, setTeamFilter }) {
+function FilterBar({ phaseFilter, setPhaseFilter, teamFilter, setTeamFilter }) {
   return (
-    <div style={{ padding: "12px 16px 0" }}>
-      {/* Busca por time */}
+    <div style={{ padding: "12px 0 0" }}>
       <input
         type="text"
         placeholder="Buscar seleção..."
@@ -336,7 +326,6 @@ function FilterBar({ phaseFilter, setPhaseFilter, groupFilter, setGroupFilter, t
         }}
       />
 
-      {/* Chips de fase */}
       <div style={{
         display: "flex",
         gap: 6,
@@ -347,6 +336,7 @@ function FilterBar({ phaseFilter, setPhaseFilter, groupFilter, setGroupFilter, t
         {[
           { id: "todos", label: "Todos" },
           { id: "grupos", label: "Grupos" },
+          { id: "r32", label: "R32" },
           { id: "oitavas", label: "Oitavas" },
           { id: "quartas", label: "Quartas" },
           { id: "semi", label: "Semi" },
@@ -359,29 +349,6 @@ function FilterBar({ phaseFilter, setPhaseFilter, groupFilter, setGroupFilter, t
           >{opt.label}</FilterChip>
         ))}
       </div>
-
-      {/* Chips de grupo - só se fase = grupos ou todos */}
-      {(phaseFilter === "todos" || phaseFilter === "grupos") && (
-        <div style={{
-          display: "flex",
-          gap: 6,
-          overflowX: "auto",
-          paddingBottom: 8,
-          WebkitOverflowScrolling: "touch",
-        }}>
-          <FilterChip
-            active={groupFilter === "todos"}
-            onClick={() => setGroupFilter("todos")}
-          >Todos grupos</FilterChip>
-          {["A","B","C","D","E","F","G","H","I","J","K","L"].map(g => (
-            <FilterChip
-              key={g}
-              active={groupFilter === g}
-              onClick={() => setGroupFilter(g)}
-            >{g}</FilterChip>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -667,7 +634,7 @@ function ClassificacaoView({ standings, fixtures = [], onSelectMatch }) {
 
   return (
     <div>
-      <div style={{ display: "flex", gap: 8, padding: "16px 16px 0", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 8, padding: "16px 0 0", flexWrap: "wrap" }}>
         {[
           { id: "grupos", label: "Grupos" },
           { id: "chaveamento", label: "Chaveamento" },
@@ -701,7 +668,7 @@ function ClassificacaoView({ standings, fixtures = [], onSelectMatch }) {
             display: "flex",
             gap: 6,
             overflowX: "auto",
-            padding: "12px 16px 8px",
+            padding: "12px 0 8px",
             WebkitOverflowScrolling: "touch",
           }}>
             <FilterChip
@@ -734,7 +701,7 @@ function GruposView({ standings, groupFilter = "todos" }) {
     : groups.filter(g => g.name === `Group ${groupFilter}`);
 
   return (
-    <div style={{ padding: "16px 16px 0" }}>
+    <div style={{ padding: "16px 0 0" }}>
       {filtered.map((group, idx) => (
         <GroupTable key={idx} group={group} />
       ))}
@@ -997,7 +964,7 @@ function ChaveamentoView({ standings, fixtures = [], onSelectMatch }) {
   // Bracket confirmado: usa os confrontos reais da API
   if (realR32.length > 0) {
     return (
-      <div style={{ padding: "16px 16px 24px" }}>
+      <div style={{ padding: "16px 0 24px" }}>
         <div style={{
           fontSize: 12,
           color: "rgba(255,255,255,0.55)",
