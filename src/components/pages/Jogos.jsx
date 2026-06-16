@@ -7,12 +7,33 @@ import { BallIcon } from "@/components/icons/BallIcon.jsx";
 import { MatchDetailModal } from "@/components/organisms/MatchDetailModal";
 import { getTeamName } from "@/data/teamsTranslation";
 
-// Chaveamento oficial Copa 2026 — Round of 32
+/**
+ * Round of 32 oficial da Copa 2026 — 16 jogos (jogos 73 a 88).
+ *
+ * Slots:
+ *  - "1A".."1L" = campeão do grupo A..L
+ *  - "2A".."2L" = vice do grupo A..L
+ *  - "3-XXXXX"  = melhor 3º colocado dentre os grupos listados (5 grupos elegíveis)
+ *
+ * Fonte: regulamento oficial FIFA / chaveamento da Copa 2026.
+ */
 const BRACKET_R32 = [
-  ["1A","2B"],["1C","2D"],["1E","2F"],["1G","2H"],
-  ["1B","2A"],["1D","2C"],["1F","2E"],["1H","2G"],
-  ["1I","2J"],["1K","2L"],["1J","2I"],["1L","2K"],
-  ["3A","3B"],["3C","3D"],["3E","3F"],["3G","3H"],
+  { jogo: 73, home: "2A", away: "2B" },
+  { jogo: 74, home: "1E", away: "3-ABCDF" },
+  { jogo: 75, home: "1F", away: "2C" },
+  { jogo: 76, home: "1C", away: "2F" },
+  { jogo: 77, home: "1I", away: "3-CDFGH" },
+  { jogo: 78, home: "2E", away: "2I" },
+  { jogo: 79, home: "1A", away: "3-CEFHI" },
+  { jogo: 80, home: "1L", away: "3-EHIJK" },
+  { jogo: 81, home: "1D", away: "3-BEFIJ" },
+  { jogo: 82, home: "1G", away: "3-AEHIJ" },
+  { jogo: 83, home: "2K", away: "2L" },
+  { jogo: 84, home: "1H", away: "2J" },
+  { jogo: 85, home: "1B", away: "3-EFGIJ" },
+  { jogo: 86, home: "1J", away: "2H" },
+  { jogo: 87, home: "1K", away: "3-DEIJL" },
+  { jogo: 88, home: "2D", away: "2G" },
 ];
 
 export function Jogos() {
@@ -869,23 +890,109 @@ function Legend() {
 }
 
 /* ============== CHAVEAMENTO ============== */
+/**
+ * Identifica os 8 melhores 3os colocados, ranqueando por:
+ * 1) pontos, 2) saldo de gols, 3) gols marcados.
+ * Só retorna lista se TODOS os 12 grupos terminaram (cada time com 3 jogos).
+ */
+function getBestThirdPlaced(groups) {
+  const allFinished = groups.length >= 12 && groups.every(g =>
+    (g.standings?.length ?? 0) > 0 &&
+    g.standings.every(s => (s.total?.games ?? 0) >= 3)
+  );
+  if (!allFinished) return null;
+
+  const thirds = groups
+    .map(g => {
+      const third = (g.standings ?? [])[2];
+      if (!third) return null;
+      return {
+        groupLetter: g.name.replace("Group ", ""),
+        team: third.team,
+        points: third.points ?? 0,
+        sg: (third.total?.scoredGoals ?? 0) - (third.total?.receivedGoals ?? 0),
+        goalsFor: third.total?.scoredGoals ?? 0,
+      };
+    })
+    .filter(Boolean);
+
+  thirds.sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    if (b.sg !== a.sg) return b.sg - a.sg;
+    return b.goalsFor - a.goalsFor;
+  });
+
+  return thirds.slice(0, 8);
+}
+
+/**
+ * Atribui os melhores 3os aos slots "3-XXXXX" do chaveamento.
+ * Processa os slots em ordem, escolhendo gulosamente o melhor 3º elegível
+ * (grupo na lista do slot) que ainda não foi alocado.
+ */
+function assignBestThirds(thirdSlots, bestThirds) {
+  if (!bestThirds) return {};
+  const assignment = {};
+  const used = new Set();
+
+  thirdSlots.forEach(slot => {
+    const eligible = slot.replace("3-", "").split("");
+    const pick = bestThirds.find(t =>
+      eligible.includes(t.groupLetter) && !used.has(t.team?.id)
+    );
+    if (pick) {
+      used.add(pick.team?.id);
+      assignment[slot] = {
+        name: getTeamName(pick.team),
+        logo: pick.team?.logo,
+        team: pick.team,
+        confirmed: true,
+      };
+    }
+  });
+
+  return assignment;
+}
+
+function formatSlotLabel(slot) {
+  if (slot.startsWith("3-")) {
+    const g = slot.replace("3-", "").split("");
+    return `3º (${g.join("/")})`;
+  }
+  return `${slot[0]}º ${slot[1]}`;
+}
+
 function ChaveamentoView({ standings }) {
   const groups = standings?.groups ?? [];
 
+  // Campeões (1X) e vices (2X)
   const classified = {};
   groups.forEach(group => {
     const letter = group.name.replace("Group ", "");
     (group.standings ?? []).forEach((row, idx) => {
       const rank = idx + 1;
-      if (rank <= 3) {
+      if (rank === 1 || rank === 2) {
         classified[`${rank}${letter}`] = {
           name: getTeamName(row.team),
           logo: row.team?.logo,
+          team: row.team,
           confirmed: (row.total?.games ?? 0) >= 3,
         };
       }
     });
   });
+
+  // Melhores 3os (só após o fim de todos os grupos) → atribui aos slots "3-..."
+  const bestThirds = getBestThirdPlaced(groups);
+  const thirdSlots = BRACKET_R32
+    .flatMap(b => [b.home, b.away])
+    .filter(s => s.startsWith("3-"));
+  const thirdAssignment = assignBestThirds(thirdSlots, bestThirds);
+
+  function resolveSlot(slot) {
+    if (slot.startsWith("3-")) return thirdAssignment[slot] ?? null;
+    return classified[slot] ?? null;
+  }
 
   return (
     <div style={{ padding: "16px 16px 24px" }}>
@@ -899,93 +1006,84 @@ function ChaveamentoView({ standings }) {
         padding: "12px 14px",
         border: "1px solid rgba(245,158,11,0.15)",
       }}>
-        <strong style={{ color: "#fbbf24" }}>✓ Confirmado</strong>
-        {" = 3 jogos disputados. "}
-        <strong style={{ color: "rgba(255,255,255,0.7)" }}>Projeção</strong>
-        {" = baseada na classificação atual."}
+        <strong style={{ color: "#fbbf24" }}>Round of 32</strong>
+        {" · Primeira fase do mata-mata. 32 classificados: 12 campeões + 12 vices + 8 melhores 3os."}
       </div>
 
-      {BRACKET_R32.map(([slot1, slot2], idx) => {
-        const t1 = classified[slot1];
-        const t2 = classified[slot2];
+      {BRACKET_R32.map(({ jogo, home, away }) => (
+        <div key={jogo} style={{
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 14,
+          padding: "12px 16px",
+          marginBottom: 8,
+        }}>
+          <div style={{
+            fontSize: 10,
+            color: "#f59e0b",
+            fontWeight: 700,
+            letterSpacing: "0.12em",
+            marginBottom: 10,
+          }}>JOGO {jogo}</div>
 
-        return (
-          <div key={idx} style={{
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 14,
-            padding: "12px 16px",
-            marginBottom: 8,
-          }}>
-            <div style={{
-              fontSize: 10,
-              color: "#f59e0b",
-              fontWeight: 700,
-              letterSpacing: "0.12em",
-              marginBottom: 10,
-            }}>JOGO {idx + 1}</div>
+          <BracketSlot slot={home} team={resolveSlot(home)} divider />
+          <BracketSlot slot={away} team={resolveSlot(away)} />
+        </div>
+      ))}
+    </div>
+  );
+}
 
-            {[{slot: slot1, team: t1}, {slot: slot2, team: t2}].map(({slot, team}, i) => (
-              <div key={i} style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "8px 0",
-                borderBottom: i === 0 ? "1px solid rgba(255,255,255,0.06)" : "none",
-              }}>
-                <span style={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: "#f59e0b",
-                  background: "rgba(245,158,11,0.1)",
-                  borderRadius: 6,
-                  padding: "3px 7px",
-                  minWidth: 30,
-                  textAlign: "center",
-                }}>{slot}</span>
+function BracketSlot({ slot, team, divider }) {
+  const displaySlot = formatSlotLabel(slot);
 
-                {team?.logo && (
-                  <img
-                    src={team.logo}
-                    alt=""
-                    style={{ width: 20, height: 20, objectFit: "contain" }}
-                    onError={e => { e.currentTarget.style.display = "none"; }}
-                  />
-                )}
+  return (
+    <div style={{
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      padding: "8px 0",
+      borderBottom: divider ? "1px solid rgba(255,255,255,0.06)" : "none",
+    }}>
+      <span style={{
+        fontSize: 10,
+        fontWeight: 700,
+        color: "#f59e0b",
+        background: "rgba(245,158,11,0.1)",
+        borderRadius: 6,
+        padding: "3px 7px",
+        minWidth: 60,
+        textAlign: "center",
+        whiteSpace: "nowrap",
+        flexShrink: 0,
+      }}>{displaySlot}</span>
 
-                <span style={{
-                  fontSize: 14,
-                  fontWeight: team?.confirmed ? 700 : 400,
-                  color: team?.confirmed ? "#fff" : "rgba(255,255,255,0.4)",
-                  fontStyle: team?.confirmed ? "normal" : "italic",
-                  flex: 1,
-                  minWidth: 0,
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}>
-                  {team?.name ?? "A definir"}
-                </span>
+      {team?.logo && (
+        <img
+          src={team.logo}
+          alt=""
+          style={{ width: 20, height: 20, objectFit: "contain", flexShrink: 0 }}
+          onError={(e) => { e.currentTarget.style.display = "none"; }}
+        />
+      )}
 
-                {team?.confirmed && (
-                  <span style={{ fontSize: 11, color: "#22c55e", fontWeight: 700 }}>✓</span>
-                )}
-                {team && !team.confirmed && (
-                  <span style={{
-                    fontSize: 9,
-                    color: "rgba(255,255,255,0.4)",
-                    background: "rgba(255,255,255,0.05)",
-                    padding: "2px 6px",
-                    borderRadius: 4,
-                    fontWeight: 600,
-                    letterSpacing: "0.05em",
-                  }}>PROJ.</span>
-                )}
-              </div>
-            ))}
-          </div>
-        );
-      })}
+      <span style={{
+        fontSize: 14,
+        fontWeight: team?.confirmed ? 700 : 400,
+        color: team?.confirmed ? "#fff" : "rgba(255,255,255,0.4)",
+        fontStyle: team?.confirmed ? "normal" : "italic",
+        flex: 1,
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        minWidth: 0,
+      }}>
+        {team ? getTeamName(team.team) : "A definir"}
+      </span>
+
+      {team?.confirmed && (
+        <span style={{ fontSize: 11, color: "#22c55e", fontWeight: 700 }}>✓</span>
+      )}
     </div>
   );
 }
