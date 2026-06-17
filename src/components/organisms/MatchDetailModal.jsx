@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   formatBrasilia, getMatchStatus, getMatchDate,
   getMatchStatistics, getLineups,
@@ -64,14 +65,20 @@ export function MatchDetailModal({ match, onClose }) {
     return () => { mounted = false; };
   }, [matchId, isScheduled]);
 
+  useEffect(() => {
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = original; };
+  }, []);
+
   if (!match) return null;
 
-  return (
+  return createPortal(
     <>
       <div onClick={onClose} style={{
         position: "fixed", inset: 0,
         background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)",
-        zIndex: 998, animation: "fadeIn 0.2s ease",
+        zIndex: 99998, animation: "fadeIn 0.2s ease",
       }}/>
 
       <div style={{
@@ -79,7 +86,7 @@ export function MatchDetailModal({ match, onClose }) {
         maxWidth: 480, margin: "0 auto",
         height: "86vh",
         background: "#0c0c1a",
-        borderRadius: "20px 20px 0 0", zIndex: 999,
+        borderRadius: "20px 20px 0 0", zIndex: 99999,
         display: "flex", flexDirection: "column",
         animation: "slideUp 0.3s ease",
         boxShadow: "0 -20px 60px rgba(0,0,0,0.5)",
@@ -101,7 +108,7 @@ export function MatchDetailModal({ match, onClose }) {
 
         <div style={{
           flex: 1, overflowY: "auto",
-          padding: "16px", WebkitOverflowScrolling: "touch",
+          padding: "16px 16px max(40px, env(safe-area-inset-bottom))", WebkitOverflowScrolling: "touch",
         }}>
           {checking && <LoadingSection />}
           {!checking && tab === "estatisticas" && <EstatisticasSection raw={data.stats} />}
@@ -116,7 +123,8 @@ export function MatchDetailModal({ match, onClose }) {
         @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.6; transform:scale(1.15); } }
         @keyframes spinM { to { transform: rotate(360deg); } }
       `}</style>
-    </>
+    </>,
+    document.body
   );
 }
 

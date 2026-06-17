@@ -62,7 +62,7 @@ export function formatBrasilia(utcStr) {
   const d = toBrasilia(utcStr);
   return {
     date: d.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" }),
-    time: d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+    time: d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }),
     dateObj: d,
     dateKey: d.toISOString().split("T")[0],
   };
