@@ -268,14 +268,14 @@ function StatRow({ stat }) {
   );
 }
 
-/* ===== ESCALAÇÕES (layout novo) ===== */
+/* ===== ESCALAÇÕES (campo visual + lista) ===== */
 function EscalacoesSection({ lineups, match }) {
   if (!lineups) return <EmptySection message="Escalações não disponíveis." />;
   const homeTeam = match.homeTeam ?? match.teams?.home ?? {};
   const awayTeam = match.awayTeam ?? match.teams?.away ?? {};
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
       {lineups.home && <TeamLineup data={lineups.home} team={homeTeam} />}
       {lineups.away && <TeamLineup data={lineups.away} team={awayTeam} />}
     </div>
@@ -283,25 +283,14 @@ function EscalacoesSection({ lineups, match }) {
 }
 
 function TeamLineup({ data, team }) {
-  const posColor = {
-    "Goalkeeper": "#fbbf24", "Defender": "#38bdf8",
-    "Midfielder": "#22c55e", "Forward": "#f87171",
-  };
-  const posLabel = {
-    "Goalkeeper": "GOL", "Defender": "DEF", "Midfielder": "MEI", "Forward": "ATA",
-  };
-
   return (
-    <div style={{
-      background: "rgba(255,255,255,0.03)",
-      border: "1px solid rgba(255,255,255,0.07)",
-      borderRadius: 16, padding: 16,
-    }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+    <div>
+      {/* Cabeçalho do time */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
         {(data.logo ?? team.logo) && (
-          <img src={data.logo ?? team.logo} style={{ width: 26, height: 26, objectFit: "contain" }} alt=""/>
+          <img src={data.logo ?? team.logo} style={{ width: 24, height: 24, objectFit: "contain" }} alt=""/>
         )}
-        <span style={{ fontSize: 15, fontWeight: 800, color: "#fff", flex: 1 }}>
+        <span style={{ fontSize: 14, fontWeight: 800, color: "#fff", flex: 1 }}>
           {getTeamName(team)}
         </span>
         {data.formation && (
@@ -312,31 +301,12 @@ function TeamLineup({ data, team }) {
         )}
       </div>
 
-      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.15em",
-        color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 10 }}>
-        Titulares
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 2, marginBottom: 16 }}>
-        {data.starters.map((p, i) => (
-          <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "7px 0" }}>
-            <span style={{
-              width: 26, height: 26, borderRadius: 8, flexShrink: 0,
-              background: "rgba(255,255,255,0.06)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 12, fontWeight: 800, color: "#fff",
-            }}>{p.number ?? "—"}</span>
-            <span style={{ flex: 1, fontSize: 13, color: "#fff", fontWeight: 600 }}>{p.name}</span>
-            <span style={{
-              fontSize: 9, fontWeight: 800, letterSpacing: "0.05em",
-              color: posColor[p.position] ?? "rgba(255,255,255,0.4)",
-              background: "rgba(255,255,255,0.04)", padding: "3px 7px", borderRadius: 5,
-            }}>{posLabel[p.position] ?? ""}</span>
-          </div>
-        ))}
-      </div>
+      {/* Campo visual */}
+      <FootballField starters={data.starters} formation={data.formation} />
 
+      {/* Lista de reservas */}
       {data.substitutes.length > 0 && (
-        <>
+        <div style={{ marginTop: 14 }}>
           <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.15em",
             color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 10 }}>
             Reservas
@@ -345,16 +315,120 @@ function TeamLineup({ data, team }) {
             {data.substitutes.map((p, i) => (
               <div key={i} style={{
                 display: "flex", alignItems: "center", gap: 6,
-                background: "rgba(255,255,255,0.03)", borderRadius: 8,
-                padding: "5px 10px",
+                background: "rgba(255,255,255,0.03)", borderRadius: 8, padding: "5px 10px",
               }}>
                 <span style={{ fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,0.4)" }}>{p.number ?? "—"}</span>
                 <span style={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}>{p.name}</span>
               </div>
             ))}
           </div>
-        </>
+        </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * Campo de futebol visual. Distribui os titulares em linhas conforme a formação.
+ * Ex: formation "4-1-4-1" → [GK, 4 def, 1 vol, 4 meio, 1 ata]
+ */
+function FootballField({ starters, formation }) {
+  // Separa o goleiro do resto
+  const gk = starters.find(p => p.position === "Goalkeeper");
+  const outfield = starters.filter(p => p.position !== "Goalkeeper");
+
+  // Quebra a formação "4-1-4-1" em [4,1,4,1]
+  const lines = (formation && /^[\d-]+$/.test(formation))
+    ? formation.split("-").map(n => parseInt(n, 10)).filter(Boolean)
+    : null;
+
+  // Distribui os jogadores de linha conforme a formação
+  let rows = [];
+  if (lines) {
+    let idx = 0;
+    rows = lines.map(count => {
+      const slice = outfield.slice(idx, idx + count);
+      idx += count;
+      return slice;
+    });
+    // Sobras (se a formação não bater) vão numa linha extra
+    if (idx < outfield.length) rows.push(outfield.slice(idx));
+  } else {
+    // Sem formação: distribui em 3 faixas aproximadas (def/meio/ata)
+    const third = Math.ceil(outfield.length / 3);
+    rows = [outfield.slice(0, third), outfield.slice(third, third * 2), outfield.slice(third * 2)];
+  }
+
+  return (
+    <div style={{
+      position: "relative",
+      background: "linear-gradient(160deg, #0d2818 0%, #0a1f13 100%)",
+      borderRadius: 16,
+      border: "1px solid rgba(255,255,255,0.08)",
+      padding: "16px 8px",
+      overflow: "hidden",
+    }}>
+      {/* Linhas decorativas do campo */}
+      <div style={{
+        position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)",
+        width: 70, height: 70, borderRadius: "50%",
+        border: "1px solid rgba(255,255,255,0.08)",
+      }}/>
+      <div style={{
+        position: "absolute", top: 0, left: 0, right: 0, height: 1,
+        background: "rgba(255,255,255,0.08)",
+      }}/>
+
+      {/* Linhas de jogadores (ataque em cima, defesa embaixo, gol por último) */}
+      <div style={{ position: "relative", display: "flex", flexDirection: "column-reverse", gap: 14 }}>
+        {/* Goleiro */}
+        {gk && (
+          <FieldRow players={[gk]} />
+        )}
+        {/* Linhas de campo (na ordem def → ata, mas reverse mostra ata no topo) */}
+        {rows.map((row, i) => (
+          <FieldRow key={i} players={row} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FieldRow({ players }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-around", alignItems: "center", gap: 4 }}>
+      {players.map((p, i) => <FieldPlayer key={i} player={p} />)}
+    </div>
+  );
+}
+
+function FieldPlayer({ player }) {
+  const posColor = {
+    "Goalkeeper": "#fbbf24", "Defender": "#38bdf8",
+    "Midfielder": "#22c55e", "Forward": "#f87171",
+  };
+  const color = posColor[player.position] ?? "#fff";
+  // Primeiro nome ou sobrenome curto
+  const shortName = (() => {
+    const parts = (player.name ?? "").split(" ");
+    return parts.length > 1 ? parts[parts.length - 1] : parts[0];
+  })();
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, minWidth: 0, flex: 1 }}>
+      <div style={{
+        width: 32, height: 32, borderRadius: "50%",
+        background: "rgba(12,12,26,0.85)",
+        border: `2px solid ${color}`,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: 13, fontWeight: 800, color: "#fff",
+        flexShrink: 0,
+      }}>{player.number ?? "?"}</div>
+      <span style={{
+        fontSize: 9, color: "rgba(255,255,255,0.85)", fontWeight: 600,
+        maxWidth: 56, textAlign: "center",
+        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+      }}>{shortName}</span>
     </div>
   );
 }
