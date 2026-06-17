@@ -84,7 +84,7 @@ export function Jogos() {
 /* ============== SEGMENTED CONTROL ============== */
 function SegmentedControl({ tab, onChange }) {
   return (
-    <div style={{ display: "flex", gap: 8, margin: "16px 0 0", padding: 0 }}>
+    <div style={{ display: "flex", gap: 8, margin: 0, padding: 0 }}>
       {[
         { id: "cronograma", label: "Cronograma" },
         { id: "classificacao", label: "Classificação" },
@@ -123,6 +123,11 @@ function CronogramaView({ fixtures, onSelectMatch }) {
 
   const [phaseFilter, setPhaseFilter] = useState("todos");
   const [teamFilter, setTeamFilter] = useState("");
+
+  const [openDays, setOpenDays] = useState({});
+  const [openMonths, setOpenMonths] = useState({});
+  const toggleDay = (key) => setOpenDays(p => ({ ...p, [key]: !p[key] }));
+  const toggleMonth = (key) => setOpenMonths(p => ({ ...p, [key]: !p[key] }));
 
   // Aplica filtros antes de agrupar por data
   const filtered = useMemo(() => {
@@ -190,7 +195,25 @@ function CronogramaView({ fixtures, onSelectMatch }) {
     return { todayMatches, futureGroups, pastGroups };
   }, [filtered, todayKey]);
 
-  const [showPast, setShowPast] = useState(false);
+  const pastSpansMultipleMonths = useMemo(() => {
+    const months = new Set(pastGroups.map(g => g.key.slice(0, 7)));
+    return months.size > 1;
+  }, [pastGroups]);
+
+  const pastByMonth = useMemo(() => {
+    if (!pastSpansMultipleMonths) return null;
+    const map = {};
+    pastGroups.forEach(g => {
+      const monthKey = g.key.slice(0, 7);
+      if (!map[monthKey]) {
+        const d = new Date(g.key + "T12:00:00");
+        const label = d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+        map[monthKey] = { key: monthKey, label, days: [] };
+      }
+      map[monthKey].days.push(g);
+    });
+    return Object.values(map).sort((a, b) => b.key.localeCompare(a.key));
+  }, [pastGroups, pastSpansMultipleMonths]);
 
   // Scroll para HOJE ou próxima rodada ao abrir
   useEffect(() => {
@@ -217,49 +240,51 @@ function CronogramaView({ fixtures, onSelectMatch }) {
           Nenhum jogo encontrado com esses filtros.
         </div>
       )}
-      {/* PASSADOS (colapsável, no topo) */}
+      {/* PASSADOS (colapsável por dia/mês) */}
       {pastGroups.length > 0 && (
-        <div style={{ marginBottom: 20 }}>
-          <button
-            onClick={() => setShowPast(!showPast)}
-            style={{
-              width: "100%",
-              padding: "14px 16px",
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 12,
-              color: "rgba(255,255,255,0.7)",
-              fontSize: 13,
-              fontWeight: 700,
-              fontFamily: "inherit",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              letterSpacing: "0.05em",
-              transition: "all 0.2s",
-            }}
-          >
-            <span>{showPast ? "Ocultar" : "Ver"} jogos anteriores ({pastGroups.reduce((acc, g) => acc + g.items.length, 0)})</span>
-            <span style={{
-              transform: showPast ? "rotate(180deg)" : "rotate(0)",
-              transition: "transform 0.2s",
-              fontSize: 16,
-            }}>▾</span>
-          </button>
+        <div style={{ marginTop: 20 }}>
+          <div style={{
+            fontSize: 11, fontWeight: 700, letterSpacing: "0.15em",
+            color: "rgba(255,255,255,0.35)", textTransform: "uppercase",
+            marginBottom: 12,
+          }}>
+            Jogos anteriores
+          </div>
 
-          {showPast && (
-            <div style={{ marginTop: 12 }}>
-              {pastGroups
-                .slice()
-                .sort((a, b) => a.key.localeCompare(b.key))
-                .map(group => (
-                  <div key={group.key} style={{ marginBottom: 20 }}>
-                    <SectionHeader label={group.label} muted />
-                    {group.items.map(m => <MatchCard key={getMatchId(m)} fixture={m} onClick={onSelectMatch} />)}
+          {pastSpansMultipleMonths ? (
+            pastByMonth.map(month => (
+              <div key={month.key} style={{ marginBottom: 8 }}>
+                <CollapseHeader
+                  label={month.label}
+                  count={month.days.reduce((acc, d) => acc + d.items.length, 0)}
+                  open={!!openMonths[month.key]}
+                  onToggle={() => toggleMonth(month.key)}
+                />
+                {openMonths[month.key] && (
+                  <div style={{ marginTop: 8, paddingLeft: 4 }}>
+                    {month.days.map(day => (
+                      <DayCollapse
+                        key={day.key}
+                        day={day}
+                        open={!!openDays[day.key]}
+                        onToggle={() => toggleDay(day.key)}
+                        onSelectMatch={onSelectMatch}
+                      />
+                    ))}
                   </div>
-                ))}
-            </div>
+                )}
+              </div>
+            ))
+          ) : (
+            pastGroups.map(day => (
+              <DayCollapse
+                key={day.key}
+                day={day}
+                open={!!openDays[day.key]}
+                onToggle={() => toggleDay(day.key)}
+                onSelectMatch={onSelectMatch}
+              />
+            ))
           )}
         </div>
       )}
@@ -318,7 +343,7 @@ function FilterBar({ phaseFilter, setPhaseFilter, teamFilter, setTeamFilter }) {
           borderRadius: 10,
           padding: "10px 14px",
           color: "#fff",
-          fontSize: 13,
+          fontSize: 16,
           fontFamily: "inherit",
           outline: "none",
           marginBottom: 10,
@@ -381,6 +406,49 @@ function FilterChip({ active, onClick, children }) {
 
 function getMatchId(m) {
   return m.id ?? m.fixture?.id ?? getMatchDate(m);
+}
+
+/* ============== COLLAPSE HELPERS ============== */
+function CollapseHeader({ label, count, open, onToggle }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      style={{
+        width: "100%", display: "flex", alignItems: "center",
+        justifyContent: "space-between",
+        background: "rgba(255,255,255,0.04)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: 10, padding: "11px 14px",
+        color: "rgba(255,255,255,0.8)", fontSize: 13, fontWeight: 700,
+        cursor: "pointer", fontFamily: "inherit",
+        textTransform: "capitalize",
+      }}
+    >
+      <span>{label} <span style={{ color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>({count})</span></span>
+      <span style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s", fontSize: 15 }}>▾</span>
+    </button>
+  );
+}
+
+function DayCollapse({ day, open, onToggle, onSelectMatch }) {
+  return (
+    <div style={{ marginBottom: 8 }}>
+      <CollapseHeader
+        label={day.label}
+        count={day.items.length}
+        open={open}
+        onToggle={onToggle}
+      />
+      {open && (
+        <div style={{ marginTop: 8 }}>
+          {day.items.map(m => (
+            <MatchCard key={getMatchId(m)} fixture={m} onClick={onSelectMatch} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 /* ============== SECTION HEADER ============== */
