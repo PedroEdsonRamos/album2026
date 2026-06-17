@@ -195,13 +195,7 @@ function CronogramaView({ fixtures, onSelectMatch }) {
     return { todayMatches, futureGroups, pastGroups };
   }, [filtered, todayKey]);
 
-  const pastSpansMultipleMonths = useMemo(() => {
-    const months = new Set(pastGroups.map(g => g.key.slice(0, 7)));
-    return months.size > 1;
-  }, [pastGroups]);
-
   const pastByMonth = useMemo(() => {
-    if (!pastSpansMultipleMonths) return null;
     const map = {};
     pastGroups.forEach(g => {
       const monthKey = g.key.slice(0, 7);
@@ -213,7 +207,7 @@ function CronogramaView({ fixtures, onSelectMatch }) {
       map[monthKey].days.push(g);
     });
     return Object.values(map).sort((a, b) => b.key.localeCompare(a.key));
-  }, [pastGroups, pastSpansMultipleMonths]);
+  }, [pastGroups]);
 
   // Scroll para HOJE ou próxima rodada ao abrir
   useEffect(() => {
@@ -240,52 +234,40 @@ function CronogramaView({ fixtures, onSelectMatch }) {
           Nenhum jogo encontrado com esses filtros.
         </div>
       )}
-      {/* PASSADOS (colapsável por dia/mês) */}
+      {/* PASSADOS (colapsável por mês → dia) */}
       {pastGroups.length > 0 && (
-        <div style={{ marginTop: 20 }}>
+        <div style={{ marginTop: 12 }}>
           <div style={{
             fontSize: 11, fontWeight: 700, letterSpacing: "0.15em",
             color: "rgba(255,255,255,0.35)", textTransform: "uppercase",
-            marginBottom: 12,
+            marginBottom: 10,
           }}>
             Jogos anteriores
           </div>
 
-          {pastSpansMultipleMonths ? (
-            pastByMonth.map(month => (
-              <div key={month.key} style={{ marginBottom: 8 }}>
-                <CollapseHeader
-                  label={month.label}
-                  count={month.days.reduce((acc, d) => acc + d.items.length, 0)}
-                  open={!!openMonths[month.key]}
-                  onToggle={() => toggleMonth(month.key)}
-                />
-                {openMonths[month.key] && (
-                  <div style={{ marginTop: 8, paddingLeft: 4 }}>
-                    {month.days.map(day => (
-                      <DayCollapse
-                        key={day.key}
-                        day={day}
-                        open={!!openDays[day.key]}
-                        onToggle={() => toggleDay(day.key)}
-                        onSelectMatch={onSelectMatch}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))
-          ) : (
-            pastGroups.map(day => (
-              <DayCollapse
-                key={day.key}
-                day={day}
-                open={!!openDays[day.key]}
-                onToggle={() => toggleDay(day.key)}
-                onSelectMatch={onSelectMatch}
+          {pastByMonth.map(month => (
+            <div key={month.key} style={{ marginBottom: 8 }}>
+              <CollapseHeader
+                label={month.label}
+                count={month.days.reduce((acc, d) => acc + d.items.length, 0)}
+                open={!!openMonths[month.key]}
+                onToggle={() => toggleMonth(month.key)}
               />
-            ))
-          )}
+              {openMonths[month.key] && (
+                <div style={{ marginTop: 8, paddingLeft: 4 }}>
+                  {month.days.map(day => (
+                    <DayCollapse
+                      key={day.key}
+                      day={day}
+                      open={!!openDays[day.key]}
+                      onToggle={() => toggleDay(day.key)}
+                      onSelectMatch={onSelectMatch}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
 
@@ -672,11 +654,14 @@ function TeamCol({ team, won }) {
         fontWeight: won ? 800 : 600,
         color: won ? "#fff" : "rgba(255,255,255,0.85)",
         textAlign: "center",
-        whiteSpace: "nowrap",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        maxWidth: "100%",
         lineHeight: 1.2,
+        wordBreak: "break-word",
+        overflowWrap: "break-word",
+        display: "-webkit-box",
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: "vertical",
+        overflow: "hidden",
+        maxWidth: "100%",
       }}>
         {getTeamName(team)}
       </span>
@@ -868,11 +853,15 @@ function GroupTable({ group }) {
                   fontSize: 12,
                   fontWeight: 600,
                   color: "#fff",
-                  whiteSpace: "nowrap",
+                  wordBreak: "break-word",
+                  overflowWrap: "break-word",
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
                   overflow: "hidden",
-                  textOverflow: "ellipsis",
                   minWidth: 0,
                   flex: 1,
+                  lineHeight: 1.2,
                 }}>{getTeamName(row.team)}</span>
               </div>
 
@@ -1162,10 +1151,14 @@ function BracketSlot({ slot, team, divider }) {
         color: team?.confirmed ? "#fff" : "rgba(255,255,255,0.4)",
         fontStyle: team?.confirmed ? "normal" : "italic",
         flex: 1,
-        whiteSpace: "nowrap",
+        wordBreak: "break-word",
+        overflowWrap: "break-word",
+        display: "-webkit-box",
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: "vertical",
         overflow: "hidden",
-        textOverflow: "ellipsis",
         minWidth: 0,
+        lineHeight: 1.3,
       }}>
         {team ? getTeamName(team.team) : "A definir"}
       </span>
