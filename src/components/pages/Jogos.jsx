@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import {
   getFixtures, getStandings, formatBrasilia, getMatchStatus,
   todayKeyBrasilia, getMatchDate, extractScore,
+  getOpenFootballData, findGoals,
 } from "@/services/worldcup";
 import { BallIcon } from "@/components/icons/BallIcon.jsx";
 import { MatchDetailModal } from "@/components/organisms/MatchDetailModal";
@@ -40,6 +41,7 @@ export function Jogos() {
   const [tab, setTab] = useState("cronograma");
   const [fixtures, setFixtures] = useState([]);
   const [standings, setStandings] = useState({ groups: [], thirdPlaceTable: [] });
+  const [ofData, setOfData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedMatch, setSelectedMatch] = useState(null);
@@ -49,9 +51,14 @@ export function Jogos() {
   async function load() {
     try {
       setLoading(true); setError(null);
-      const [fix, std] = await Promise.all([getFixtures(), getStandings()]);
+      const [fix, std, of] = await Promise.all([
+        getFixtures(),
+        getStandings(),
+        getOpenFootballData(),
+      ]);
       setFixtures(fix);
       setStandings(std);
+      setOfData(of);
     } catch {
       setError("Não foi possível carregar os dados. Verifique sua conexão.");
     } finally {
@@ -65,7 +72,7 @@ export function Jogos() {
       {loading && <Loading />}
       {error && <ErrorState msg={error} onRetry={load} />}
       {!loading && !error && tab === "cronograma" && (
-        <CronogramaView fixtures={fixtures} onSelectMatch={setSelectedMatch} />
+        <CronogramaView fixtures={fixtures} onSelectMatch={setSelectedMatch} ofData={ofData} />
       )}
       {!loading && !error && tab === "classificacao" && (
         <ClassificacaoView standings={standings} fixtures={fixtures} onSelectMatch={setSelectedMatch} />
@@ -116,7 +123,7 @@ function SegmentedControl({ tab, onChange }) {
 }
 
 /* ============== CRONOGRAMA INTELIGENTE ============== */
-function CronogramaView({ fixtures, onSelectMatch }) {
+function CronogramaView({ fixtures, onSelectMatch, ofData }) {
   const todayKey = todayKeyBrasilia();
   const hojeRef = useRef(null);
   const proximaRef = useRef(null);
@@ -271,6 +278,7 @@ function CronogramaView({ fixtures, onSelectMatch }) {
                       open={!!openDays[day.key]}
                       onToggle={() => toggleDay(day.key)}
                       onSelectMatch={onSelectMatch}
+                      ofData={ofData}
                     />
                   ))}
                 </div>
@@ -284,7 +292,7 @@ function CronogramaView({ fixtures, onSelectMatch }) {
       {todayMatches.length > 0 && (
         <div ref={hojeRef} style={{ marginBottom: 28 }}>
           <SectionHeader label="HOJE" highlight />
-          {todayMatches.map(m => <MatchCard key={getMatchId(m)} fixture={m} onClick={onSelectMatch} />)}
+          {todayMatches.map(m => <MatchCard key={getMatchId(m)} fixture={m} onClick={onSelectMatch} ofData={ofData} />)}
         </div>
       )}
 
@@ -301,7 +309,7 @@ function CronogramaView({ fixtures, onSelectMatch }) {
                 label={group.label}
                 badge={idx === 0 && todayMatches.length === 0 ? "PRÓXIMA RODADA" : null}
               />
-              {group.items.map(m => <MatchCard key={getMatchId(m)} fixture={m} onClick={onSelectMatch} />)}
+              {group.items.map(m => <MatchCard key={getMatchId(m)} fixture={m} onClick={onSelectMatch} ofData={ofData} />)}
             </div>
           ))}
         </div>
@@ -422,7 +430,7 @@ function CollapseHeader({ label, count, open, onToggle }) {
   );
 }
 
-function DayCollapse({ day, open, onToggle, onSelectMatch }) {
+function DayCollapse({ day, open, onToggle, onSelectMatch, ofData }) {
   return (
     <div style={{ marginBottom: 8 }}>
       <CollapseHeader
@@ -434,7 +442,7 @@ function DayCollapse({ day, open, onToggle, onSelectMatch }) {
       {open && (
         <div style={{ marginTop: 8 }}>
           {day.items.map(m => (
-            <MatchCard key={getMatchId(m)} fixture={m} onClick={onSelectMatch} />
+            <MatchCard key={getMatchId(m)} fixture={m} onClick={onSelectMatch} ofData={ofData} />
           ))}
         </div>
       )}
@@ -492,7 +500,7 @@ function SectionHeader({ label, highlight, muted, badge }) {
 }
 
 /* ============== MATCH CARD ============== */
-function MatchCard({ fixture: m, onClick }) {
+function MatchCard({ fixture: m, onClick, ofData }) {
   const dateStr = getMatchDate(m);
   if (!dateStr) return null;
 
@@ -506,6 +514,10 @@ function MatchCard({ fixture: m, onClick }) {
 
   const score = extractScore(m);
   const hasScore = score !== null;
+
+  // Busca gols do openfootball
+  const goals = hasScore ? findGoals(m, ofData) : null;
+  const hasGoals = goals && (goals.home.length > 0 || goals.away.length > 0);
 
   const homeWon = hasScore && Number(score.home) > Number(score.away);
   const awayWon = hasScore && Number(score.away) > Number(score.home);
@@ -607,6 +619,34 @@ function MatchCard({ fixture: m, onClick }) {
         <TeamCol team={awayTeam} won={awayWon} />
       </div>
 
+      {/* GOLS */}
+      {hasGoals && (
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 20px 1fr",
+          gap: 4,
+          marginTop: 8,
+          padding: "0 4px",
+        }}>
+          {/* Gols mandante (alinhados à direita) */}
+          <div style={{ textAlign: "right" }}>
+            {goals.home.map((g, i) => (
+              <GoalLine key={i} goal={g} />
+            ))}
+          </div>
+
+          {/* Separador central */}
+          <div />
+
+          {/* Gols visitante (alinhados à esquerda) */}
+          <div style={{ textAlign: "left" }}>
+            {goals.away.map((g, i) => (
+              <GoalLine key={i} goal={g} />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* RODAPÉ: Rodada */}
       {roundLabel && (
         <div style={{
@@ -673,6 +713,26 @@ function TeamCol({ team, won }) {
         maxWidth: "100%",
       }}>
         {getTeamName(team)}
+      </span>
+    </div>
+  );
+}
+
+function GoalLine({ goal }) {
+  return (
+    <div style={{
+      fontSize: 10,
+      color: "rgba(255,255,255,0.6)",
+      lineHeight: 1.6,
+    }}>
+      <span style={{ color: "rgba(255,255,255,0.35)", marginRight: 2 }}>⚽</span>
+      {" "}
+      <span style={{ fontWeight: 600, color: "rgba(255,255,255,0.75)" }}>
+        {goal.name}
+      </span>
+      {" "}
+      <span style={{ color: "rgba(255,255,255,0.4)" }}>
+        {goal.minute}'{goal.penalty ? " (P)" : ""}
       </span>
     </div>
   );

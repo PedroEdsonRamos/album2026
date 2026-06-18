@@ -282,3 +282,95 @@ export function normalizeLineups(raw) {
 
   return { home, away };
 }
+
+// ===== OPENFOOTBALL — gols com nome + minuto =====
+
+const OPENFOOTBALL_URL =
+  "https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json";
+
+/**
+ * Busca o JSON do openfootball e cacheia por 30 minutos.
+ * Retorna o array de matches com goals1/goals2.
+ */
+export async function getOpenFootballData() {
+  const key = "openfootball";
+  const cached = getCached(key);
+  if (cached) return cached;
+
+  try {
+    const res = await fetch(OPENFOOTBALL_URL);
+    if (!res.ok) return [];
+    const json = await res.json();
+    const matches = json.matches ?? [];
+    setCache(key, matches, 30 * 60 * 1000); // 30 min
+    return matches;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Normaliza nome de time para matching (lowercase, sem acentos comuns).
+ */
+function normalizeTeamName(name) {
+  return (name ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "") // remove acentos
+    .replace(/[^a-z0-9]/g, "");      // remove espaços e especiais
+}
+
+/**
+ * Encontra os gols de um jogo no openfootball, cruzando por data + nomes dos times.
+ *
+ * @param {Object} match — match da Highlightly
+ * @param {Array} ofMatches — array de matches do openfootball
+ * @returns {{ home: [{name, minute}], away: [{name, minute}] } | null}
+ */
+export function findGoals(match, ofMatches) {
+  if (!ofMatches || ofMatches.length === 0) return null;
+
+  const matchDate = getMatchDate(match);
+  if (!matchDate) return null;
+
+  // Extrai a data YYYY-MM-DD do jogo da Highlightly (em UTC)
+  const hlDate = new Date(matchDate).toISOString().split("T")[0];
+
+  const homeName = normalizeTeamName(match.homeTeam?.name ?? match.teams?.home?.name);
+  const awayName = normalizeTeamName(match.awayTeam?.name ?? match.teams?.away?.name);
+
+  // Busca no openfootball por data + nomes
+  const found = ofMatches.find(of => {
+    const ofDate = of.date; // já é "YYYY-MM-DD"
+    if (ofDate !== hlDate) return false;
+
+    const t1 = normalizeTeamName(of.team1);
+    const t2 = normalizeTeamName(of.team2);
+
+    // Pode estar em qualquer ordem (mandante/visitante)
+    return (t1 === homeName && t2 === awayName) ||
+           (t1 === awayName && t2 === homeName);
+  });
+
+  if (!found) return null;
+
+  // Determina qual lado é home/away
+  const t1IsHome = normalizeTeamName(found.team1) === homeName;
+  const homeGoals = (t1IsHome ? found.goals1 : found.goals2) ?? [];
+  const awayGoals = (t1IsHome ? found.goals2 : found.goals1) ?? [];
+
+  if (homeGoals.length === 0 && awayGoals.length === 0) return null;
+
+  return {
+    home: homeGoals.map(g => ({
+      name: g.name,
+      minute: String(g.minute ?? ""),
+      penalty: !!g.penalty,
+    })),
+    away: awayGoals.map(g => ({
+      name: g.name,
+      minute: String(g.minute ?? ""),
+      penalty: !!g.penalty,
+    })),
+  };
+}
