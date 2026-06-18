@@ -172,7 +172,14 @@ function CronogramaView({ fixtures, onSelectMatch }) {
         if (!futureMap[dateKey]) futureMap[dateKey] = { label: date, items: [] };
         futureMap[dateKey].items.push(m);
       } else {
-        if (!pastMap[dateKey]) pastMap[dateKey] = { label: date, items: [] };
+        if (!pastMap[dateKey]) {
+          const dObj = new Date(dateKey + "T12:00:00Z");
+          const wday = dObj.toLocaleDateString("pt-BR", { weekday: "short", timeZone: "UTC" });
+          const dayNum = dObj.toLocaleDateString("pt-BR", { day: "numeric", timeZone: "UTC" });
+          const monthLong = dObj.toLocaleDateString("pt-BR", { month: "long", timeZone: "UTC" });
+          const dayLabel = `${wday.charAt(0).toUpperCase() + wday.slice(1)}, ${dayNum} de ${monthLong}`;
+          pastMap[dateKey] = { label: dayLabel, items: [] };
+        }
         pastMap[dateKey].items.push(m);
       }
     });
@@ -200,8 +207,10 @@ function CronogramaView({ fixtures, onSelectMatch }) {
     pastGroups.forEach(g => {
       const monthKey = g.key.slice(0, 7);
       if (!map[monthKey]) {
-        const d = new Date(g.key + "T12:00:00");
-        const label = d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+        const d = new Date(monthKey + "-01T12:00:00Z");
+        const monthName = d.toLocaleDateString("pt-BR", { month: "long", timeZone: "UTC" });
+        const year = d.getUTCFullYear();
+        const label = `${monthName.charAt(0).toUpperCase() + monthName.slice(1)}, ${year}`;
         map[monthKey] = { key: monthKey, label, days: [] };
       }
       map[monthKey].days.push(g);
@@ -228,7 +237,7 @@ function CronogramaView({ fixtures, onSelectMatch }) {
         setTeamFilter={setTeamFilter}
       />
 
-      <div style={{ padding: "12px 0 0" }}>
+      <div style={{ padding: "0" }}>
       {filtered.length === 0 && (
         <div style={{ padding: "40px 0", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
           Nenhum jogo encontrado com esses filtros.
@@ -407,7 +416,7 @@ function CollapseHeader({ label, count, open, onToggle }) {
         textTransform: "capitalize",
       }}
     >
-      <span>{label} <span style={{ color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>({count})</span></span>
+      <span>{label} <span style={{ color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>({count} {count === 1 ? "jogo" : "jogos"})</span></span>
       <span style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s", fontSize: 15 }}>▾</span>
     </button>
   );

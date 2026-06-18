@@ -52,25 +52,34 @@ async function proxyFetch(endpoint, params = {}) {
   }
 }
 
-// UTC → Brasília (UTC-3)
-export function toBrasilia(utcStr) {
-  const d = new Date(utcStr);
-  return new Date(d.getTime() + (-3) * 60 * 60 * 1000);
-}
-
+/**
+ * Formata UTC para horário de Brasília via Intl — funciona igual no browser e no PWA.
+ */
 export function formatBrasilia(utcStr) {
-  const d = toBrasilia(utcStr);
-  return {
-    date: d.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" }),
-    time: d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }),
-    dateObj: d,
-    dateKey: d.toISOString().split("T")[0],
-  };
+  const d = new Date(utcStr);
+  const tz = "America/Sao_Paulo";
+
+  const date = d.toLocaleDateString("pt-BR", {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    timeZone: tz,
+  });
+
+  const time = d.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: tz,
+  });
+
+  const dateKey = d.toLocaleDateString("en-CA", { timeZone: tz });
+
+  return { date, time, dateObj: d, dateKey };
 }
 
 // Data de hoje em Brasília (apenas YYYY-MM-DD)
 export function todayKeyBrasilia() {
-  return formatBrasilia(new Date().toISOString()).dateKey;
+  return new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
 }
 
 /**
