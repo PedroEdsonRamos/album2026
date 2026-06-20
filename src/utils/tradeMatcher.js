@@ -66,7 +66,8 @@ function resolveTeamAlias(sigla) {
  * @param {Object} esByCode — mapa ES_BY_CODE (extra stickers por código)
  */
 export function getStickerType(s, esByCode = {}) {
-  if (esByCode[s.code]) return "extra";
+  if (!s) return "jogador";
+  if (s.code && esByCode[s.code]) return "extra";
   if (s.team === "CC") return "cocacola";
   if (s.team === "FWC" || s.code === "00") return "fwc";
   if (s.position === "Escudo") return "escudo";
@@ -105,6 +106,7 @@ export function parseTraderCodes(raw, validCodes) {
   if (!raw || !raw.trim()) return { valid: [], invalid: [] };
 
   const foundCodes = new Set();
+  const invalidSet = new Set(); // candidatos SIGLA+NUM que não casaram em validCodes
 
   // Processa linha a linha (formatos compacto e detalhado são por linha)
   const lines = raw.split(/\r?\n/);
@@ -148,6 +150,8 @@ export function parseTraderCodes(raw, validCodes) {
       if (validCodes.has(code)) {
         foundCodes.add(code);
         foundInLine = true;
+      } else {
+        invalidSet.add(`${mFull[1]}${num}`);
       }
     }
 
@@ -171,24 +175,16 @@ export function parseTraderCodes(raw, validCodes) {
     }
   }
 
-  // Separa válidos de inválidos (inválidos = não conseguimos resolver)
-  // Como já filtramos por validCodes, todos em foundCodes são válidos.
+  // Separa válidos de inválidos (inválidos = não conseguimos resolver).
+  // Coletados na mesma passada do loop (sem varrer o texto de novo).
   const valid = [...foundCodes];
 
-  // Para reportar "não reconhecidos", contamos tokens que pareciam códigos mas não casaram.
-  // Heurística simples: conta padrões SIGLA+NUM no texto todo que não entraram em valid.
-  const allTokens = new Set();
-  const tokenRegex = /\b([A-Z]{2,4})\s?(\d{1,3})\b/gi;
-  let mt;
-  const cleanAll = raw
-    .replace(/[\u{1F000}-\u{1FFFF}]/gu, " ")
-    .replace(/[\u{1F1E6}-\u{1F1FF}]/gu, " ");
-  while ((mt = tokenRegex.exec(cleanAll)) !== null) {
-    const sigla = resolveTeamAlias(mt[1]);
-    const code = `${sigla}${mt[2]}`;
-    if (!validCodes.has(code)) allTokens.add(`${mt[1]}${mt[2]}`);
-  }
-  const invalid = [...allTokens];
+  // Remove dos inválidos os que acabaram resolvidos por outro formato (ex: compacto).
+  const invalid = [...invalidSet].filter(c => {
+    const num = c.match(/\d+$/)?.[0] ?? "";
+    const sigla = resolveTeamAlias(c.replace(/\d+$/, ""));
+    return !foundCodes.has(`${sigla}${num}`);
+  });
 
   return { valid, invalid };
 }
@@ -210,55 +206,74 @@ export function parseTraderCodes(raw, validCodes) {
  * }}
  */
 export function computeTrade({ allStickers, traderCodes, esByCode = {} }) {
-  const traderSet = new Set(traderCodes);
+  if (!Array.isArray(allStickers) || allStickers.length === 0) {
+    return { suggestedPairs: [], receiveWithoutPair: [], allMyDuplicates: [], summary: { willReceive: 0, willGive: 0 } };
+  }
+
+  const traderSet = new Set(traderCodes ?? []);
 
   // Mapa code → sticker (para resolver os códigos do trocador)
   const byCode = {};
-  allStickers.forEach(s => { byCode[s.code] = s; });
+  allStickers.forEach(s => { if (s?.code) byCode[s.code] = s; });
 
   // ===== Balde A — "Eu recebo": repetidas do trocador que EU não tenho =====
-  const receiveBucket = traderCodes
+  const receiveBucket = (traderCodes ?? [])
     .map(code => byCode[code])
     .filter(s => s && s.status === "Faltando");
 
   // ===== Balde B — "Eu ofereço": minhas repetidas que o trocador NÃO colou =====
-  const myDuplicates = allStickers.filter(s => s.status === "Repetida");
-  const offerBucket = myDuplicates.filter(s => !traderSet.has(s.code));
+  const offerBucket = allStickers.filter(
+    s => s && s.status === "Repetida" && !traderSet.has(s.code)
+  );
 
-  // ===== Matching equilibrado por tipo =====
-  const usedOffer = new Set(); // ids já pareados
+  const usedOffer = new Set();
+  const matched = new Set(); // receive ids já pareados
   const suggestedPairs = [];
-  const receiveWithoutPair = [];
 
+  // Pré-calcula o tipo de cada figurinha (evita recalcular no loop)
+  const typeOf = new Map();
+  const allRelevant = [...receiveBucket, ...offerBucket];
+  allRelevant.forEach(s => {
+    if (!typeOf.has(s.id)) typeOf.set(s.id, getStickerType(s, esByCode));
+  });
+
+  // ===== PASSADA 1: matches perfeitos (mesma seleção + mesmo tipo) =====
   receiveBucket.forEach(receive => {
-    const rType = getStickerType(receive, esByCode);
-
-    // 1. Match perfeito: mesmo tipo + mesma seleção
-    let give = offerBucket.find(o =>
+    const rType = typeOf.get(receive.id);
+    const give = offerBucket.find(o =>
       !usedOffer.has(o.id) &&
-      getStickerType(o, esByCode) === rType &&
+      typeOf.get(o.id) === rType &&
       o.team === receive.team
     );
-    let perfect = !!give;
-
-    // 2. Fallback: mesmo tipo, qualquer seleção
-    if (!give) {
-      give = offerBucket.find(o =>
-        !usedOffer.has(o.id) &&
-        getStickerType(o, esByCode) === rType
-      );
-      perfect = false;
-    }
-
     if (give) {
       usedOffer.add(give.id);
-      suggestedPairs.push({ give, receive, perfect });
-    } else {
-      receiveWithoutPair.push(receive);
+      matched.add(receive.id);
+      suggestedPairs.push({ give, receive, perfect: true });
     }
   });
 
-  // Todas as minhas repetidas que o trocador não tem (para escolha manual)
+  // ===== PASSADA 2: fallback (só mesmo tipo) para os que sobraram =====
+  receiveBucket.forEach(receive => {
+    if (matched.has(receive.id)) return;
+    const rType = typeOf.get(receive.id);
+    const give = offerBucket.find(o =>
+      !usedOffer.has(o.id) &&
+      typeOf.get(o.id) === rType
+    );
+    if (give) {
+      usedOffer.add(give.id);
+      matched.add(receive.id);
+      suggestedPairs.push({ give, receive, perfect: false });
+    }
+  });
+
+  // Ordena os pares: perfeitos primeiro, depois por tipo
+  suggestedPairs.sort((a, b) => {
+    if (a.perfect !== b.perfect) return a.perfect ? -1 : 1;
+    return 0;
+  });
+
+  const receiveWithoutPair = receiveBucket.filter(r => !matched.has(r.id));
   const allMyDuplicates = offerBucket;
 
   return {
@@ -277,17 +292,27 @@ export function computeTrade({ allStickers, traderCodes, esByCode = {} }) {
 /**
  * Gera um texto-resumo da troca para o usuário enviar ao trocador.
  */
-export function buildTradeSummaryText(suggestedPairs) {
-  if (!suggestedPairs.length) return "";
+export function buildTradeSummaryText(suggestedPairs, receiveWithoutPair = []) {
+  if (!suggestedPairs.length && !receiveWithoutPair.length) return "";
 
-  const give = suggestedPairs.map(p => `${p.give.code} (${p.give.name})`).join(", ");
-  const receive = suggestedPairs.map(p => `${p.receive.code} (${p.receive.name})`).join(", ");
+  const lines = ["🔄 *Proposta de troca*", ""];
 
-  return [
-    "🔄 Proposta de troca",
-    "",
-    `Eu te dou (${suggestedPairs.length}): ${give}`,
-    "",
-    `Você me dá (${suggestedPairs.length}): ${receive}`,
-  ].join("\n");
+  if (suggestedPairs.length) {
+    lines.push(`*Eu te dou* (${suggestedPairs.length}):`);
+    suggestedPairs.forEach(p => lines.push(`  • ${p.give.code} — ${p.give.name}`));
+    lines.push("");
+    lines.push(`*Você me dá* (${suggestedPairs.length}):`);
+    suggestedPairs.forEach(p => lines.push(`  • ${p.receive.code} — ${p.receive.name}`));
+  }
+
+  if (receiveWithoutPair.length) {
+    lines.push("");
+    lines.push(`*Ainda preciso* (a combinar):`);
+    receiveWithoutPair.forEach(s => lines.push(`  • ${s.code} — ${s.name}`));
+  }
+
+  lines.push("");
+  lines.push("📲 Álbum FIFA World Cup 2026 · PTEC Solutions");
+
+  return lines.join("\n");
 }
