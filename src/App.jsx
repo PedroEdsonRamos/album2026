@@ -19,6 +19,7 @@ const Teams     = lazy(() => import("@/components/pages/Teams.jsx").then(m => ({
 const Stickers  = lazy(() => import("@/components/pages/Stickers.jsx").then(m => ({ default: m.Stickers })));
 const AddPage   = lazy(() => import("@/components/pages/AddPage.jsx").then(m => ({ default: m.AddPage })));
 const Trades    = lazy(() => import("@/components/pages/Trades.jsx").then(m => ({ default: m.Trades })));
+const Trocador  = lazy(() => import("@/components/pages/Trocador.jsx").then(m => ({ default: m.Trocador })));
 const Status    = lazy(() => import("@/components/pages/Status.jsx").then(m => ({ default: m.Status })));
 const Help      = lazy(() => import("@/components/pages/Help.jsx").then(m => ({ default: m.Help })));
 const Profile   = lazy(() => import("@/components/pages/Profile.jsx").then(m => ({ default: m.Profile })));
@@ -430,6 +431,11 @@ function AppContent({ auth }) {
             {page === "trocas" && (
               <PageSuspense>
                 <Trades stickers={stickers} addToast={addToast} goToAlbum={goToAlbum} setPage={handleNav} setTeamFilter={setSelectedTeam} />
+              </PageSuspense>
+            )}
+            {page === "trocador" && (
+              <PageSuspense>
+                <Trocador stickers={stickers} addToast={addToast} />
               </PageSuspense>
             )}
             {page === "status" && (
