@@ -5,6 +5,57 @@
  * trocador, e devolve uma sugestão de troca equilibrada por tipo.
  */
 
+/* ===== Aliases de siglas ===== */
+
+/**
+ * Mapa de siglas alternativas (de outros apps) → sigla oficial do nosso app.
+ * Outros apps usam abreviações diferentes para os mesmos times.
+ */
+const TEAM_ALIASES = {
+  // Holanda
+  "HOL": "NED", "NED": "NED", "NLD": "NED",
+  // Alemanha
+  "ALE": "GER", "GER": "GER", "DEU": "GER",
+  // Estados Unidos
+  "EUA": "USA", "USA": "USA",
+  // Curaçao
+  "CUR": "CUW", "CUW": "CUW",
+  // Congo RD
+  "COG": "COD", "COD": "COD", "RDC": "COD", "DRC": "COD",
+  // Arábia Saudita
+  "ARA": "KSA", "KSA": "KSA", "SAU": "KSA",
+  // África do Sul
+  "AFS": "RSA", "ZAF": "RSA", "RSA": "RSA",
+  // Coreia do Sul
+  "CRS": "KOR", "KOR": "KOR", "COR": "KOR",
+  // Argélia (cuidado: não confundir com Argentina=ARG)
+  "ALG": "ALG", "ARGELIA": "ALG", "DZA": "ALG",
+  // Argentina
+  "ARG": "ARG",
+  // Inglaterra
+  "ING": "ENG", "ENG": "ENG",
+  // Escócia
+  "ESC": "SCO", "SCO": "SCO",
+  // Croácia
+  "CRO": "CRO", "CRA": "CRO",
+  // Suíça
+  "SUI": "SUI", "SWI": "SUI", "CHE": "SUI",
+  // Japão
+  "JAP": "JPN", "JPN": "JPN",
+  // Espanha
+  "ESP": "ESP", "SPA": "ESP",
+  // demais batem com a sigla oficial (resolvidos pelo fallback)
+};
+
+/**
+ * Resolve uma sigla de time (de qualquer app) para a sigla oficial.
+ * Se não houver alias, retorna a própria sigla em UPPERCASE.
+ */
+function resolveTeamAlias(sigla) {
+  const up = (sigla ?? "").toUpperCase().trim();
+  return TEAM_ALIASES[up] ?? up;
+}
+
 /* ===== Classificação de tipo ===== */
 
 /**
@@ -41,32 +92,103 @@ export function getTypeLabel(type) {
 /* ===== Parsing da lista colada ===== */
 
 /**
- * Extrai códigos válidos de um texto colado pelo usuário.
- * Aceita separação por vírgula, espaço, quebra de linha, ponto-e-vírgula.
+ * Extrai códigos válidos de um texto colado, suportando múltiplos formatos:
+ *  - Lista simples: "BRA10, ARG05"
+ *  - Compacto: "MEX 🇲🇽: 2 (×2), 3, 7"
+ *  - Detalhado: "MEX18 — Alexis Vega | Atacante"
  *
  * @param {string} raw — texto colado
- * @param {Set<string>} validCodes — conjunto de códigos existentes no álbum (UPPERCASE)
+ * @param {Set<string>} validCodes — códigos existentes no álbum (UPPERCASE)
  * @returns {{ valid: string[], invalid: string[] }}
  */
 export function parseTraderCodes(raw, validCodes) {
   if (!raw || !raw.trim()) return { valid: [], invalid: [] };
 
-  const tokens = raw
-    .toUpperCase()
-    .split(/[\s,;]+/)
-    .map(t => t.trim())
-    .filter(Boolean);
+  const foundCodes = new Set();
 
-  const valid = [];
-  const invalid = [];
-  const seen = new Set();
+  // Processa linha a linha (formatos compacto e detalhado são por linha)
+  const lines = raw.split(/\r?\n/);
 
-  tokens.forEach(code => {
-    if (seen.has(code)) return; // ignora duplicados na própria lista
-    seen.add(code);
-    if (validCodes.has(code)) valid.push(code);
-    else invalid.push(code);
-  });
+  for (let line of lines) {
+    // Remove emojis e símbolos de bandeira (mantém letras, números, pontuação básica)
+    const clean = line
+      .replace(/[\u{1F000}-\u{1FFFF}]/gu, " ")   // emojis
+      .replace(/[\u{2600}-\u{27BF}]/gu, " ")     // símbolos diversos
+      .replace(/[\u{1F1E6}-\u{1F1FF}]/gu, " ")   // bandeiras
+      .replace(/[\u{E0000}-\u{E007F}]/gu, " ")   // tags (bandeiras regionais)
+      .replace(/[*_>#]/g, " ")                    // markdown
+      .trim();
+
+    if (!clean) continue;
+
+    // Ignora linhas de ruído conhecido
+    const lower = clean.toLowerCase();
+    if (
+      lower.includes("baixe o app") ||
+      lower.includes("http") ||
+      lower.includes("figurinhas disponíveis") ||
+      lower.includes("figurinhas para troca") ||
+      lower.startsWith("tipo:") ||
+      lower.includes("ptec solutions")
+    ) continue;
+
+    // ===== Tentativa A: códigos completos na linha (ex "MEX18", "FWC10", "CC5", "ES7", "00") =====
+    // Captura SIGLA+NÚMERO ou FWC/CC/ES+número ou "00"
+    const fullCodeRegex = /\b([A-Z]{2,4})\s?(\d{1,3})\b|\b(00)\b/gi;
+    let mFull;
+    let foundInLine = false;
+    while ((mFull = fullCodeRegex.exec(clean)) !== null) {
+      if (mFull[3] === "00") {
+        if (validCodes.has("00")) { foundCodes.add("00"); foundInLine = true; }
+        continue;
+      }
+      const sigla = resolveTeamAlias(mFull[1]);
+      const num = mFull[2];
+      const code = `${sigla}${num}`;
+      if (validCodes.has(code)) {
+        foundCodes.add(code);
+        foundInLine = true;
+      }
+    }
+
+    // Se já achou códigos completos na linha, vai para a próxima
+    if (foundInLine) continue;
+
+    // ===== Tentativa B: formato compacto "SIGLA: 2 (×2), 3, 7" =====
+    const compactMatch = clean.match(/^([A-Za-z]{2,4})\s*[:：]\s*(.+)$/);
+    if (compactMatch) {
+      const sigla = resolveTeamAlias(compactMatch[1]);
+      const numberspart = compactMatch[2];
+
+      // Extrai todos os números (ignora "(×N)" que indica quantidade)
+      const numRegex = /(\d{1,3})(?:\s*[（(]\s*[×x]\s*\d+\s*[）)])?/g;
+      let mNum;
+      while ((mNum = numRegex.exec(numberspart)) !== null) {
+        const num = mNum[1];
+        const code = `${sigla}${num}`;
+        if (validCodes.has(code)) foundCodes.add(code);
+      }
+    }
+  }
+
+  // Separa válidos de inválidos (inválidos = não conseguimos resolver)
+  // Como já filtramos por validCodes, todos em foundCodes são válidos.
+  const valid = [...foundCodes];
+
+  // Para reportar "não reconhecidos", contamos tokens que pareciam códigos mas não casaram.
+  // Heurística simples: conta padrões SIGLA+NUM no texto todo que não entraram em valid.
+  const allTokens = new Set();
+  const tokenRegex = /\b([A-Z]{2,4})\s?(\d{1,3})\b/gi;
+  let mt;
+  const cleanAll = raw
+    .replace(/[\u{1F000}-\u{1FFFF}]/gu, " ")
+    .replace(/[\u{1F1E6}-\u{1F1FF}]/gu, " ");
+  while ((mt = tokenRegex.exec(cleanAll)) !== null) {
+    const sigla = resolveTeamAlias(mt[1]);
+    const code = `${sigla}${mt[2]}`;
+    if (!validCodes.has(code)) allTokens.add(`${mt[1]}${mt[2]}`);
+  }
+  const invalid = [...allTokens];
 
   return { valid, invalid };
 }
