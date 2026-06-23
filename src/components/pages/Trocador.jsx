@@ -26,11 +26,13 @@ const POS_COLORS = {
   "Atacante": "#f87171",
 };
 
-export function Trocador({ stickers, addToast }) {
+export function Trocador({ stickers, addToast, applyTrade }) {
   const [raw, setRaw] = useState("");
   const [result, setResult] = useState(null);
   const [parseInfo, setParseInfo] = useState(null);
   const [processing, setProcessing] = useState(false);
+  const [applied, setApplied] = useState(false);
+  const [confirming, setConfirming] = useState(false);
 
   const validCodes = useMemo(() => new Set(stickers.map(s => s.code)), [stickers]);
 
@@ -39,6 +41,8 @@ export function Trocador({ stickers, addToast }) {
       addToast?.("Cole os códigos das repetidas do trocador primeiro.");
       return;
     }
+    setApplied(false);
+    setConfirming(false);
     setProcessing(true);
     setTimeout(() => {
       const parsed = parseTraderCodes(raw, validCodes);
@@ -60,11 +64,20 @@ export function Trocador({ stickers, addToast }) {
 
   function handleReset() {
     setRaw(""); setResult(null); setParseInfo(null);
+    setApplied(false); setConfirming(false);
   }
 
   function handleCopy() {
     if (!result?.suggestedPairs?.length) return;
     copyToClipboard(buildTradeSummaryText(result.suggestedPairs, result.receiveWithoutPair), addToast);
+  }
+
+  function handleConfirmTrade() {
+    if (!result?.suggestedPairs?.length || applied) return;
+    applyTrade?.(result.suggestedPairs);
+    setApplied(true);
+    setConfirming(false);
+    addToast?.("Álbum atualizado!");
   }
 
   return (
@@ -141,6 +154,49 @@ export function Trocador({ stickers, addToast }) {
                   <TradePair key={`${pair.give.code}-${pair.receive.code}`} pair={pair} />
                 ))}
               </div>
+              {/* Confirmar troca no álbum */}
+              {applied ? (
+                <div style={{
+                  marginTop: 12, padding: "11px 12px", borderRadius: 10,
+                  border: "1px solid rgba(34,197,94,0.35)", background: "rgba(34,197,94,0.12)",
+                  color: C.green, fontSize: 13, fontWeight: 700, textAlign: "center",
+                }}>
+                  ✓ Troca aplicada no seu álbum
+                  <div style={{ fontSize: 11, fontWeight: 500, color: C.t3, marginTop: 4 }}>
+                    Envie a proposta pro trocador aplicar o lado dele.
+                  </div>
+                </div>
+              ) : confirming ? (
+                <div style={{
+                  marginTop: 12, padding: 12, borderRadius: 10,
+                  border: `1px solid ${C.border}`, background: C.surface,
+                }}>
+                  <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.5, marginBottom: 10 }}>
+                    Isso atualiza seu álbum: <b style={{ color: C.amber }}>−{result.summary.willGive}</b> repetidas
+                    {" "}e <b style={{ color: C.green }}>+{result.summary.willReceive}</b> novas. Confirmar?
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button type="button" onClick={handleConfirmTrade} style={{
+                      flex: 1, padding: "10px 0", borderRadius: 9, border: "none",
+                      background: `linear-gradient(135deg, ${C.amber}, ${C.amberLt})`,
+                      color: "#0c0c1a", fontWeight: 800, fontSize: 13,
+                      cursor: "pointer", fontFamily: "inherit",
+                    }}>Sim, atualizar álbum</button>
+                    <button type="button" onClick={() => setConfirming(false)} style={{
+                      padding: "10px 16px", borderRadius: 9, border: `1px solid ${C.border}`,
+                      background: "transparent", color: C.t2, fontWeight: 700, fontSize: 13,
+                      cursor: "pointer", fontFamily: "inherit",
+                    }}>Cancelar</button>
+                  </div>
+                </div>
+              ) : (
+                <button type="button" onClick={() => setConfirming(true)} style={{
+                  width: "100%", marginTop: 12, padding: "12px 0", borderRadius: 10,
+                  border: "none", background: `linear-gradient(135deg, ${C.amber}, ${C.amberLt})`,
+                  color: "#0c0c1a", fontWeight: 800, fontSize: 14,
+                  cursor: "pointer", fontFamily: "inherit",
+                }}>Confirmar troca no meu álbum</button>
+              )}
               <button type="button" onClick={handleCopy} style={{
                 width: "100%", marginTop: 12, padding: "11px 0", borderRadius: 10,
                 border: `1px solid ${C.border}`, background: C.surface, color: C.amber,
