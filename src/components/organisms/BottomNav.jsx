@@ -8,7 +8,6 @@ const NAV_ITEMS = [
   { id: "stickers", label: "Álbum", icon: "grid" },
   { id: "add", label: "Adicionar", icon: "plus" },
   { id: "trocas", label: "Trocas", icon: "swap" },
-  { id: "trocador", label: "Trocador", icon: "share" },
   { id: "status", label: "Status", icon: "chart" },
   { id: "ajuda",  label: "Ajuda",  icon: "help-circle" },
   { id: "jogos",  label: "Jogos",  icon: <BallIcon size={20} /> },
