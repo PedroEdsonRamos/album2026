@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { C } from "@/styles/tokens.js";
 import { computeLinkTrade } from "@/utils/tradeMatcher.js";
 import {
@@ -68,7 +68,7 @@ function PairList({ pairs }) {
 }
 
 /* ===== componente principal ===== */
-export function TrocaPorLink({ stickers = [], applyTrade, addToast }) {
+export function TrocaPorLink({ stickers = [], applyTrade, addToast, incomingLink }) {
   const [myLink, setMyLink] = useState("");
   const [inText, setInText] = useState("");
   const [analysis, setAnalysis] = useState(null); // {kind,...} | {error}
@@ -84,15 +84,24 @@ export function TrocaPorLink({ stickers = [], applyTrade, addToast }) {
     return { rep, fal };
   }, [stickers]);
 
+  // Pré-preenche e analisa quando a tela é aberta via link (?troca=...)
+  useEffect(() => {
+    if (incomingLink) {
+      setInText(incomingLink);
+      handleAnalyze(incomingLink);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incomingLink]);
+
   function handleGenerate() {
     if (!stickers.length) return;
     setMyLink(buildTradeUrl(encodeTradeLink(stickers)));
   }
 
-  function handleAnalyze() {
+  function handleAnalyze(textArg) {
     setApplied(false);
     setConfirmLink("");
-    const payload = extractPayload(inText);
+    const payload = extractPayload(textArg ?? inText);
     if (!payload) { setAnalysis(null); addToast?.("Cole um link primeiro."); return; }
 
     const state = decodeTradeLink(payload, stickers);
