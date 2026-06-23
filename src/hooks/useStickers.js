@@ -67,6 +67,35 @@ const checkAchievements = async (stickers, userId) => {
 
 const CACHE_KEY = "album2026-stickers-cache";
 
+/* ===== Helpers de quantidade (modelo do álbum) =====
+ * "Faltando" = 0 cópias | "Tenho" = 1 | "Repetida" = duplicates (>= 2).
+ * Se `duplicates` representar SOBRAS em vez de total, ajustar APENAS ownedCount.
+ */
+function ownedCount(s) {
+  if (s.status === "Repetida") return s.duplicates || 0;
+  if (s.status === "Tenho") return 1;
+  return 0;
+}
+
+function statusFromCount(owned) {
+  if (owned <= 0) return { status: "Faltando", duplicates: 0 };
+  if (owned === 1) return { status: "Tenho", duplicates: 0 };
+  return { status: "Repetida", duplicates: owned };
+}
+
+/** Remove 1 unidade do typeBreakdown (a cópia mais comum), mantendo
+ *  soma(typeBreakdown) === duplicates. Retorna novo objeto ou undefined. */
+function decrementBreakdown(tb) {
+  if (!tb || typeof tb !== "object") return undefined;
+  const entries = Object.entries(tb).filter(([, q]) => q > 0);
+  if (entries.length === 0) return undefined;
+  entries.sort((a, b) => b[1] - a[1]); // tira do tipo com maior quantidade
+  const [key] = entries[0];
+  const next = { ...tb, [key]: tb[key] - 1 };
+  if (next[key] <= 0) delete next[key];
+  return Object.keys(next).length ? next : undefined;
+}
+
 export function useStickers(userId, addToast) {
   const [stickers, setStickers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -210,11 +239,72 @@ export function useStickers(userId, addToast) {
     }
   };
 
+  /**
+   * Aplica uma troca confirmada no álbum:
+   *  - cada par.give  → -1 cópia (recalcula status)
+   *  - cada par.receive → +1 cópia (recalcula status)
+   * @param {Array<{give:Object, receive:Object}>} pairs
+   */
+  const applyTrade = useCallback(
+    (pairs) => {
+      if (!userId || !Array.isArray(pairs) || pairs.length === 0) return;
+
+      const giveCodes = new Set(pairs.map((p) => p?.give?.code).filter(Boolean));
+      const receiveCodes = new Set(pairs.map((p) => p?.receive?.code).filter(Boolean));
+
+      setStickersAndSync((prev) =>
+        prev.map((s) => {
+          // Dou: -1
+          if (giveCodes.has(s.code)) {
+            const owned = Math.max(0, ownedCount(s) - 1);
+            const recalc = statusFromCount(owned);
+            const tb = owned >= 2 ? decrementBreakdown(s.typeBreakdown) : undefined;
+            return { ...s, ...recalc, typeBreakdown: tb };
+          }
+          // Recebo: +1
+          if (receiveCodes.has(s.code)) {
+            const owned = ownedCount(s) + 1;
+            const recalc = statusFromCount(owned);
+            let tb;
+            if (owned >= 2) {
+              // base = cópias que já existiam; +1 da figurinha recebida
+              const base =
+                s.typeBreakdown && Object.keys(s.typeBreakdown).length
+                  ? { ...s.typeBreakdown }
+                  : { [s.rarity]: owned - 1 };
+              base[s.rarity] = (base[s.rarity] || 0) + 1;
+              tb = base;
+            } else {
+              tb = undefined;
+            }
+            return { ...s, ...recalc, typeBreakdown: tb };
+          }
+          return s;
+        })
+      );
+    },
+    [userId, setStickersAndSync]
+  );
+
+  /** Opção oculta: remove TODAS as repetidas, mantendo 1 cópia (a do álbum). */
+  const clearAllDuplicates = useCallback(() => {
+    if (!userId) return;
+    setStickersAndSync((prev) =>
+      prev.map((s) =>
+        s.status === "Repetida"
+          ? { ...s, status: "Tenho", duplicates: 0, typeBreakdown: undefined }
+          : s
+      )
+    );
+  }, [userId, setStickersAndSync]);
+
   return {
     stickers,
     setStickers: setStickersAndSync,
     loading,
     syncStatus,
     resetCollection,
+    applyTrade,        // ← novo
+    clearAllDuplicates, // ← novo
   };
 }
