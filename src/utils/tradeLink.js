@@ -16,6 +16,7 @@
 
 const LINK_FORMAT_VERSION = 1;
 const KIND_STATE = 0;
+const KIND_CONFIRM = 1;
 
 /* ===== Fingerprint da ordem canônica (FNV-1a 32-bit → 16 bits) ===== */
 export function canonicalFingerprint(stickers) {
@@ -118,4 +119,78 @@ export function decodeTradeLink(text, stickers) {
     if (readBit(falBytes, i)) theirFaltantes.add(stickers[i].code);
   }
   return { ok: true, theirRepetidas, theirFaltantes };
+}
+
+/**
+ * Gera o link de CONFIRMAÇÃO (kind 1), do ponto de vista de QUEM ACEITA/gera.
+ * Empacota os pares: `gives` = o que EU (gerador) dou; `receives` = o que EU recebo.
+ * @param {Array<{give:Object, receive:Object}>} suggestedPairs
+ * @param {Array} stickers — coleção completa (ordem canônica)
+ */
+export function encodeTradeConfirm(suggestedPairs, stickers) {
+  const gives = new Set((suggestedPairs ?? []).map((p) => p?.give?.code).filter(Boolean));
+  const receives = new Set((suggestedPairs ?? []).map((p) => p?.receive?.code).filter(Boolean));
+  const n = stickers.length;
+  const giveBytes = packBits(stickers.map((s) => gives.has(s.code)));
+  const recvBytes = packBits(stickers.map((s) => receives.has(s.code)));
+  const fp = canonicalFingerprint(stickers);
+
+  const header = new Uint8Array(6);
+  header[0] = LINK_FORMAT_VERSION;
+  header[1] = KIND_CONFIRM;
+  header[2] = (n >> 8) & 0xff;
+  header[3] = n & 0xff;
+  header[4] = (fp >> 8) & 0xff;
+  header[5] = fp & 0xff;
+
+  const out = new Uint8Array(6 + giveBytes.length + recvBytes.length);
+  out.set(header, 0);
+  out.set(giveBytes, 6);
+  out.set(recvBytes, 6 + giveBytes.length);
+  return bytesToB64url(out);
+}
+
+/**
+ * Lê o link de confirmação contra a coleção DESTE usuário (o remetente original).
+ * Retorna do MEU ponto de vista (inverte o do gerador):
+ *   - theyGive    = códigos que o outro dá  → EU recebo (+1)
+ *   - theyReceive = códigos que o outro recebe → EU dou  (-1)
+ * @returns {{ok:true, theyGive:Set<string>, theyReceive:Set<string>}
+ *          | {ok:false, reason:"invalid"|"version"}}
+ */
+export function decodeTradeConfirm(text, stickers) {
+  let bytes;
+  try {
+    bytes = b64urlToBytes((text || "").trim());
+  } catch {
+    return { ok: false, reason: "invalid" };
+  }
+  if (bytes.length < 6) return { ok: false, reason: "invalid" };
+
+  const version = bytes[0];
+  const kind = bytes[1];
+  const count = (bytes[2] << 8) | bytes[3];
+  const fp = (bytes[4] << 8) | bytes[5];
+
+  if (version !== LINK_FORMAT_VERSION || kind !== KIND_CONFIRM) {
+    return { ok: false, reason: "invalid" };
+  }
+  if (count !== stickers.length || fp !== canonicalFingerprint(stickers)) {
+    return { ok: false, reason: "version" };
+  }
+
+  const per = Math.ceil(count / 8);
+  if (bytes.length < 6 + per * 2) return { ok: false, reason: "invalid" };
+
+  const giveBytes = bytes.subarray(6, 6 + per);
+  const recvBytes = bytes.subarray(6 + per, 6 + per * 2);
+
+  // No link, gives/receives são do ponto de vista de quem gerou; pra mim, invertem.
+  const theyGive = new Set();    // o outro dá → EU recebo
+  const theyReceive = new Set(); // o outro recebe → EU dou
+  for (let i = 0; i < count; i++) {
+    if (readBit(giveBytes, i)) theyGive.add(stickers[i].code);
+    if (readBit(recvBytes, i)) theyReceive.add(stickers[i].code);
+  }
+  return { ok: true, theyGive, theyReceive };
 }
