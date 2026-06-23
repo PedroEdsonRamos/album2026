@@ -250,7 +250,10 @@ function AppContent({ auth }) {
   const online = useOnlineStatus();
   const forceUpdate = useForceUpdate();
   useAppVisibility(useCallback(() => { forceUpdate(); }, [forceUpdate]));
-  const [page, setPage] = useState("dashboard");
+  const [incomingTrade] = useState(() =>
+    typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("troca") : null
+  );
+  const [page, setPage] = useState(incomingTrade ? "trocas" : "dashboard");
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [toasts, setToasts] = useState([]);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -259,6 +262,14 @@ function AppContent({ auth }) {
   const [completion, setCompletion] = useState(null);
   const prevStickersRef = useRef(null);
   const mountedRef = useRef(false);
+
+  // Abriu via link de troca? Remove só o param `troca` da URL (preserva o resto).
+  useEffect(() => {
+    if (!incomingTrade) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("troca");
+    window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+  }, [incomingTrade]);
 
   const addToast = useCallback((msg, type = "success", duration) => {
     const id = Date.now() + Math.random();
@@ -429,7 +440,7 @@ function AppContent({ auth }) {
             )}
             {page === "trocas" && (
               <PageSuspense>
-                <TrocasHub stickers={stickers} addToast={addToast} applyTrade={applyTrade} goToAlbum={goToAlbum} setPage={handleNav} setTeamFilter={setSelectedTeam} />
+                <TrocasHub stickers={stickers} addToast={addToast} applyTrade={applyTrade} goToAlbum={goToAlbum} setPage={handleNav} setTeamFilter={setSelectedTeam} initialView={incomingTrade ? "link" : undefined} incomingTrade={incomingTrade} />
               </PageSuspense>
             )}
             {page === "status" && (

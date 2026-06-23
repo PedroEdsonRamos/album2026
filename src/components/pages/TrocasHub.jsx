@@ -1,16 +1,17 @@
 import { useState } from "react";
 import { Trades } from "@/components/pages/Trades.jsx";
 import { Trocador } from "@/components/pages/Trocador.jsx";
+import { TrocaPorLink } from "@/components/pages/TrocaPorLink.jsx";
 import { C } from "@/styles/tokens.js";
 
 const VIEWS = [
   { id: "repetidas", label: "Minhas repetidas" },
   { id: "trocador", label: "Trocador" },
+  { id: "link", label: "Por link" },
 ];
 
-export function TrocasHub({ stickers, addToast, applyTrade, goToAlbum, setPage, setTeamFilter }) {
-  // Troque o valor inicial para "trocador" se quiser que o Trocador abra primeiro.
-  const [view, setView] = useState("repetidas");
+export function TrocasHub({ stickers, addToast, applyTrade, goToAlbum, setPage, setTeamFilter, initialView, incomingTrade }) {
+  const [view, setView] = useState(initialView || "repetidas");
 
   return (
     <div>
@@ -71,6 +72,9 @@ export function TrocasHub({ stickers, addToast, applyTrade, goToAlbum, setPage, 
       </div>
       <div style={{ display: view === "trocador" ? "block" : "none" }}>
         <Trocador stickers={stickers} addToast={addToast} applyTrade={applyTrade} />
+      </div>
+      <div style={{ display: view === "link" ? "block" : "none" }}>
+        <TrocaPorLink stickers={stickers} applyTrade={applyTrade} addToast={addToast} incomingLink={incomingTrade} />
       </div>
     </div>
   );
