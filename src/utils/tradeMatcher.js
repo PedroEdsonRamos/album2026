@@ -45,6 +45,59 @@ export function getTypeLabel(type) {
 /* ===== Matching ===== */
 
 /**
+ * Pareamento equilibrado por tipo — compartilhado pelos dois modos de troca.
+ * Passada 1: match perfeito (mesmo tipo + mesma seleção/time).
+ * Passada 2: fallback (só mesmo tipo).
+ */
+function pairBuckets(receiveBucket, offerBucket, esByCode = {}) {
+  const usedOffer = new Set();
+  const matched = new Set();
+  const suggestedPairs = [];
+
+  const typeOf = new Map();
+  [...receiveBucket, ...offerBucket].forEach((s) => {
+    if (!typeOf.has(s.id)) typeOf.set(s.id, getStickerType(s, esByCode));
+  });
+
+  // Passada 1 — perfeitos
+  receiveBucket.forEach((receive) => {
+    const rType = typeOf.get(receive.id);
+    const give = offerBucket.find(
+      (o) => !usedOffer.has(o.id) && typeOf.get(o.id) === rType && o.team === receive.team
+    );
+    if (give) {
+      usedOffer.add(give.id);
+      matched.add(receive.id);
+      suggestedPairs.push({ give, receive, perfect: true });
+    }
+  });
+
+  // Passada 2 — fallback (só mesmo tipo)
+  receiveBucket.forEach((receive) => {
+    if (matched.has(receive.id)) return;
+    const rType = typeOf.get(receive.id);
+    const give = offerBucket.find((o) => !usedOffer.has(o.id) && typeOf.get(o.id) === rType);
+    if (give) {
+      usedOffer.add(give.id);
+      matched.add(receive.id);
+      suggestedPairs.push({ give, receive, perfect: false });
+    }
+  });
+
+  suggestedPairs.sort((a, b) => (a.perfect !== b.perfect ? (a.perfect ? -1 : 1) : 0));
+
+  const receiveWithoutPair = receiveBucket.filter((r) => !matched.has(r.id));
+  const offerWithoutPair = offerBucket.filter((o) => !usedOffer.has(o.id));
+
+  return {
+    suggestedPairs,
+    receiveWithoutPair,
+    offerWithoutPair,
+    summary: { willReceive: suggestedPairs.length, willGive: suggestedPairs.length },
+  };
+}
+
+/**
  * Calcula a sugestão de troca.
  *
  * @param {Object} params
@@ -79,54 +132,7 @@ export function computeTrade({ allStickers, traderCodes, esByCode = {} }) {
     s => s && s.status === "Repetida" && !traderSet.has(s.code)
   );
 
-  const usedOffer = new Set();
-  const matched = new Set(); // receive ids já pareados
-  const suggestedPairs = [];
-
-  // Pré-calcula o tipo de cada figurinha (evita recalcular no loop)
-  const typeOf = new Map();
-  const allRelevant = [...receiveBucket, ...offerBucket];
-  allRelevant.forEach(s => {
-    if (!typeOf.has(s.id)) typeOf.set(s.id, getStickerType(s, esByCode));
-  });
-
-  // ===== PASSADA 1: matches perfeitos (mesma seleção + mesmo tipo) =====
-  receiveBucket.forEach(receive => {
-    const rType = typeOf.get(receive.id);
-    const give = offerBucket.find(o =>
-      !usedOffer.has(o.id) &&
-      typeOf.get(o.id) === rType &&
-      o.team === receive.team
-    );
-    if (give) {
-      usedOffer.add(give.id);
-      matched.add(receive.id);
-      suggestedPairs.push({ give, receive, perfect: true });
-    }
-  });
-
-  // ===== PASSADA 2: fallback (só mesmo tipo) para os que sobraram =====
-  receiveBucket.forEach(receive => {
-    if (matched.has(receive.id)) return;
-    const rType = typeOf.get(receive.id);
-    const give = offerBucket.find(o =>
-      !usedOffer.has(o.id) &&
-      typeOf.get(o.id) === rType
-    );
-    if (give) {
-      usedOffer.add(give.id);
-      matched.add(receive.id);
-      suggestedPairs.push({ give, receive, perfect: false });
-    }
-  });
-
-  // Ordena os pares: perfeitos primeiro, depois por tipo
-  suggestedPairs.sort((a, b) => {
-    if (a.perfect !== b.perfect) return a.perfect ? -1 : 1;
-    return 0;
-  });
-
-  const receiveWithoutPair = receiveBucket.filter(r => !matched.has(r.id));
+  const { suggestedPairs, receiveWithoutPair } = pairBuckets(receiveBucket, offerBucket, esByCode);
   const allMyDuplicates = offerBucket;
 
   return {
@@ -138,6 +144,38 @@ export function computeTrade({ allStickers, traderCodes, esByCode = {} }) {
       willGive: suggestedPairs.length,
     },
   };
+}
+
+/**
+ * Troca por LINK — match dos dois lados (preciso, sem chute).
+ * Usa o estado decodificado do trocador (decodeTradeLink): conjuntos de códigos.
+ *
+ *   eu recebo = repetidas DELE  ∩  minhas FALTANDO
+ *   eu dou    = minhas REPETIDAS ∩  faltantes DELE
+ *
+ * @param {Object} params
+ * @param {Array}  params.allStickers       — minha coleção completa
+ * @param {Set<string>} params.theirRepetidas — códigos repetidos do trocador
+ * @param {Set<string>} params.theirFaltantes — códigos que o trocador precisa
+ * @param {Object} params.esByCode          — mapa ES_BY_CODE
+ * @returns {{ suggestedPairs, receiveWithoutPair, offerWithoutPair, summary }}
+ */
+export function computeLinkTrade({ allStickers, theirRepetidas, theirFaltantes, esByCode = {} }) {
+  const empty = {
+    suggestedPairs: [], receiveWithoutPair: [], offerWithoutPair: [],
+    summary: { willReceive: 0, willGive: 0 },
+  };
+  if (!Array.isArray(allStickers) || allStickers.length === 0) return empty;
+
+  const theirRep = theirRepetidas instanceof Set ? theirRepetidas : new Set(theirRepetidas ?? []);
+  const theirFal = theirFaltantes instanceof Set ? theirFaltantes : new Set(theirFaltantes ?? []);
+
+  // Eu recebo: o que ELE tem repetido e EU não tenho
+  const receiveBucket = allStickers.filter((s) => s && s.status === "Faltando" && theirRep.has(s.code));
+  // Eu dou: o que EU tenho repetido e ELE precisa
+  const offerBucket = allStickers.filter((s) => s && s.status === "Repetida" && theirFal.has(s.code));
+
+  return pairBuckets(receiveBucket, offerBucket, esByCode);
 }
 
 /* ===== Resumo em texto (para copiar/compartilhar) ===== */
