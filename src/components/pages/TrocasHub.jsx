@@ -8,7 +8,7 @@ const VIEWS = [
   { id: "trocador", label: "Trocador" },
 ];
 
-export function TrocasHub({ stickers, addToast, goToAlbum, setPage, setTeamFilter }) {
+export function TrocasHub({ stickers, addToast, applyTrade, goToAlbum, setPage, setTeamFilter }) {
   // Troque o valor inicial para "trocador" se quiser que o Trocador abra primeiro.
   const [view, setView] = useState("repetidas");
 
@@ -70,7 +70,7 @@ export function TrocasHub({ stickers, addToast, goToAlbum, setPage, setTeamFilte
         />
       </div>
       <div style={{ display: view === "trocador" ? "block" : "none" }}>
-        <Trocador stickers={stickers} addToast={addToast} />
+        <Trocador stickers={stickers} addToast={addToast} applyTrade={applyTrade} />
       </div>
     </div>
   );

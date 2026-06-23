@@ -265,7 +265,7 @@ function AppContent({ auth }) {
     setToasts((t) => [...t, { id, msg, type, duration }]);
   }, []);
 
-  const { stickers, setStickers, loading, syncStatus, resetCollection } =
+  const { stickers, setStickers, loading, syncStatus, resetCollection, applyTrade, clearAllDuplicates } =
     useStickers(auth.user.id, addToast);
 
   const handleLogout = async () => {
@@ -429,7 +429,7 @@ function AppContent({ auth }) {
             )}
             {page === "trocas" && (
               <PageSuspense>
-                <TrocasHub stickers={stickers} addToast={addToast} goToAlbum={goToAlbum} setPage={handleNav} setTeamFilter={setSelectedTeam} />
+                <TrocasHub stickers={stickers} addToast={addToast} applyTrade={applyTrade} goToAlbum={goToAlbum} setPage={handleNav} setTeamFilter={setSelectedTeam} />
               </PageSuspense>
             )}
             {page === "status" && (
