@@ -12,10 +12,12 @@ import { StatMiniBox } from "@/components/molecules/StatMiniBox.jsx";
 import { CategoryBar } from "@/components/molecules/CategoryBar.jsx";
 import { StatusTeamRow } from "@/components/molecules/StatusTeamRow.jsx";
 import { ResetModal } from "@/components/organisms/ResetModal.jsx";
+import { ConfirmDangerModal } from "@/components/organisms/ConfirmDangerModal.jsx";
 import { C } from "@/styles/tokens.js";
 
-export function Status({ stickers, setStickers, addToast, setPage, onReset }) {
+export function Status({ stickers, setStickers, addToast, setPage, onReset, onClearDuplicates }) {
   const [showReset, setShowReset] = useState(false);
+  const [showClearDups, setShowClearDups] = useState(false);
   const [displayOwned, setDisplayOwned] = useState(null);
   const total = TOTAL_OFFICIAL;
   const isCollected = (s) => s.status === "Tenho" || s.status === "Repetida";
@@ -347,6 +349,25 @@ export function Status({ stickers, setStickers, addToast, setPage, onReset }) {
           Zona de Perigo
         </div>
         <button
+          type="button"
+          onClick={() => setShowClearDups(true)}
+          style={{
+            width: "100%",
+            padding: "12px 0",
+            borderRadius: 10,
+            border: "1px solid rgba(245,158,11,0.4)",
+            background: "rgba(245,158,11,0.1)",
+            color: "#fbbf24",
+            fontWeight: 700,
+            fontSize: 14,
+            cursor: "pointer",
+            fontFamily: "inherit",
+            marginBottom: 10,
+          }}
+        >
+          🧹 Limpar figurinhas repetidas
+        </button>
+        <button
           onClick={() => setShowReset(true)}
           style={{
             width: "100%",
@@ -373,6 +394,14 @@ export function Status({ stickers, setStickers, addToast, setPage, onReset }) {
           onConfirm={handleReset}
         />
       )}
+      <ConfirmDangerModal
+        open={showClearDups}
+        onClose={() => setShowClearDups(false)}
+        onConfirm={() => {
+          onClearDuplicates?.();
+          addToast?.("Repetidas removidas!", "info");
+        }}
+      />
     </div>
   );
 }

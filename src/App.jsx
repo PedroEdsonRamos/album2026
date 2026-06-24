@@ -445,7 +445,7 @@ function AppContent({ auth }) {
             )}
             {page === "status" && (
               <PageSuspense>
-                <Status stickers={stickers} setStickers={setStickers} addToast={addToast} setPage={setPage} onReset={resetCollection} />
+                <Status stickers={stickers} setStickers={setStickers} addToast={addToast} setPage={setPage} onReset={resetCollection} onClearDuplicates={clearAllDuplicates} />
               </PageSuspense>
             )}
             {page === "ajuda" && <PageSuspense><Help setPage={setPage} /></PageSuspense>}
