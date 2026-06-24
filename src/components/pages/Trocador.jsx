@@ -256,11 +256,11 @@ function BalanceBar({ give, receive }) {
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
         <div>
           <div style={{ fontSize: 22, fontWeight: 800, color: C.amber }}>{give}</div>
-          <div style={{ fontSize: 10, color: C.t3, textTransform: "uppercase", letterSpacing: "0.08em" }}>Você dá</div>
+          <div style={{ fontSize: 10, color: C.t3, textTransform: "uppercase", letterSpacing: "0.08em" }}>Entregar</div>
         </div>
         <div style={{ textAlign: "right" }}>
           <div style={{ fontSize: 22, fontWeight: 800, color: C.green }}>{receive}</div>
-          <div style={{ fontSize: 10, color: C.t3, textTransform: "uppercase", letterSpacing: "0.08em" }}>Você recebe</div>
+          <div style={{ fontSize: 10, color: C.t3, textTransform: "uppercase", letterSpacing: "0.08em" }}>Receber</div>
         </div>
       </div>
       <div style={{ display: "flex", height: 6, borderRadius: 3, overflow: "hidden", background: "rgba(255,255,255,0.06)" }}>

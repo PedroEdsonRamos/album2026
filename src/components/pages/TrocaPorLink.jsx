@@ -43,11 +43,11 @@ function Summary({ give, receive }) {
     <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
       <div style={{ flex: 1, textAlign: "center", padding: "8px 0", borderRadius: 8, background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.3)" }}>
         <div style={{ fontSize: 18, fontWeight: 800, color: C.green }}>+{receive}</div>
-        <div style={{ fontSize: 11, color: C.t3 }}>você recebe</div>
+        <div style={{ fontSize: 11, color: C.t3 }}>Receber</div>
       </div>
       <div style={{ flex: 1, textAlign: "center", padding: "8px 0", borderRadius: 8, background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.3)" }}>
         <div style={{ fontSize: 18, fontWeight: 800, color: C.amber }}>−{give}</div>
-        <div style={{ fontSize: 11, color: C.t3 }}>você dá</div>
+        <div style={{ fontSize: 11, color: C.t3 }}>Entregar</div>
       </div>
     </div>
   );
