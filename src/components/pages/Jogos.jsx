@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
+import { SegmentedTabs } from "@/components/molecules/SegmentedTabs.jsx";
 import {
   getFixtures, getStandings, formatBrasilia, getMatchStatus,
   todayKeyBrasilia, getMatchDate, extractScore,
@@ -68,7 +69,14 @@ export function Jogos() {
 
   return (
     <div style={{ minHeight: "100vh", color: "#fff", paddingBottom: 80 }}>
-      <SegmentedControl tab={tab} onChange={setTab} />
+      <SegmentedTabs
+        items={[
+          { id: "cronograma", label: "Cronograma" },
+          { id: "classificacao", label: "Classificação" },
+        ]}
+        value={tab}
+        onChange={setTab}
+      />
       {loading && <Loading />}
       {error && <ErrorState msg={error} onRetry={load} />}
       {!loading && !error && tab === "cronograma" && (
@@ -84,40 +92,6 @@ export function Jogos() {
           onClose={() => setSelectedMatch(null)}
         />
       )}
-    </div>
-  );
-}
-
-/* ============== SEGMENTED CONTROL ============== */
-function SegmentedControl({ tab, onChange }) {
-  return (
-    <div style={{ display: "flex", gap: 8, margin: 0, padding: 0 }}>
-      {[
-        { id: "cronograma", label: "Cronograma" },
-        { id: "classificacao", label: "Classificação" },
-      ].map(o => (
-        <button
-          key={o.id}
-          onClick={() => onChange(o.id)}
-          style={{
-            flex: 1,
-            padding: "8px 0",
-            borderRadius: 10,
-            border: tab === o.id
-              ? "1px solid rgba(245,158,11,0.5)"
-              : "1px solid rgba(255,255,255,0.1)",
-            background: tab === o.id
-              ? "rgba(245,158,11,0.12)"
-              : "rgba(255,255,255,0.04)",
-            color: tab === o.id ? "#fbbf24" : "rgba(255,255,255,0.55)",
-            fontWeight: 700,
-            fontSize: 13,
-            cursor: "pointer",
-            fontFamily: "inherit",
-            transition: "all 0.2s",
-          }}
-        >{o.label}</button>
-      ))}
     </div>
   );
 }
@@ -756,32 +730,15 @@ function ClassificacaoView({ standings, fixtures = [], onSelectMatch }) {
 
   return (
     <div>
-      <div style={{ display: "flex", gap: 8, padding: "16px 0 0", flexWrap: "wrap" }}>
-        {[
-          { id: "grupos", label: "Grupos" },
-          { id: "chaveamento", label: "Chaveamento" },
-        ].map(o => (
-          <button
-            key={o.id}
-            onClick={() => setView(o.id)}
-            style={{
-              padding: "8px 18px",
-              borderRadius: 999,
-              border: view === o.id
-                ? "1px solid rgba(245,158,11,0.5)"
-                : "1px solid rgba(255,255,255,0.1)",
-              background: view === o.id
-                ? "rgba(245,158,11,0.12)"
-                : "rgba(255,255,255,0.04)",
-              color: view === o.id ? "#fbbf24" : "rgba(255,255,255,0.55)",
-              fontWeight: 700,
-              fontSize: 13,
-              cursor: "pointer",
-              fontFamily: "inherit",
-              transition: "all 0.2s",
-            }}
-          >{o.label}</button>
-        ))}
+      <div style={{ paddingTop: 16 }}>
+        <SegmentedTabs
+          items={[
+            { id: "grupos", label: "Grupos" },
+            { id: "chaveamento", label: "Chaveamento" },
+          ]}
+          value={view}
+          onChange={setView}
+        />
       </div>
 
       {view === "grupos" && (
