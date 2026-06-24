@@ -56,12 +56,14 @@ export const SECTIONS = [
       <>
         {/* AJUDA: atualizar se novas abas forem adicionadas */}
         {[
-          { icon: "🏠", name: "Início",    desc: "Resumo da coleção, cards de progresso, ranking de seleções e últimas figurinhas adicionadas." },
-          { icon: "🌍", name: "Seleções",  desc: "Veja todas as 48 seleções e as seções extras (FWC, Coca-Cola, Extra Stickers). Filtre por grupo e ordene como quiser." },
-          { icon: "📒", name: "Álbum",     desc: "Grid de todas as figurinhas. Filtre por status, tipo e posição. Clique em qualquer figurinha para editar." },
-          { icon: "➕", name: "Adicionar", desc: "Lance figurinhas na sua coleção: modo Individual, Por Seleção ou Lote Livre." },
-          { icon: "🔄", name: "Trocas",    desc: "Lista de figurinhas repetidas disponíveis para troca. Compartilhe pelo WhatsApp." },
-          { icon: "📊", name: "Status",    desc: "Estatísticas completas, estimativa de pacotes e opção de resetar o álbum." },
+          { icon: "🏠", name: "Início",     desc: "Resumo da coleção, cards de progresso, ranking de seleções e últimas figurinhas adicionadas." },
+          { icon: "🌍", name: "Seleções",   desc: "Veja todas as 48 seleções e as seções extras (FWC, Coca-Cola, Extra Stickers). Filtre por grupo e ordene como quiser." },
+          { icon: "📒", name: "Álbum",      desc: "Grid de todas as figurinhas. Filtre por status, tipo e posição. Clique em qualquer figurinha para editar." },
+          { icon: "➕", name: "Adicionar",  desc: "Lance figurinhas na sua coleção: modo Individual, Por Seleção ou Lote Livre." },
+          { icon: "🔄", name: "Trocas",     desc: "3 segmentos: ★ Oficial (troca por link entre usuários do app), Manual (colar lista de repetidas de qualquer pessoa) e Repetidas (lista para compartilhar)." },
+          { icon: "📊", name: "Status",     desc: "Estatísticas completas, estimativa de pacotes, limpar repetidas e opção de resetar o álbum." },
+          { icon: "⚽", name: "Jogos",      desc: "Calendário de jogos da Copa 2026, tabela de grupos e chaveamento." },
+          { icon: "❓", name: "Ajuda",      desc: "Esta página — manual completo do app." },
         ].map(tab => (
           <div key={tab.name} style={{ display: "flex", gap: 12, marginBottom: 10, padding: "10px 12px", background: C.surface, borderRadius: 10, border: `1px solid ${C.border}` }}>
             <span style={{ fontSize: 22, flexShrink: 0 }}>{tab.icon}</span>
@@ -170,11 +172,32 @@ export const SECTIONS = [
     ),
   },
   {
-    id: "trades", icon: "🔄", title: "Aba Trocas — compartilhar repetidas",
+    id: "trades", icon: "🔄", title: "Aba Trocas — 3 modos",
     content: (
       <>
-        {/* AJUDA: atualizar se o formato de compartilhamento mudar */}
-        <HelpText>A aba Trocas lista todas as suas figurinhas repetidas, agrupadas por seleção.</HelpText>
+        <HelpText>A aba Trocas tem 3 segmentos: <strong style={{ color: C.amber }}>★ Oficial</strong>, <strong style={{ color: "#fff" }}>Manual</strong> e <strong style={{ color: "#fff" }}>Repetidas</strong>.</HelpText>
+
+        <div style={{ fontSize: 13, fontWeight: 700, color: C.amber, marginBottom: 8 }}>★ Oficial — Troca por link (app ↔ app)</div>
+        <HelpText>Troca peer-to-peer entre dois usuários do app, sem precisar digitar nada. O app calcula automaticamente o match perfeito dos dois lados.</HelpText>
+        <HelpStep number={1}>Você clica em <strong style={{ color: "#fff" }}>Gerar meu link de troca</strong> e envia para o trocador (WhatsApp, etc.).</HelpStep>
+        <HelpStep number={2}>O trocador abre o link no app <em>dele</em>, vê os pares sugeridos (Receber / Entregar) e clica em <strong style={{ color: "#fff" }}>Aceitar e dar baixa no meu álbum</strong>.</HelpStep>
+        <HelpStep number={3}>O app do trocador atualiza o álbum dele e gera um <strong style={{ color: "#fff" }}>link de confirmação</strong>.</HelpStep>
+        <HelpStep number={4}>Você abre o link de confirmação no app, clica em <strong style={{ color: "#fff" }}>Dar baixa no meu álbum</strong> — e o seu álbum é atualizado.</HelpStep>
+        <HelpNote>Abrir um link de troca pelo WhatsApp leva direto ao segmento Oficial com o link já analisado — a URL fica limpa depois.</HelpNote>
+        <HelpTip>Se aparecer mensagem de "versão incompatível", vocês dois precisam atualizar o app antes de trocar.</HelpTip>
+
+        <HelpDivider />
+        <div style={{ fontSize: 13, fontWeight: 700, color: C.amber, marginBottom: 8 }}>Manual — Trocador por texto</div>
+        <HelpText>Cole a lista de repetidas de qualquer pessoa (do WhatsApp, de outro app) e receba uma sugestão de troca equilibrada por tipo.</HelpText>
+        <HelpStep number={1}>Cole o texto com os códigos das repetidas do trocador no campo.</HelpStep>
+        <HelpStep number={2}>Clique em <strong style={{ color: "#fff" }}>Calcular troca</strong> — o app identifica os códigos no formato de qualquer app e cruza com seu álbum.</HelpStep>
+        <HelpStep number={3}>Veja os pares sugeridos (Entregar / Receber) e clique em <strong style={{ color: "#fff" }}>Copiar proposta</strong> para enviar de volta.</HelpStep>
+        <HelpStep number={4}>Se aceitar, clique em <strong style={{ color: "#fff" }}>Aplicar troca</strong> para dar baixa no seu álbum.</HelpStep>
+        <HelpTip>O parser reconhece vários formatos: lista simples ("BRA10, ARG5"), compacto ("BRA 🇧🇷: 2, 5, 10") e detalhado com nomes. Emojis de bandeira são ignorados automaticamente.</HelpTip>
+
+        <HelpDivider />
+        <div style={{ fontSize: 13, fontWeight: 700, color: C.amber, marginBottom: 8 }}>Repetidas — lista para compartilhar</div>
+        <HelpText>Lista de todas as suas figurinhas repetidas, agrupadas por seleção, pronta para compartilhar.</HelpText>
         <HelpStep number={1}>Toque no nome/bandeira da seleção para expandir ou ir para a aba Seleções.</HelpStep>
         <HelpStep number={2}>Toque em uma figurinha para ir direto ao Álbum com ela em foco.</HelpStep>
         <HelpStep number={3}>Use o botão <strong style={{ color: "#fff" }}>Compartilhar</strong> por figurinha ou por seleção inteira.</HelpStep>
@@ -216,8 +239,9 @@ export const SECTIONS = [
         <HelpStep number={3}><strong style={{ color: "#fff" }}>Por Categoria:</strong> Jogadores · Fotos de Equipe · Escudos · FWC · Coca-Cola</HelpStep>
         <HelpStep number={4}><strong style={{ color: "#fff" }}>Extra Stickers:</strong> matriz visual de 20 jogadores × 4 tipos com bolinhas coloridas</HelpStep>
         <HelpDivider />
-        <div style={{ fontSize: 13, fontWeight: 700, color: "#f87171", marginBottom: 8 }}>🗑️ Zona de Perigo — Resetar Álbum</div>
-        <HelpText>O botão <strong style={{ color: "#fff" }}>Resetar Álbum</strong> apaga todas as figurinhas coletadas e volta ao estado inicial. Requer dupla confirmação.</HelpText>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#f87171", marginBottom: 8 }}>🗑️ Zona de Perigo</div>
+        <HelpText><strong style={{ color: "#fff" }}>Limpar repetidas</strong> — zera todas as repetidas mantendo 1 cópia de cada figurinha que você tem. Útil após fechar uma rodada de trocas. Requer dupla confirmação.</HelpText>
+        <HelpText><strong style={{ color: "#fff" }}>Resetar Álbum</strong> — apaga todas as figurinhas coletadas e volta ao estado inicial. Requer dupla confirmação.</HelpText>
         <HelpNote>Se após o reset as figurinhas ainda aparecerem, use o botão <strong style={{ color: "#fff" }}>🔄 Limpar cache e reiniciar app</strong> que aparece no modal de confirmação.</HelpNote>
       </>
     ),
@@ -236,6 +260,25 @@ export const SECTIONS = [
           <div><span style={{ color: tiffany }}>CC1</span>   → Coca-Cola, figurinha 1</div>
         </div>
         <HelpNote>A busca aceita com ou sem espaço: <code style={{ color: tiffany }}>BRA10</code> e <code style={{ color: tiffany }}>BRA 10</code> retornam o mesmo resultado.</HelpNote>
+      </>
+    ),
+  },
+  {
+    id: "profile", icon: "👤", title: "Perfil & Instalar o app",
+    content: (
+      <>
+        <div style={{ fontSize: 13, fontWeight: 700, color: C.amber, marginBottom: 8 }}>👤 Perfil</div>
+        <HelpText>Acesse o Perfil pelo ícone de avatar no cabeçalho. Lá você pode:</HelpText>
+        <HelpStep number={1}>Ver suas estatísticas e progresso da coleção.</HelpStep>
+        <HelpStep number={2}>Exportar sua coleção em JSON (portabilidade de dados, LGPD).</HelpStep>
+        <HelpStep number={3}>Alterar nome e informações da conta.</HelpStep>
+        <HelpStep number={4}>Excluir sua conta permanentemente (requer confirmação com senha ou "EXCLUIR").</HelpStep>
+        <HelpDivider />
+        <div style={{ fontSize: 13, fontWeight: 700, color: C.amber, marginBottom: 8 }}>📲 Instalar o app (PWA)</div>
+        <HelpText>O Álbum Copa 2026 pode ser instalado no seu celular como um app nativo — sem precisar da App Store ou Google Play.</HelpText>
+        <HelpStep number={1}><strong style={{ color: "#fff" }}>Android/Chrome:</strong> toque no banner "Instalar app" que aparece na tela, ou use o menu do navegador → "Adicionar à tela inicial".</HelpStep>
+        <HelpStep number={2}><strong style={{ color: "#fff" }}>iPhone/Safari:</strong> toque no ícone de compartilhar (□↑) → "Adicionar à Tela de Início".</HelpStep>
+        <HelpTip>Depois de instalado, o app funciona offline e abre como qualquer outro app — sem barra do navegador.</HelpTip>
       </>
     ),
   },
