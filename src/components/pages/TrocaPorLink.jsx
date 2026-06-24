@@ -101,7 +101,7 @@ export function TrocaPorLink({ stickers = [], applyTrade, addToast, incomingLink
   function handleAnalyze(textArg) {
     setApplied(false);
     setConfirmLink("");
-    const payload = extractPayload(textArg ?? inText);
+    const payload = extractPayload(typeof textArg === "string" ? textArg : inText);
     if (!payload) { setAnalysis(null); addToast?.("Cole um link primeiro."); return; }
 
     const state = decodeTradeLink(payload, stickers);
@@ -122,6 +122,13 @@ export function TrocaPorLink({ stickers = [], applyTrade, addToast, incomingLink
     }
     const reason = state.reason === "version" || conf.reason === "version" ? "version" : "invalid";
     setAnalysis({ error: reason });
+  }
+
+  function handleClearInput() {
+    setInText("");
+    setAnalysis(null);
+    setApplied(false);
+    setConfirmLink("");
   }
 
   function handleAcceptProposal() {
@@ -151,12 +158,24 @@ export function TrocaPorLink({ stickers = [], applyTrade, addToast, incomingLink
 
   return (
     <div>
+      {/* Contadores sempre visíveis */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+        <div style={{ flex: 1, textAlign: "center", padding: "10px 0", borderRadius: 10, background: C.surface, border: `1px solid ${C.border}` }}>
+          <div style={{ fontSize: 20, fontWeight: 800, color: C.amber }}>{counts.rep}</div>
+          <div style={{ fontSize: 11, color: C.t3 }}>repetidas</div>
+        </div>
+        <div style={{ flex: 1, textAlign: "center", padding: "10px 0", borderRadius: 10, background: C.surface, border: `1px solid ${C.border}` }}>
+          <div style={{ fontSize: 20, fontWeight: 800, color: C.green }}>{counts.fal}</div>
+          <div style={{ fontSize: 11, color: C.t3 }}>faltando</div>
+        </div>
+      </div>
+
       {/* Gerar meu link */}
       <div style={card}>
         <div style={label}>Gerar meu link</div>
         <div style={sub}>
-          Cria um link com suas figurinhas <b style={{ color: C.amber }}>repetidas</b> ({counts.rep}) e{" "}
-          <b style={{ color: C.green }}>faltando</b> ({counts.fal}). O trocador abre no app dele e o app calcula a troca ideal dos dois lados.
+          Cria um link com suas figurinhas <b style={{ color: C.amber }}>repetidas</b> e{" "}
+          <b style={{ color: C.green }}>faltando</b>. O trocador abre no app dele e o app calcula a troca ideal dos dois lados.
         </div>
         {!myLink ? (
           <button type="button" onClick={handleGenerate} style={primaryBtn}>Gerar meu link de troca</button>
@@ -180,9 +199,26 @@ export function TrocaPorLink({ stickers = [], applyTrade, addToast, incomingLink
           onChange={(e) => setInText(e.target.value)}
           placeholder="Cole aqui o link recebido…"
           rows={3}
-          style={{ width: "100%", boxSizing: "border-box", background: "#0c0c1a", border: `1px solid ${C.border}`, borderRadius: 8, color: "#fff", fontSize: 13, padding: 10, fontFamily: "inherit", resize: "vertical", marginBottom: 10 }}
+          style={{ width: "100%", boxSizing: "border-box", background: "#0c0c1a", border: `1px solid ${C.border}`, borderRadius: 8, color: "#fff", fontSize: 16, padding: 10, fontFamily: "inherit", resize: "vertical", marginBottom: 10 }}
         />
-        <button type="button" onClick={handleAnalyze} style={primaryBtn}>Analisar link</button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button type="button" onClick={() => handleAnalyze()} style={{ ...primaryBtn, flex: 1 }}>
+            Analisar link
+          </button>
+          {inText ? (
+            <button
+              type="button"
+              onClick={handleClearInput}
+              style={{
+                padding: "10px 14px", borderRadius: 10, border: `1px solid ${C.border}`,
+                background: "transparent", color: C.t2, fontWeight: 700, fontSize: 13,
+                cursor: "pointer", fontFamily: "inherit",
+              }}
+            >
+              Limpar
+            </button>
+          ) : null}
+        </div>
 
         {analysis?.error && (
           <div style={{ marginTop: 12, padding: 12, borderRadius: 10, border: "1px solid rgba(239,68,68,0.35)", background: "rgba(239,68,68,0.12)", color: "#fca5a5", fontSize: 13, lineHeight: 1.5 }}>
@@ -208,7 +244,9 @@ export function TrocaPorLink({ stickers = [], applyTrade, addToast, incomingLink
             ) : analysis.result.suggestedPairs.length ? (
               <button type="button" onClick={handleAcceptProposal} style={{ ...primaryBtn, marginTop: 10 }}>Aceitar e dar baixa no meu álbum</button>
             ) : (
-              <div style={{ ...sub, marginTop: 10, marginBottom: 0 }}>Nenhuma troca equilibrada com esse trocador no momento.</div>
+              <div style={{ ...sub, marginTop: 10, marginBottom: 0 }}>
+                Nenhuma troca possível com esse link agora — vocês não têm figurinhas que se completam (ou esse é o seu próprio link).
+              </div>
             )}
           </div>
         )}
