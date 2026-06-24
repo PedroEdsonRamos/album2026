@@ -2,63 +2,20 @@ import { useState } from "react";
 import { Trades } from "@/components/pages/Trades.jsx";
 import { Trocador } from "@/components/pages/Trocador.jsx";
 import { TrocaPorLink } from "@/components/pages/TrocaPorLink.jsx";
-import { C } from "@/styles/tokens.js";
+import { SegmentedTabs } from "@/components/molecules/SegmentedTabs.jsx";
 
 const VIEWS = [
-  { id: "repetidas", label: "Minhas repetidas" },
-  { id: "trocador", label: "Trocador" },
-  { id: "link", label: "Por link" },
+  { id: "link", label: "Oficial", featured: true },
+  { id: "trocador", label: "Manual" },
+  { id: "repetidas", label: "Repetidas" },
 ];
 
 export function TrocasHub({ stickers, addToast, applyTrade, goToAlbum, setPage, setTeamFilter, initialView, incomingTrade }) {
-  const [view, setView] = useState(initialView || "repetidas");
+  const [view, setView] = useState(initialView || "link");
 
   return (
     <div>
-      {/* Segmented control */}
-      <div
-        role="tablist"
-        aria-label="Modo de troca"
-        style={{
-          display: "flex",
-          gap: 4,
-          background: C.surface,
-          border: `1px solid ${C.border}`,
-          borderRadius: 12,
-          padding: 4,
-          marginBottom: 20,
-        }}
-      >
-        {VIEWS.map((v) => {
-          const active = view === v.id;
-          return (
-            <button
-              key={v.id}
-              role="tab"
-              aria-selected={active}
-              onClick={() => setView(v.id)}
-              style={{
-                flex: 1,
-                padding: "9px 0",
-                borderRadius: 9,
-                border: "none",
-                cursor: "pointer",
-                fontFamily: "inherit",
-                fontSize: 13,
-                fontWeight: active ? 800 : 600,
-                color: active ? "#0c0c1a" : C.t2,
-                background: active
-                  ? `linear-gradient(135deg, ${C.amber}, ${C.amberLt})`
-                  : "transparent",
-                transition: "background .2s, color .2s",
-                WebkitTapHighlightColor: "transparent",
-              }}
-            >
-              {v.label}
-            </button>
-          );
-        })}
-      </div>
+      <SegmentedTabs items={VIEWS} value={view} onChange={setView} />
 
       {/* Ambas montadas (toggle por display) para preservar o estado do Trocador */}
       <div style={{ display: view === "repetidas" ? "block" : "none" }}>
