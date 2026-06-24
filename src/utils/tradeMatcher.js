@@ -189,10 +189,10 @@ export function buildTradeSummaryText(suggestedPairs, receiveWithoutPair = []) {
   const lines = ["🔄 *Proposta de troca*", ""];
 
   if (suggestedPairs.length) {
-    lines.push(`*Eu te dou* (${suggestedPairs.length}):`);
+    lines.push(`*Entrego* (${suggestedPairs.length}):`);
     suggestedPairs.forEach(p => lines.push(`  • ${p.give.code} — ${p.give.name}`));
     lines.push("");
-    lines.push(`*Você me dá* (${suggestedPairs.length}):`);
+    lines.push(`*Recebo* (${suggestedPairs.length}):`);
     suggestedPairs.forEach(p => lines.push(`  • ${p.receive.code} — ${p.receive.name}`));
   }
 
