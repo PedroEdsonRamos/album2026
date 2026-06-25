@@ -86,12 +86,12 @@ export function TrocaPorLink({ stickers = [], applyTrade, addToast, incomingLink
 
   // Pré-preenche e analisa quando a tela é aberta via link (?troca=...)
   useEffect(() => {
-    if (incomingLink) {
-      setInText(incomingLink);
-      handleAnalyze(incomingLink);
-    }
+    if (!incomingLink) return;
+    if (applied) return;            // não re-analisa depois que o usuário já aplicou
+    setInText(incomingLink);
+    handleAnalyze(incomingLink);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [incomingLink]);
+  }, [incomingLink, stickers]);     // re-roda quando a coleção carrega
 
   function handleGenerate() {
     if (!stickers.length) return;
