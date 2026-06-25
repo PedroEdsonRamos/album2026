@@ -241,45 +241,80 @@ export function useStickers(userId, addToast) {
 
   /**
    * Aplica uma troca confirmada no álbum:
-   *  - cada par.give  → -1 cópia (recalcula status)
-   *  - cada par.receive → +1 cópia (recalcula status)
-   * @param {Array<{give:Object, receive:Object}>} pairs
+   *  - cada código em `entrego` → -1 cópia (recalcula status)
+   *  - cada código em `recebo`  → +1 cópia (recalcula status)
+   * Aceita dois formatos de entrada (compatibilidade):
+   *  - antigo: lista de pares `[{ give, receive }]`
+   *  - novo:   listas independentes `{ entrego: [...], recebo: [...] }`
+   *    (permite trocas desbalanceadas, ex.: 2 por 1)
+   * Códigos repetidos aplicam o delta uma vez por ocorrência.
+   * @param {Array<{give:Object, receive:Object}>|{entrego:Array, recebo:Array}} input
    */
   const applyTrade = useCallback(
-    (pairs) => {
-      if (!userId || !Array.isArray(pairs) || pairs.length === 0) return;
+    (input) => {
+      if (!userId) return;
 
-      const giveCodes = new Set(pairs.map((p) => p?.give?.code).filter(Boolean));
-      const receiveCodes = new Set(pairs.map((p) => p?.receive?.code).filter(Boolean));
+      function normalizeTrade(inp) {
+        const codeOf = (x) => (typeof x === "string" ? x : x && x.code);
+        if (Array.isArray(inp)) {
+          // formato antigo: lista de pares
+          const entrego = [], recebo = [];
+          for (const p of inp) {
+            if (p && p.give != null) entrego.push(codeOf(p.give));
+            if (p && p.receive != null) recebo.push(codeOf(p.receive));
+          }
+          return {
+            entrego: entrego.filter(Boolean),
+            recebo: recebo.filter(Boolean),
+          };
+        }
+        return {
+          entrego: ((inp && inp.entrego) || []).map(codeOf).filter(Boolean),
+          recebo: ((inp && inp.recebo) || []).map(codeOf).filter(Boolean),
+        };
+      }
+
+      const { entrego, recebo } = normalizeTrade(input);
+      if (entrego.length === 0 && recebo.length === 0) return;
+
+      // Conta ocorrências: cada ocorrência aplica um delta.
+      const giveCounts = new Map();
+      for (const c of entrego) giveCounts.set(c, (giveCounts.get(c) || 0) + 1);
+      const receiveCounts = new Map();
+      for (const c of recebo) receiveCounts.set(c, (receiveCounts.get(c) || 0) + 1);
 
       setStickersAndSync((prev) =>
         prev.map((s) => {
-          // Dou: -1
-          if (giveCodes.has(s.code)) {
-            const owned = Math.max(0, ownedCount(s) - 1);
-            const recalc = statusFromCount(owned);
-            const tb = owned >= 2 ? decrementBreakdown(s.typeBreakdown) : undefined;
-            return { ...s, ...recalc, typeBreakdown: tb };
+          const gives = giveCounts.get(s.code) || 0;
+          const receives = receiveCounts.get(s.code) || 0;
+          if (gives === 0 && receives === 0) return s;
+
+          let owned = ownedCount(s);
+          let tb = s.typeBreakdown;
+
+          // Dou: -1 por ocorrência
+          for (let i = 0; i < gives; i++) {
+            owned = Math.max(0, owned - 1);
+            tb = owned >= 2 ? decrementBreakdown(tb) : undefined;
           }
-          // Recebo: +1
-          if (receiveCodes.has(s.code)) {
-            const owned = ownedCount(s) + 1;
-            const recalc = statusFromCount(owned);
-            let tb;
+          // Recebo: +1 por ocorrência
+          for (let i = 0; i < receives; i++) {
+            owned = owned + 1;
             if (owned >= 2) {
               // base = cópias que já existiam; +1 da figurinha recebida
               const base =
-                s.typeBreakdown && Object.keys(s.typeBreakdown).length
-                  ? { ...s.typeBreakdown }
+                tb && Object.keys(tb).length
+                  ? { ...tb }
                   : { [s.rarity]: owned - 1 };
               base[s.rarity] = (base[s.rarity] || 0) + 1;
               tb = base;
             } else {
               tb = undefined;
             }
-            return { ...s, ...recalc, typeBreakdown: tb };
           }
-          return s;
+
+          const recalc = statusFromCount(owned);
+          return { ...s, ...recalc, typeBreakdown: tb };
         })
       );
     },
