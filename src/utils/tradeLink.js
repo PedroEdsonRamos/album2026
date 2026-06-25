@@ -122,17 +122,17 @@ export function decodeTradeLink(text, stickers) {
 }
 
 /**
- * Gera o link de CONFIRMAÇÃO (kind 1), do ponto de vista de QUEM ACEITA/gera.
- * Empacota os pares: `gives` = o que EU (gerador) dou; `receives` = o que EU recebo.
- * @param {Array<{give:Object, receive:Object}>} suggestedPairs
+ * Gera o link de CONFIRMAÇÃO (kind 1), do ponto de vista de QUEM CONFIRMA.
+ * @param {{ entrego: string[], recebo: string[] }} param0
+ *   `entrego` = códigos que o confirmador DÁ; `recebo` = o que o confirmador RECEBE.
  * @param {Array} stickers — coleção completa (ordem canônica)
  */
-export function encodeTradeConfirm(suggestedPairs, stickers) {
-  const gives = new Set((suggestedPairs ?? []).map((p) => p?.give?.code).filter(Boolean));
-  const receives = new Set((suggestedPairs ?? []).map((p) => p?.receive?.code).filter(Boolean));
+export function encodeTradeConfirm({ entrego = [], recebo = [] }, stickers) {
+  const giveSet = new Set(entrego.filter(Boolean));
+  const recvSet = new Set(recebo.filter(Boolean));
   const n = stickers.length;
-  const giveBytes = packBits(stickers.map((s) => gives.has(s.code)));
-  const recvBytes = packBits(stickers.map((s) => receives.has(s.code)));
+  const giveBytes = packBits(stickers.map((s) => giveSet.has(s.code)));
+  const recvBytes = packBits(stickers.map((s) => recvSet.has(s.code)));
   const fp = canonicalFingerprint(stickers);
 
   const header = new Uint8Array(6);
@@ -151,12 +151,12 @@ export function encodeTradeConfirm(suggestedPairs, stickers) {
 }
 
 /**
- * Lê o link de confirmação contra a coleção DESTE usuário (o remetente original).
- * Retorna do MEU ponto de vista (inverte o do gerador):
- *   - theyGive    = códigos que o outro dá  → EU recebo (+1)
- *   - theyReceive = códigos que o outro recebe → EU dou  (-1)
- * @returns {{ok:true, theyGive:Set<string>, theyReceive:Set<string>}
- *          | {ok:false, reason:"invalid"|"version"}}
+ * Lê o link de confirmação contra a coleção DESTE usuário.
+ * Retorna do ponto de vista de QUEM LÊ (inverso de quem gerou):
+ *   - iReceive = bitset A do gerador (o que ele deu  → EU recebo)
+ *   - iGive    = bitset B do gerador (o que ele recebeu → EU dou)
+ * @returns {{ ok: true, iGive: string[], iReceive: string[] }
+ *          | { ok: false, reason: "invalid"|"version" }}
  */
 export function decodeTradeConfirm(text, stickers) {
   let bytes;
@@ -185,12 +185,12 @@ export function decodeTradeConfirm(text, stickers) {
   const giveBytes = bytes.subarray(6, 6 + per);
   const recvBytes = bytes.subarray(6 + per, 6 + per * 2);
 
-  // No link, gives/receives são do ponto de vista de quem gerou; pra mim, invertem.
-  const theyGive = new Set();    // o outro dá → EU recebo
-  const theyReceive = new Set(); // o outro recebe → EU dou
+  // bitset A = o que o gerador deu → eu recebo; bitset B = o que ele recebeu → eu dou
+  const iReceive = [];
+  const iGive = [];
   for (let i = 0; i < count; i++) {
-    if (readBit(giveBytes, i)) theyGive.add(stickers[i].code);
-    if (readBit(recvBytes, i)) theyReceive.add(stickers[i].code);
+    if (readBit(giveBytes, i)) iReceive.push(stickers[i].code);
+    if (readBit(recvBytes, i)) iGive.push(stickers[i].code);
   }
-  return { ok: true, theyGive, theyReceive };
+  return { ok: true, iGive, iReceive };
 }
