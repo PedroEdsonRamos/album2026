@@ -8,6 +8,7 @@ import {
   decodeTradeConfirm,
 } from "@/utils/tradeLink.js";
 import { ES_BY_CODE } from "@/data/extraStickers.js";
+import { TradeEditor } from "@/components/organisms/TradeEditor.jsx";
 
 /* ===== helpers ===== */
 function copyText(text, onOk) {
@@ -35,36 +36,6 @@ function extractPayload(text) {
 function buildTradeUrl(payload) {
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   return `${origin}/?troca=${payload}`;
-}
-
-/* ===== sub-componentes visuais ===== */
-function Summary({ give, receive }) {
-  return (
-    <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-      <div style={{ flex: 1, textAlign: "center", padding: "8px 0", borderRadius: 8, background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.3)" }}>
-        <div style={{ fontSize: 18, fontWeight: 800, color: C.green }}>+{receive}</div>
-        <div style={{ fontSize: 11, color: C.t3 }}>Receber</div>
-      </div>
-      <div style={{ flex: 1, textAlign: "center", padding: "8px 0", borderRadius: 8, background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.3)" }}>
-        <div style={{ fontSize: 18, fontWeight: 800, color: C.amber }}>−{give}</div>
-        <div style={{ fontSize: 11, color: C.t3 }}>Entregar</div>
-      </div>
-    </div>
-  );
-}
-function PairList({ pairs }) {
-  if (!pairs?.length) return null;
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      {pairs.map((p) => (
-        <div key={`${p.give.code}-${p.receive.code}`} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 13, background: "#0c0c1a", border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 10px" }}>
-          <span title={p.give.name} style={{ color: C.amber, fontWeight: 700 }}>−{p.give.code}</span>
-          <span style={{ color: C.t3 }}>→</span>
-          <span title={p.receive.name} style={{ color: C.green, fontWeight: 700 }}>+{p.receive.code}</span>
-        </div>
-      ))}
-    </div>
-  );
 }
 
 /* ===== componente principal ===== */
@@ -112,12 +83,12 @@ export function TrocaPorLink({ stickers = [], applyTrade, addToast, incomingLink
         theirFaltantes: state.theirFaltantes,
         esByCode: ES_BY_CODE,
       });
-      setAnalysis({ kind: 0, result });
+      setAnalysis({ kind: 0, result, payload });
       return;
     }
     const conf = decodeTradeConfirm(payload, stickers);
     if (conf.ok) {
-      setAnalysis({ kind: 1, theyGive: conf.theyGive, theyReceive: conf.theyReceive });
+      setAnalysis({ kind: 1, iGive: conf.iGive, iReceive: conf.iReceive });
       return;
     }
     const reason = state.reason === "version" || conf.reason === "version" ? "version" : "invalid";
@@ -131,21 +102,17 @@ export function TrocaPorLink({ stickers = [], applyTrade, addToast, incomingLink
     setConfirmLink("");
   }
 
-  function handleAcceptProposal() {
-    const pairs = analysis?.result?.suggestedPairs ?? [];
-    if (!pairs.length || applied) return;
-    applyTrade?.(pairs);
+  function handleConfirmFromLink({ entrego, recebo }) {
+    applyTrade?.({ entrego, recebo });
+    const payload = encodeTradeConfirm({ entrego, recebo }, stickers);
+    setConfirmLink(buildTradeUrl(payload));
     setApplied(true);
-    setConfirmLink(buildTradeUrl(encodeTradeConfirm(pairs, stickers)));
     addToast?.("Álbum atualizado!");
   }
 
   function handleApplyConfirm() {
     if (analysis?.kind !== 1 || applied) return;
-    const gives = [...(analysis.theyReceive ?? [])].map((code) => ({ give: { code } }));
-    const recvs = [...(analysis.theyGive ?? [])].map((code) => ({ receive: { code } }));
-    if (!gives.length && !recvs.length) return;
-    applyTrade?.([...gives, ...recvs]);
+    applyTrade?.({ entrego: analysis.iGive, recebo: analysis.iReceive });
     setApplied(true);
     addToast?.("Álbum atualizado!");
   }
@@ -155,6 +122,10 @@ export function TrocaPorLink({ stickers = [], applyTrade, addToast, incomingLink
   const sub = { fontSize: 12, color: C.t3, marginBottom: 12, lineHeight: 1.5 };
   const primaryBtn = { width: "100%", padding: "12px 0", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${C.amber}, ${C.amberLt})`, color: "#0c0c1a", fontWeight: 800, fontSize: 14, cursor: "pointer", fontFamily: "inherit" };
   const codeBox = { fontSize: 11, color: C.t3, wordBreak: "break-all", background: "#0c0c1a", border: `1px solid ${C.border}`, borderRadius: 8, padding: 10, marginBottom: 10 };
+
+  const codeOf = (x) => (typeof x === "string" ? x : x && x.code);
+  const suggestedGive = (analysis?.result?.suggestedPairs || []).map((p) => codeOf(p.give)).filter(Boolean);
+  const suggestedRecv = (analysis?.result?.suggestedPairs || []).map((p) => codeOf(p.receive)).filter(Boolean);
 
   return (
     <div>
@@ -228,36 +199,49 @@ export function TrocaPorLink({ stickers = [], applyTrade, addToast, incomingLink
           </div>
         )}
 
-        {analysis?.kind === 0 && (
-          <div style={{ marginTop: 12 }}>
-            <Summary give={analysis.result.summary.willGive} receive={analysis.result.summary.willReceive} />
-            <PairList pairs={analysis.result.suggestedPairs} />
-            {applied ? (
-              <div style={{ marginTop: 10 }}>
-                <div style={{ padding: 11, borderRadius: 10, border: "1px solid rgba(34,197,94,0.35)", background: "rgba(34,197,94,0.12)", color: C.green, fontSize: 13, fontWeight: 700, textAlign: "center", marginBottom: 10 }}>
-                  ✓ Baixa feita no seu álbum
-                  <div style={{ fontSize: 11, fontWeight: 500, color: C.t3, marginTop: 4 }}>Envie a confirmação pro trocador dar baixa no álbum dele.</div>
-                </div>
-                <div style={codeBox}>{confirmLink}</div>
-                <button type="button" onClick={() => copyText(confirmLink, () => addToast?.("Confirmação copiada!"))} style={{ width: "100%", padding: "11px 0", borderRadius: 10, border: `1px solid ${C.border}`, background: C.surface, color: C.amber, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>Copiar link de confirmação</button>
+        {analysis?.kind === 0 && analysis.result && (
+          applied ? (
+            <div style={{ marginTop: 10 }}>
+              <div style={{ padding: 11, borderRadius: 10, border: "1px solid rgba(34,197,94,0.35)", background: "rgba(34,197,94,0.12)", color: C.green, fontSize: 13, fontWeight: 700, textAlign: "center", marginBottom: 10 }}>
+                ✓ Baixa feita no seu álbum
+                <div style={{ fontSize: 11, fontWeight: 500, color: C.t3, marginTop: 4 }}>Envie a confirmação pro trocador dar baixa no álbum dele.</div>
               </div>
-            ) : analysis.result.suggestedPairs.length ? (
-              <button type="button" onClick={handleAcceptProposal} style={{ ...primaryBtn, marginTop: 10 }}>Aceitar e dar baixa no meu álbum</button>
-            ) : (
-              <div style={{ ...sub, marginTop: 10, marginBottom: 0 }}>
-                Nenhuma troca possível com esse link agora — vocês não têm figurinhas que se completam (ou esse é o seu próprio link).
+              <div style={codeBox}>{confirmLink}</div>
+              <button type="button" onClick={() => copyText(confirmLink, () => addToast?.("Confirmação copiada!"))} style={{ width: "100%", padding: "11px 0", borderRadius: 10, border: `1px solid ${C.border}`, background: C.surface, color: C.amber, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>Copiar link de confirmação</button>
+            </div>
+          ) : (
+            <div style={{ marginTop: 12 }}>
+              <div style={{ fontSize: 12, color: C.t3, marginBottom: 8 }}>
+                Monte a troca: toque pra incluir/excluir. Não precisa ser 1 por 1.
               </div>
-            )}
-          </div>
+              <TradeEditor
+                key={analysis.payload}
+                poolEntregar={analysis.result.pools?.entregar || []}
+                poolReceber={analysis.result.pools?.receber || []}
+                initialEntrego={suggestedGive}
+                initialRecebo={suggestedRecv}
+                confirmLabel="Confirmar e gerar link de volta"
+                onConfirm={handleConfirmFromLink}
+              />
+            </div>
+          )
         )}
 
         {analysis?.kind === 1 && (
-          <div style={{ marginTop: 12 }}>
-            <Summary give={analysis.theyReceive.size} receive={analysis.theyGive.size} />
+          <div style={{ marginTop: 12, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 14 }}>
+            <div style={{ fontWeight: 800, color: C.t2, marginBottom: 8 }}>Troca combinada</div>
             {applied ? (
               <div style={{ padding: 11, borderRadius: 10, border: "1px solid rgba(34,197,94,0.35)", background: "rgba(34,197,94,0.12)", color: C.green, fontSize: 13, fontWeight: 700, textAlign: "center" }}>✓ Troca concluída no seu álbum</div>
             ) : (
-              <button type="button" onClick={handleApplyConfirm} style={{ ...primaryBtn, marginTop: 10 }}>Dar baixa no meu álbum</button>
+              <>
+                <div style={{ fontSize: 13, color: C.t3, marginBottom: 12 }}>
+                  Você entrega <b style={{ color: C.amber }}>{analysis.iGive.length}</b> e recebe{" "}
+                  <b style={{ color: C.green }}>{analysis.iReceive.length}</b>.
+                </div>
+                <button type="button" onClick={handleApplyConfirm} style={{ width: "100%", padding: "12px 14px", borderRadius: 12, border: "none", background: C.amber, color: "#0c0c1a", fontWeight: 800, fontSize: 15, cursor: "pointer", fontFamily: "inherit" }}>
+                  Aplicar troca
+                </button>
+              </>
             )}
           </div>
         )}
