@@ -143,6 +143,10 @@ export function computeTrade({ allStickers, traderCodes, esByCode = {} }) {
       willReceive: suggestedPairs.length,
       willGive: suggestedPairs.length,
     },
+    pools: {
+      entregar: offerBucket,
+      receber: receiveBucket,
+    },
   };
 }
 
