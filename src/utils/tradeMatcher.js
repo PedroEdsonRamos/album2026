@@ -175,7 +175,16 @@ export function computeLinkTrade({ allStickers, theirRepetidas, theirFaltantes, 
   // Eu dou: o que EU tenho repetido e ELE precisa
   const offerBucket = allStickers.filter((s) => s && s.status === "Repetida" && theirFal.has(s.code));
 
-  return pairBuckets(receiveBucket, offerBucket, esByCode);
+  const byStickerOrder = (a, b) => a.team < b.team ? -1 : a.team > b.team ? 1 : a.code < b.code ? -1 : a.code > b.code ? 1 : 0;
+
+  const result = pairBuckets(receiveBucket, offerBucket, esByCode);
+  return {
+    ...result,
+    pools: {
+      entregar: [...offerBucket].sort(byStickerOrder),
+      receber: [...receiveBucket].sort(byStickerOrder),
+    },
+  };
 }
 
 /* ===== Resumo em texto (para copiar/compartilhar) ===== */
