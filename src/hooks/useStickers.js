@@ -72,7 +72,7 @@ const CACHE_KEY = "album2026-stickers-cache";
  * Se `duplicates` representar SOBRAS em vez de total, ajustar APENAS ownedCount.
  */
 function ownedCount(s) {
-  if (s.status === "Repetida") return s.duplicates || 0;
+  if (s.status === "Repetida") return (s.duplicates || 0) + 1; // duplicates = excedente; +1 da colada
   if (s.status === "Tenho") return 1;
   return 0;
 }
@@ -314,7 +314,8 @@ export function useStickers(userId, addToast) {
           }
 
           const recalc = statusFromCount(owned);
-          return { ...s, ...recalc, typeBreakdown: tb };
+          // duplicates persistido = excedente (total − a colada); status vem de statusFromCount
+          return { ...s, ...recalc, duplicates: Math.max(0, owned - 1), typeBreakdown: tb };
         })
       );
     },
