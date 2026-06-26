@@ -168,6 +168,7 @@ export const SECTIONS = [
         <HelpStep number={4}>Clique em <strong style={{ color: "#fff" }}>Salvar</strong></HelpStep>
         <HelpNote>Para marcar como Repetida a partir de zero (Faltando), você precisa selecionar pelo menos 2 figurinhas no total.</HelpNote>
         <HelpTip>Cards com borda brilhante e fundo colorido = você <strong style={{ color: "#fff" }}>tem</strong> essa figurinha. Cards apagados = ainda falta.</HelpTip>
+        <HelpNote>O número no card (ex: <strong style={{ color: "#fff" }}>1x</strong>, <strong style={{ color: "#fff" }}>2x</strong>) indica o <strong style={{ color: "#fff" }}>total de cópias</strong> que você tem: "1x" = Tenho (1 cópia colada no álbum); "2x" ou mais = Repetida — as cópias extras além da primeira são as disponíveis pra trocar.</HelpNote>
       </>
     ),
   },
@@ -205,8 +206,9 @@ export const SECTIONS = [
           <div>📒 Figurinhas Disponíveis para Troca...</div>
           <div>🇧🇷 Brasil</div>
           <div>BRA10 — Casemiro | Meio-Campista</div>
-          <div>Tipo: Comum (2×)</div>
+          <div>Tipo: Comum (2× no total)</div>
         </div>
+        <HelpNote>O número entre parênteses indica o <strong style={{ color: "#fff" }}>total de cópias</strong> que você tem: "2× no total" = 1 colada no álbum + 1 disponível pra trocar. Essa 1 extra é o que você oferece na troca.</HelpNote>
         <HelpTip>Use o botão ▼ para colapsar seleções que já negociou, deixando a lista mais limpa.</HelpTip>
       </>
     ),
