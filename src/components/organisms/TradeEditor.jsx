@@ -1,25 +1,88 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { C } from "@/styles/tokens.js";
+import { getFinish } from "@/styles/finishes.js";
+import { getCardLines } from "@/components/molecules/StickerCard.jsx";
+
+// espelha RARITY_PRIORITY (StickerCard.jsx): mais raro -> mais comum
+const RARITY_ORDER = ["Ouro", "Prata", "Bronze", "Lilás", "Metalizado", "McDonalds", "Comum", "Coca-Cola"];
+const rank = (r) => { const i = RARITY_ORDER.indexOf(r); return i === -1 ? 999 : i; };
+const rarColor = (r) => { const f = getFinish(r); return (f && f.color) || C.t2; };
+const rarBorder = (r) => { const f = getFinish(r); return (f && f.border) || C.border; };
+
+// raridades trocáveis (excedentes), ordenadas do mais raro pro mais comum
+function availRarities(s) {
+  const keys = Object.keys(s && s.typeBreakdown ? s.typeBreakdown : {});
+  if (keys.length) return keys.slice().sort((a, b) => rank(a) - rank(b));
+  return s && s.rarity ? [s.rarity] : [];
+}
+// padrão ao dar: a mais comum disponível (guarda as raras)
+function defaultGive(s) { const a = availRarities(s); return a.length ? a[a.length - 1] : undefined; }
+// tipo a exibir (lado recebe / item sem escolha): mais rara do breakdown, senão a base
+function showRarity(s) { const a = availRarities(s); return a.length ? a[0] : (s ? s.rarity : undefined); }
+
+function cardLines(s) {
+  let l = {};
+  try { l = getCardLines(s) || {}; } catch (e) { l = {}; }
+  const desc = (l.desc || s.name || s.code || "").replace(/\n/g, " ");
+  const footer = (l.footer || s.position || "").replace(/\n/g, " ");
+  return { desc, footer };
+}
 
 function filterPool(pool, q) {
   const t = q.trim().toLowerCase();
   if (!t) return pool;
   return pool.filter((s) => {
-    const name = (s.name || "").toLowerCase();
-    const team = (s.teamName || s.team || "").toLowerCase();
-    const code = (s.code || "").toLowerCase();
-    return name.includes(t) || team.includes(t) || code.includes(t);
+    const { desc, footer } = cardLines(s);
+    return (
+      desc.toLowerCase().includes(t) ||
+      footer.toLowerCase().includes(t) ||
+      (s.code || "").toLowerCase().includes(t)
+    );
   });
 }
 
-// raridades trocáveis (excedentes por tipo); se não houver breakdown, usa a raridade única
-function availRarities(s) {
-  const keys = Object.keys(s && s.typeBreakdown ? s.typeBreakdown : {});
-  if (keys.length) return keys;
-  return s && s.rarity ? [s.rarity] : [];
+function RarityTag({ r }) {
+  if (!r) return null;
+  return <span style={{ color: rarColor(r), fontWeight: 800 }}>{r}</span>;
 }
 
-function PoolSide({ title, accent, pool, selected, onToggle, query, onQuery, emptyMsg, prioritize, withRarity, rarityByCode, onRarity }) {
+function Item({ s, on, accent, onToggle, withPicker, chosen, onRarity }) {
+  const { desc, footer } = cardLines(s);
+  const rars = withPicker ? availRarities(s) : [];
+  const single = !withPicker ? showRarity(s) : (rars.length <= 1 ? rars[0] : null);
+  return (
+    <div style={{ border: `1px solid ${on ? accent : C.border}`, background: on ? `${accent}14` : "transparent", borderRadius: 8 }}>
+      <button type="button" onClick={() => onToggle(s.code)}
+        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, padding: "8px 10px", cursor: "pointer", textAlign: "left", border: "none", background: "transparent", color: "#fff", fontFamily: "inherit", width: "100%" }}>
+        <span style={{ minWidth: 0 }}>
+          <span style={{ display: "block", fontSize: 13, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{desc}</span>
+          <span style={{ display: "block", fontSize: 11, color: C.t3 }}>
+            {s.code}{footer ? ` · ${footer}` : ""}{single ? " · " : ""}{single ? <RarityTag r={single} /> : null}
+          </span>
+        </span>
+        <span style={{ fontSize: 16, color: on ? accent : C.t3, flexShrink: 0 }}>{on ? "✓" : "+"}</span>
+      </button>
+      {on && withPicker && rars.length > 1 ? (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, padding: "0 10px 8px" }}>
+          {rars.map((r) => {
+            const sel = (chosen || defaultGive(s)) === r;
+            const qty = s.typeBreakdown ? s.typeBreakdown[r] : undefined;
+            const col = rarColor(r);
+            return (
+              <button key={r} type="button" onClick={() => onRarity(s.code, r)}
+                style={{ fontSize: 11, fontWeight: 800, padding: "3px 8px", borderRadius: 999, cursor: "pointer", fontFamily: "inherit",
+                  border: `1px solid ${sel ? col : rarBorder(r)}`, background: sel ? col : "transparent", color: sel ? "#0c0c1a" : col }}>
+                {r}{qty ? ` (${qty})` : ""}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function PoolSide({ title, accent, pool, selected, onToggle, query, onQuery, emptyMsg, prioritize, withPicker, rarityByCode, onRarity }) {
   const filtered = useMemo(() => {
     const list = filterPool(pool, query);
     if (!prioritize || prioritize.size === 0) return list;
@@ -38,44 +101,30 @@ function PoolSide({ title, accent, pool, selected, onToggle, query, onQuery, emp
         <div style={{ fontSize: 13, color: C.t3, padding: "8px 0" }}>{emptyMsg}</div>
       ) : (
         <>
-          <input value={query} onChange={(e) => onQuery(e.target.value)} placeholder="Buscar por nome, time ou código…"
+          <input value={query} onChange={(e) => onQuery(e.target.value)} placeholder="Buscar por nome, categoria ou código…"
             style={{ width: "100%", boxSizing: "border-box", background: "#0c0c1a", border: `1px solid ${C.border}`, color: "#fff", fontSize: 16, padding: "8px 10px", borderRadius: 8, marginBottom: 8, fontFamily: "inherit" }} />
           <div style={{ maxHeight: 240, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6 }}>
-            {filtered.map((s) => {
-              const on = selected.has(s.code);
-              const rars = withRarity ? availRarities(s) : [];
-              const chosen = rarityByCode ? rarityByCode[s.code] : undefined;
-              return (
-                <div key={s.code} style={{ border: `1px solid ${on ? accent : C.border}`, background: on ? `${accent}14` : "transparent", borderRadius: 8 }}>
-                  <button type="button" onClick={() => onToggle(s.code)}
-                    style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, padding: "8px 10px", cursor: "pointer", textAlign: "left", border: "none", background: "transparent", color: "#fff", fontFamily: "inherit", width: "100%" }}>
-                    <span style={{ minWidth: 0 }}>
-                      <span style={{ display: "block", fontSize: 13, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.name || s.code}</span>
-                      <span style={{ display: "block", fontSize: 11, color: C.t3 }}>{(s.teamName || s.team || "")}{s.code ? ` · ${s.code}` : ""}</span>
-                    </span>
-                    <span style={{ fontSize: 16, color: on ? accent : C.t3, flexShrink: 0 }}>{on ? "✓" : "+"}</span>
-                  </button>
-                  {on && withRarity && rars.length > 1 ? (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, padding: "0 10px 8px" }}>
-                      {rars.map((r) => {
-                        const sel = (chosen || rars[0]) === r;
-                        const qty = s.typeBreakdown ? s.typeBreakdown[r] : undefined;
-                        return (
-                          <button key={r} type="button" onClick={() => onRarity(s.code, r)}
-                            style={{ fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 999, cursor: "pointer", fontFamily: "inherit", border: `1px solid ${sel ? accent : C.border}`, background: sel ? accent : "transparent", color: sel ? "#0c0c1a" : C.t2 }}>
-                            {r}{qty ? ` (${qty})` : ""}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ) : null}
-                </div>
-              );
-            })}
+            {filtered.map((s) => (
+              <Item key={s.code} s={s} on={selected.has(s.code)} accent={accent} onToggle={onToggle}
+                withPicker={withPicker} chosen={rarityByCode ? rarityByCode[s.code] : undefined} onRarity={onRarity} />
+            ))}
             {filtered.length === 0 ? (<div style={{ fontSize: 12, color: C.t3, padding: "6px 0" }}>Nada encontrado.</div>) : null}
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+// linha do resumo: CÓDIGO · nome · categoria · raridade(colorida)
+function SummaryLine({ s, rarity }) {
+  const { desc, footer } = cardLines(s);
+  return (
+    <div style={{ fontSize: 13, color: "#fff", padding: "2px 0" }}>
+      <b>{s.code}</b>
+      {desc ? ` · ${desc}` : ""}
+      {footer ? ` · ${footer}` : ""}
+      {rarity ? <> · <RarityTag r={rarity} /></> : null}
     </div>
   );
 }
@@ -98,36 +147,39 @@ export function TradeEditor({ poolEntregar = [], poolReceber = [], initialEntreg
     return m;
   }, [poolEntregar, poolReceber]);
 
-  const labelOf = (code) => { const s = byCode[code]; return s ? (s.name || s.code) : code; };
-
-  const toggleReceive = (code) =>
-    setRecebo((prev) => { const n = new Set(prev); n.has(code) ? n.delete(code) : n.add(code); return n; });
-
-  const toggleGive = (code) => {
-    const willSelect = !entrego.has(code);
-    setEntrego((prev) => { const n = new Set(prev); willSelect ? n.add(code) : n.delete(code); return n; });
-    setRarityByCode((r) => {
-      const c = { ...r };
-      if (willSelect) { const def = availRarities(byCode[code])[0]; if (def) c[code] = def; }
-      else delete c[code];
-      return c;
+  // garante raridade-padrão para todos os itens em entrego (inclui pré-selecionados)
+  useEffect(() => {
+    setRarityByCode((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      for (const code of entrego) {
+        if (!next[code]) {
+          const d = defaultGive(byCode[code]);
+          if (d) { next[code] = d; changed = true; }
+        }
+      }
+      for (const code of Object.keys(next)) {
+        if (!entrego.has(code)) { delete next[code]; changed = true; }
+      }
+      return changed ? next : prev;
     });
-  };
+  }, [entrego, byCode]);
 
+  const toggleReceive = (code) => setRecebo((p) => { const n = new Set(p); n.has(code) ? n.delete(code) : n.add(code); return n; });
+  const toggleGive = (code) => setEntrego((p) => { const n = new Set(p); n.has(code) ? n.delete(code) : n.add(code); return n; });
   const setRarity = (code, rarity) => setRarityByCode((r) => ({ ...r, [code]: rarity }));
 
   const total = entrego.size + recebo.size;
 
   const buildGive = () =>
     [...entrego].map((code) => {
-      const s = byCode[code];
-      const r = rarityByCode[code] || availRarities(s)[0];
+      const r = rarityByCode[code] || defaultGive(byCode[code]);
       return r ? { code, rarity: r } : code;
     });
 
   if (reviewing) {
     const give = buildGive();
-    const gr = [...recebo];
+    const rec = [...recebo];
     return (
       <div>
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, marginBottom: 12 }}>
@@ -136,14 +188,16 @@ export function TradeEditor({ poolEntregar = [], poolReceber = [], initialEntreg
           {give.length ? give.map((g) => {
             const code = typeof g === "string" ? g : g.code;
             const r = typeof g === "string" ? null : g.rarity;
-            return (<div key={code} style={{ fontSize: 13, color: "#fff", padding: "1px 0" }}>{labelOf(code)}{r ? ` · ${r}` : ""}</div>);
+            return <SummaryLine key={code} s={byCode[code] || { code }} rarity={r} />;
           }) : <div style={{ fontSize: 13, color: C.t3 }}>—</div>}
-          <div style={{ fontSize: 12, fontWeight: 800, color: C.green, margin: "10px 0 4px" }}>Você recebe ({gr.length})</div>
-          {gr.length ? gr.map((c) => (<div key={c} style={{ fontSize: 13, color: "#fff", padding: "1px 0" }}>{labelOf(c)}</div>)) : <div style={{ fontSize: 13, color: C.t3 }}>—</div>}
+          <div style={{ fontSize: 12, fontWeight: 800, color: C.green, margin: "10px 0 4px" }}>Você recebe ({rec.length})</div>
+          {rec.length ? rec.map((code) => (
+            <SummaryLine key={code} s={byCode[code] || { code }} rarity={showRarity(byCode[code])} />
+          )) : <div style={{ fontSize: 13, color: C.t3 }}>—</div>}
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <button type="button" onClick={() => setReviewing(false)} style={{ flex: 1, padding: "12px 14px", borderRadius: 12, border: `1px solid ${C.border}`, background: "transparent", color: C.t2, fontWeight: 800, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>Cancelar</button>
-          <button type="button" onClick={() => onConfirm && onConfirm({ entrego: give, recebo: gr })} style={{ flex: 2, padding: "12px 14px", borderRadius: 12, border: "none", background: C.amber, color: "#0c0c1a", fontWeight: 800, fontSize: 15, cursor: "pointer", fontFamily: "inherit" }}>{confirmLabel}</button>
+          <button type="button" onClick={() => setReviewing(false)} style={{ flex: 1, padding: "12px 14px", borderRadius: 12, border: `1px solid ${C.border}`, background: "transparent", color: C.t2, fontWeight: 800, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>Voltar</button>
+          <button type="button" onClick={() => onConfirm && onConfirm({ entrego: give, recebo: rec })} style={{ flex: 2, padding: "12px 14px", borderRadius: 12, border: "none", background: C.amber, color: "#0c0c1a", fontWeight: 800, fontSize: 15, cursor: "pointer", fontFamily: "inherit" }}>{confirmLabel}</button>
         </div>
       </div>
     );
@@ -151,7 +205,7 @@ export function TradeEditor({ poolEntregar = [], poolReceber = [], initialEntreg
 
   return (
     <div>
-      <PoolSide title="Você entrega" accent={C.amber} pool={poolEntregar} selected={entrego} onToggle={toggleGive} query={qE} onQuery={setQE} prioritize={prioE} emptyMsg="Você não tem repetidas que o outro precise." withRarity rarityByCode={rarityByCode} onRarity={setRarity} />
+      <PoolSide title="Você entrega" accent={C.amber} pool={poolEntregar} selected={entrego} onToggle={toggleGive} query={qE} onQuery={setQE} prioritize={prioE} emptyMsg="Você não tem repetidas que o outro precise." withPicker rarityByCode={rarityByCode} onRarity={setRarity} />
       <PoolSide title="Você recebe" accent={C.green} pool={poolReceber} selected={recebo} onToggle={toggleReceive} query={qR} onQuery={setQR} prioritize={prioR} emptyMsg="O outro não tem repetidas que te faltem." />
       <div style={{ fontSize: 13, color: C.t3, margin: "2px 2px 10px" }}>
         Entrega <b style={{ color: C.amber }}>{entrego.size}</b> · Recebe <b style={{ color: C.green }}>{recebo.size}</b>

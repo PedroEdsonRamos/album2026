@@ -34,7 +34,7 @@ const FWC_SHORT_DESC = {
   "FWC7": "País-Sede", "FWC8": "País-Sede",
 };
 
-function getCardLines(s) {
+export function getCardLines(s) {
   const num = s.code === "00" ? "00" : s.number;
   if (s.position === "Foto Equipe") {
     return { number: num, desc: `Seleção ${s.teamName}`, footer: "Foto de Equipe" };
