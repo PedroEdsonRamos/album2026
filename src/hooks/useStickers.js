@@ -326,11 +326,11 @@ export function useStickers(userId, addToast) {
           for (let i = 0; i < receives; i++) {
             owned = owned + 1;
             if (owned >= 2) {
-              // base = cópias que já existiam; +1 da figurinha recebida
+              // base = excedentes existentes (vazio se ainda não há); +1 da cópia recebida
               const base =
                 tb && Object.keys(tb).length
                   ? { ...tb }
-                  : { [s.rarity]: owned - 1 };
+                  : {};
               base[s.rarity] = (base[s.rarity] || 0) + 1;
               tb = base;
             } else {
