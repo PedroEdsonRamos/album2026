@@ -55,6 +55,19 @@ function getCardLines(s) {
   return { number: num, desc: s.name, footer: s.position };
 }
 
+function totaisExibicao(s) {
+  if (!s || s.status === "Faltando") return null;
+  if (s.status === "Tenho") return s.rarity ? { [s.rarity]: 1 } : null;
+  // Repetida
+  const base = s.typeBreakdown ? { ...s.typeBreakdown } : {};
+  if (Object.keys(base).length === 0) {
+    const total = (s.duplicates || 0) + 1;
+    return s.rarity ? { [s.rarity]: total } : null;
+  }
+  if (s.rarity) base[s.rarity] = (base[s.rarity] || 0) + 1;
+  return base;
+}
+
 export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
   const [ref, vis] = useInView(0.05);
   const [touched, setTouched] = useState(false);
@@ -69,6 +82,11 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
   const isMine = MY_CODES.has(s.code);
   const clickable = !!(onToggle || onClick);
   const lines = getCardLines(s);
+  const dupBadgeEntries = dup
+    ? Object.entries(totaisExibicao(s) ?? {})
+        .filter(([, qty]) => qty > 0)
+        .sort(([a], [b]) => RARITY_PRIORITY.indexOf(a) - RARITY_PRIORITY.indexOf(b))
+    : [];
 
   const handleClick = () => {
     if (onToggle) onToggle(s.id);
@@ -149,39 +167,36 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
           }}
         />
       )}
-      {dup && s.typeBreakdown && Object.keys(s.typeBreakdown).filter((k) => (s.typeBreakdown[k] ?? 0) > 0).length > 0 && (
+      {dup && dupBadgeEntries.length > 0 && (
         <div style={{
           position: "absolute",
           top: 6,
           right: 6,
           display: "grid",
-          gridTemplateColumns: Object.values(s.typeBreakdown).filter((q) => q > 0).length > 2 ? "1fr 1fr" : "1fr",
+          gridTemplateColumns: dupBadgeEntries.length > 2 ? "1fr 1fr" : "1fr",
           gap: 3,
           maxWidth: 70,
           zIndex: 1,
         }}>
-          {Object.entries(s.typeBreakdown)
-            .filter(([, qty]) => qty > 0)
-            .sort(([typeA], [typeB]) => RARITY_PRIORITY.indexOf(typeA) - RARITY_PRIORITY.indexOf(typeB))
-            .map(([type, qty]) => {
-              const badgeFin = FINISH[type] ?? FINISH.Comum;
-              return (
-                <span key={type} style={{
-                  background: badgeFin.bg,
-                  border: `1px solid ${badgeFin.border}`,
-                  color: badgeFin.color,
-                  borderRadius: 8,
-                  padding: "1px 6px",
-                  fontSize: 9,
-                  fontWeight: 700,
-                  textAlign: "center",
-                  whiteSpace: "nowrap",
-                  lineHeight: "14px",
-                }}>
-                  {qty}x
-                </span>
-              );
-            })}
+          {dupBadgeEntries.map(([type, qty]) => {
+            const badgeFin = FINISH[type] ?? FINISH.Comum;
+            return (
+              <span key={type} style={{
+                background: badgeFin.bg,
+                border: `1px solid ${badgeFin.border}`,
+                color: badgeFin.color,
+                borderRadius: 8,
+                padding: "1px 6px",
+                fontSize: 9,
+                fontWeight: 700,
+                textAlign: "center",
+                whiteSpace: "nowrap",
+                lineHeight: "14px",
+              }}>
+                {qty}x
+              </span>
+            );
+          })}
         </div>
       )}
       <div
@@ -210,15 +225,18 @@ export function StickerCard({ s, onToggle, onClick, delay = 0 }) {
         {owned && (
           <span
             style={{
-              background: C.greenDim,
-              color: C.green,
-              borderRadius: 10,
-              padding: "1px 4px",
-              fontSize: 10,
+              background: fin.bg,
+              border: `1px solid ${fin.border}`,
+              color: fin.color,
+              borderRadius: 8,
+              padding: "1px 6px",
+              fontSize: 9,
+              fontWeight: 700,
               flexShrink: 0,
+              lineHeight: "14px",
             }}
           >
-            <Icon name="check" size={9} />
+            1x
           </span>
         )}
       </div>

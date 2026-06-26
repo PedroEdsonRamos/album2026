@@ -206,6 +206,12 @@ export function TrocaPorLink({ stickers = [], applyTrade, addToast, incomingLink
                 ✓ Baixa feita no seu álbum
                 <div style={{ fontSize: 11, fontWeight: 500, color: C.t3, marginTop: 4 }}>Envie a confirmação pro trocador dar baixa no álbum dele.</div>
               </div>
+              <div style={{ background: `${C.amber}1a`, border: `1px solid ${C.amber}`, borderRadius: 10, padding: 12, marginBottom: 10 }}>
+                <div style={{ fontSize: 13, color: C.t2, fontWeight: 700, marginBottom: 4 }}>Falta o trocador confirmar!</div>
+                <div style={{ fontSize: 12, color: C.t3 }}>
+                  Sua coleção já foi atualizada. Envie este link para o trocador — ele precisa abrir e confirmar a troca no álbum dele também, senão só o seu álbum muda.
+                </div>
+              </div>
               <div style={codeBox}>{confirmLink}</div>
               <button type="button" onClick={() => copyText(confirmLink, () => addToast?.("Confirmação copiada!"))} style={{ width: "100%", padding: "11px 0", borderRadius: 10, border: `1px solid ${C.border}`, background: C.surface, color: C.amber, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>Copiar link de confirmação</button>
             </div>
@@ -215,7 +221,7 @@ export function TrocaPorLink({ stickers = [], applyTrade, addToast, incomingLink
                 Monte a troca: toque pra incluir/excluir. Não precisa ser 1 por 1.
               </div>
               <TradeEditor
-                key={analysis.payload}
+                key={`${analysis.payload || "x"}:${analysis.result?.suggestedPairs?.length || 0}`}
                 poolEntregar={analysis.result.pools?.entregar || []}
                 poolReceber={analysis.result.pools?.receber || []}
                 initialEntrego={suggestedGive}
