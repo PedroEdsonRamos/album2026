@@ -23,7 +23,7 @@ const Status    = lazy(() => import("@/components/pages/Status.jsx").then(m => (
 const Help      = lazy(() => import("@/components/pages/Help.jsx").then(m => ({ default: m.Help })));
 const Profile   = lazy(() => import("@/components/pages/Profile.jsx").then(m => ({ default: m.Profile })));
 const Jogos     = lazy(() => import("@/components/pages/Jogos.jsx").then(m => ({ default: m.Jogos })));
-import { PWAInstallBanner } from "@/components/PWAInstallBanner.jsx";
+import InstallGuide from "@/components/organisms/InstallGuide.jsx";
 import { LoginScreen } from "@/components/auth/LoginScreen.jsx";
 import { SignupScreen } from "@/components/auth/SignupScreen.jsx";
 import { ResetPasswordScreen } from "@/components/auth/ResetPasswordScreen.jsx";
@@ -457,7 +457,7 @@ function AppContent({ auth }) {
       </div>
       <BottomNav page={page} onNav={handleNav} />
     </div>
-    <PWAInstallBanner />
+    <InstallGuide />
     </>
   );
 }
