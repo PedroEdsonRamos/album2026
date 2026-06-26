@@ -83,14 +83,21 @@ function statusFromCount(owned) {
   return { status: "Repetida", duplicates: owned };
 }
 
-/** Remove 1 unidade do typeBreakdown (a cópia mais comum), mantendo
- *  soma(typeBreakdown) === duplicates. Retorna novo objeto ou undefined. */
-function decrementBreakdown(tb) {
+/** Remove 1 unidade do typeBreakdown, mantendo soma(typeBreakdown) === duplicates.
+ *  Se `targetRarity` for informada e tiver cópia disponível, tira DELA (raridade
+ *  escolhida); senão, mantém a regra atual (tipo com maior quantidade).
+ *  Retorna novo objeto ou undefined. */
+function decrementBreakdown(tb, targetRarity) {
   if (!tb || typeof tb !== "object") return undefined;
   const entries = Object.entries(tb).filter(([, q]) => q > 0);
   if (entries.length === 0) return undefined;
-  entries.sort((a, b) => b[1] - a[1]); // tira do tipo com maior quantidade
-  const [key] = entries[0];
+  let key;
+  if (targetRarity && tb[targetRarity] > 0) {
+    key = targetRarity; // tira da raridade ESCOLHIDA
+  } else {
+    entries.sort((a, b) => b[1] - a[1]); // fallback: tipo com maior quantidade
+    key = entries[0][0];
+  }
   const next = { ...tb, [key]: tb[key] - 1 };
   if (next[key] <= 0) delete next[key];
   return Object.keys(next).length ? next : undefined;
@@ -248,6 +255,8 @@ export function useStickers(userId, addToast) {
    *  - novo:   listas independentes `{ entrego: [...], recebo: [...] }`
    *    (permite trocas desbalanceadas, ex.: 2 por 1)
    * Códigos repetidos aplicam o delta uma vez por ocorrência.
+   * Cada item de `entrego` pode ser um código (string) ou `{ code, rarity }`:
+   * quando vier a raridade, a cópia tirada é exatamente a dessa raridade.
    * @param {Array<{give:Object, receive:Object}>|{entrego:Array, recebo:Array}} input
    */
   const applyTrade = useCallback(
@@ -256,20 +265,28 @@ export function useStickers(userId, addToast) {
 
       function normalizeTrade(inp) {
         const codeOf = (x) => (typeof x === "string" ? x : x && x.code);
+        // Item de entrego: string (código) OU { code, rarity }.
+        // A raridade só existe quando o item é objeto.
+        const giveOf = (x) =>
+          typeof x === "string"
+            ? { code: x, rarity: undefined }
+            : x && { code: x.code, rarity: x.rarity };
         if (Array.isArray(inp)) {
           // formato antigo: lista de pares
           const entrego = [], recebo = [];
           for (const p of inp) {
-            if (p && p.give != null) entrego.push(codeOf(p.give));
+            if (p && p.give != null) entrego.push(giveOf(p.give));
             if (p && p.receive != null) recebo.push(codeOf(p.receive));
           }
           return {
-            entrego: entrego.filter(Boolean),
+            entrego: entrego.filter((g) => g && g.code),
             recebo: recebo.filter(Boolean),
           };
         }
         return {
-          entrego: ((inp && inp.entrego) || []).map(codeOf).filter(Boolean),
+          entrego: ((inp && inp.entrego) || [])
+            .map(giveOf)
+            .filter((g) => g && g.code),
           recebo: ((inp && inp.recebo) || []).map(codeOf).filter(Boolean),
         };
       }
@@ -278,8 +295,15 @@ export function useStickers(userId, addToast) {
       if (entrego.length === 0 && recebo.length === 0) return;
 
       // Conta ocorrências: cada ocorrência aplica um delta.
+      // giveRarities guarda a raridade escolhida por ocorrência (ou undefined).
       const giveCounts = new Map();
-      for (const c of entrego) giveCounts.set(c, (giveCounts.get(c) || 0) + 1);
+      const giveRarities = new Map();
+      for (const g of entrego) {
+        giveCounts.set(g.code, (giveCounts.get(g.code) || 0) + 1);
+        const arr = giveRarities.get(g.code) || [];
+        arr.push(g.rarity);
+        giveRarities.set(g.code, arr);
+      }
       const receiveCounts = new Map();
       for (const c of recebo) receiveCounts.set(c, (receiveCounts.get(c) || 0) + 1);
 
@@ -291,11 +315,12 @@ export function useStickers(userId, addToast) {
 
           let owned = ownedCount(s);
           let tb = s.typeBreakdown;
+          const giveRarityList = giveRarities.get(s.code) || [];
 
-          // Dou: -1 por ocorrência
+          // Dou: -1 por ocorrência (tira da raridade escolhida, se houver)
           for (let i = 0; i < gives; i++) {
             owned = Math.max(0, owned - 1);
-            tb = owned >= 2 ? decrementBreakdown(tb) : undefined;
+            tb = owned >= 2 ? decrementBreakdown(tb, giveRarityList[i]) : undefined;
           }
           // Recebo: +1 por ocorrência
           for (let i = 0; i < receives; i++) {
