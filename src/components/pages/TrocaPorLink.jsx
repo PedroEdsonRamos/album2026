@@ -104,7 +104,9 @@ export function TrocaPorLink({ stickers = [], applyTrade, addToast, incomingLink
 
   function handleConfirmFromLink({ entrego, recebo }) {
     applyTrade?.({ entrego, recebo });
-    const payload = encodeTradeConfirm({ entrego, recebo }, stickers);
+    // codec trabalha por código; entrego pode vir como [{ code, rarity }] (passo B)
+    const giveCodes = entrego.map((x) => (typeof x === "string" ? x : x.code));
+    const payload = encodeTradeConfirm({ entrego: giveCodes, recebo }, stickers);
     setConfirmLink(buildTradeUrl(payload));
     setApplied(true);
     addToast?.("Álbum atualizado!");
