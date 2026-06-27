@@ -48,8 +48,12 @@ export function Trocador({ stickers, addToast, applyTrade }) {
 
   function handleEditorConfirm({ entrego, recebo }) {
     applyTrade?.({ entrego, recebo });
-    setApplied(true);
-    addToast?.("Álbum atualizado!");
+    setRaw("");
+    setResult(null);
+    setParseInfo(null);
+    setApplied(false);
+    setEditorKey(k => k + 1);
+    addToast?.("Troca concluída!");
   }
 
   const codeOf = (x) => (typeof x === "string" ? x : x && x.code);
