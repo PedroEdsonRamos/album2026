@@ -59,10 +59,12 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
         ...prev,
         typeBreakdown: Object.keys(updated).length > 0 ? updated : undefined,
         duplicates: total,
-        rarity: Object.keys(updated).length === 1 ? Object.keys(updated)[0] : prev.rarity,
+        // rarity NÃO é tocada aqui — pertence à colada, não aos extras
       };
     });
   };
+
+  const rarColor = (r) => getFinish(r)?.color || C.t2;
 
   const fixedRarity = fixed ? getDefaultRarity(sticker) : null;
   const incFixed = () => onChange((p) => ({ ...p, duplicates: (p.duplicates ?? 0) + 1 }));
@@ -209,68 +211,61 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
                 🔒 Tipo automático para {CATEGORY_LABEL[category]}.
               </div>
             </>
-          ) : sticker.status !== "Repetida" ? (
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {Object.entries(FINISH).filter(([key]) => isTypeAllowed(sticker, key)).map(([key, fin]) => {
-                const active = rarToFinish(sticker.rarity) === key;
-                return (
-                  <button
-                    key={key}
-                    onClick={() => onChange((p) => ({ ...p, rarity: RARITY_MAP[key] || "Comum" }))}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.filter = "brightness(1.15)";
-                      e.currentTarget.style.transform = "translateY(-2px)";
-                      e.currentTarget.style.boxShadow = `0 6px 16px ${fin.glow}`;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.filter = "";
-                      e.currentTarget.style.transform = "";
-                      e.currentTarget.style.boxShadow = active ? `0 4px 12px ${fin.glow}` : "";
-                    }}
-                    style={{
-                      flex: 1,
-                      minWidth: 54,
-                      background: active ? fin.bg : "transparent",
-                      border: `1px solid ${active ? fin.border : C.borderHi}`,
-                      color: active ? fin.color : C.t3,
-                      boxShadow: active ? `0 4px 12px ${fin.glow}` : "none",
-                      borderRadius: 10,
-                      padding: "10px 6px",
-                      fontSize: 11,
-                      fontWeight: 700,
-                      cursor: "pointer",
-                      fontFamily: "inherit",
-                      transition: "all .18s",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      textAlign: "center",
-                    }}
-                  >
-                    {fin.label}
-                  </button>
-                );
-              })}
-            </div>
           ) : (
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                background: ef.bg,
-                border: `1px solid ${ef.border}`,
-                color: ef.color,
-                borderRadius: 999,
-                padding: "5px 16px",
-                fontSize: 12,
-                fontWeight: 700,
-                whiteSpace: "nowrap",
-                flexShrink: 0,
-                minWidth: 80,
-              }}
-            >
-              {ef.label}
-            </span>
+            <>
+              {originalStatus === "Faltando" && sticker.status === "Tenho" && (
+                <div style={{ fontSize: 12, color: C.amber, marginBottom: 6 }}>
+                  Escolha o tipo desta figurinha:
+                </div>
+              )}
+              {sticker.status === "Repetida" && (
+                <div style={{ fontSize: 12, color: C.t3, marginBottom: 6 }}>
+                  Tipo da cópia colada (a que fica no seu álbum):
+                </div>
+              )}
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {Object.entries(FINISH).filter(([key]) => isTypeAllowed(sticker, key)).map(([key, fin]) => {
+                  const active = rarToFinish(sticker.rarity) === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => onChange((p) => ({ ...p, rarity: RARITY_MAP[key] || "Comum" }))}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.filter = "brightness(1.15)";
+                        e.currentTarget.style.transform = "translateY(-2px)";
+                        e.currentTarget.style.boxShadow = `0 6px 16px ${fin.glow}`;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.filter = "";
+                        e.currentTarget.style.transform = "";
+                        e.currentTarget.style.boxShadow = active ? `0 4px 12px ${fin.glow}` : "";
+                      }}
+                      style={{
+                        flex: 1,
+                        minWidth: 54,
+                        background: active ? fin.bg : "transparent",
+                        border: `1px solid ${active ? fin.border : C.borderHi}`,
+                        color: active ? fin.color : C.t3,
+                        boxShadow: active ? `0 4px 12px ${fin.glow}` : "none",
+                        borderRadius: 10,
+                        padding: "10px 6px",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        fontFamily: "inherit",
+                        transition: "all .18s",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        textAlign: "center",
+                      }}
+                    >
+                      {fin.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
 
@@ -289,6 +284,11 @@ export function StickerEditModal({ sticker, onChange, onClose, onSave }) {
             }}>
               ⚠️ Lance apenas as cópias <strong>extras</strong> além da que está colada no álbum.
               A figurinha principal já está contabilizada.
+            </div>
+            <div style={{ fontSize: 12, color: C.t3, marginBottom: 4 }}>
+              Você já tem: <span style={{ color: rarColor(sticker.rarity), fontWeight: 800 }}>
+                {sticker.rarity}
+              </span> (cópia colada)
             </div>
             <div style={{ fontSize: 10, fontWeight: 700, color: C.t2, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>
               Quantidade por tipo
