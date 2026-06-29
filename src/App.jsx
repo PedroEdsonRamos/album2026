@@ -253,6 +253,12 @@ function AppContent({ auth }) {
   const [incomingTrade] = useState(() =>
     typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("troca") : null
   );
+  const [paymentSuccess] = useState(() =>
+    typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("payment") === "success" : false
+  );
+  const [paymentCancelled] = useState(() =>
+    typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("payment") === "cancelled" : false
+  );
   const [page, setPage] = useState(incomingTrade ? "trocas" : "dashboard");
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [toasts, setToasts] = useState([]);
@@ -263,18 +269,28 @@ function AppContent({ auth }) {
   const prevStickersRef = useRef(null);
   const mountedRef = useRef(false);
 
-  // Abriu via link de troca? Remove só o param `troca` da URL (preserva o resto).
+  // Remove params de navegação da URL após leitura inicial.
   useEffect(() => {
-    if (!incomingTrade) return;
+    if (!incomingTrade && !paymentSuccess && !paymentCancelled) return;
     const url = new URL(window.location.href);
     url.searchParams.delete("troca");
+    url.searchParams.delete("payment");
     window.history.replaceState(null, "", url.pathname + url.search + url.hash);
-  }, [incomingTrade]);
+  }, [incomingTrade, paymentSuccess, paymentCancelled]);
 
   const addToast = useCallback((msg, type = "success", duration) => {
     const id = Date.now() + Math.random();
     setToasts((t) => [...t, { id, msg, type, duration }]);
   }, []);
+
+  useEffect(() => {
+    if (paymentSuccess) {
+      auth.checkApproval(auth.user?.id);
+      addToast("🎉 Pagamento confirmado! Bem-vindo ao Álbum Copa 2026!", "success", 5000);
+    } else if (paymentCancelled) {
+      addToast("Pagamento cancelado. Você pode tentar novamente quando quiser.", "info", 4000);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { stickers, setStickers, loading, syncStatus, resetCollection, applyTrade, clearAllDuplicates } =
     useStickers(auth.user.id, addToast);

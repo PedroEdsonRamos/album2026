@@ -1,112 +1,155 @@
 import { useState } from "react";
-import { AuthLayout } from "./AuthLayout";
+import { supabase } from "@/lib/supabase";
+import { C } from "@/styles/tokens.js";
 
 export function PendingApprovalScreen({ auth }) {
-  const [checking, setChecking] = useState(false);
-  const [checked, setChecked]   = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleCheckAgain = async () => {
-    setChecking(true);
-    setChecked(false);
-    await auth.checkApproval(auth.user?.id);
-    setChecked(true);
-    setChecking(false);
-  };
-
-  const handleLogout = async () => {
-    if (!confirm("Deseja sair da conta?")) return;
-    await auth.signOut();
+  const handlePayment = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session.access_token}`,
+          },
+        }
+      );
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setError("Erro ao iniciar pagamento. Tente novamente.");
+      }
+    } catch {
+      setError("Erro ao conectar. Verifique sua conexão e tente novamente.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <AuthLayout>
+    <div style={{
+      minHeight: "100vh",
+      background: "#0c0c1a",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 24,
+      textAlign: "center",
+      fontFamily: "'Sora','DM Sans',system-ui,sans-serif",
+    }}>
+      <div style={{ fontSize: 56, marginBottom: 16 }}>🏆</div>
+
+      <h1 style={{ color: "#fff", fontSize: 22, fontWeight: 800, margin: "0 0 8px" }}>
+        Álbum Copa do Mundo 2026
+      </h1>
+      <p style={{ color: C.t3, fontSize: 14, margin: "0 0 32px", maxWidth: 320, lineHeight: 1.7 }}>
+        Você está no modo demonstração. Para marcar figurinhas, registrar trocas
+        e usar todas as funcionalidades, desbloqueie o acesso completo.
+      </p>
+
       <div style={{
-        background: "rgba(255,255,255,0.04)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 20, padding: "32px 24px",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
-        textAlign: "center",
+        background: C.surface,
+        border: `1px solid ${C.amber}`,
+        borderRadius: 16,
+        padding: "24px 32px",
+        marginBottom: 24,
+        maxWidth: 320,
+        width: "100%",
       }}>
-
-        <div style={{ fontSize: 52, marginBottom: 16, animation: "pulse 2s infinite" }}>
-          ⏳
+        <div style={{ color: C.t3, fontSize: 13, marginBottom: 4 }}>Acesso completo e vitalício</div>
+        <div style={{ color: "#fff", fontSize: 40, fontWeight: 900, lineHeight: 1 }}>
+          R$ 7<span style={{ fontSize: 20 }}>,00</span>
         </div>
+        <div style={{ color: C.t3, fontSize: 12, marginTop: 4 }}>pagamento único</div>
 
-        <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 8 }}>
-          Cadastro em análise
-        </div>
-
-        <div style={{
-          fontSize: 13, color: "rgba(255,255,255,0.45)",
-          lineHeight: 1.8, marginBottom: 20,
+        <ul style={{
+          listStyle: "none",
+          padding: 0,
+          margin: "20px 0 0",
+          textAlign: "left",
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
         }}>
-          Seu cadastro foi recebido com sucesso!
-          <br />
-          Nossa equipe analisa os acessos manualmente
-          <br />
-          e você será notificado em breve.
-        </div>
-
-        <div style={{
-          background: "rgba(245,158,11,0.08)",
-          border: "1px solid rgba(245,158,11,0.2)",
-          borderRadius: 12, padding: "12px 16px",
-          marginBottom: 8, fontSize: 13,
-          color: "rgba(245,158,11,0.8)",
-        }}>
-          📧 {auth.user?.email}
-        </div>
-
-        <div style={{
-          fontSize: 11, color: "rgba(255,255,255,0.25)",
-          marginBottom: 24, lineHeight: 1.6,
-        }}>
-          Prazo estimado: até 24 horas
-        </div>
-
-        {checked && (
-          <div style={{
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: 10, padding: "10px 14px",
-            marginBottom: 16, fontSize: 12,
-            color: "rgba(255,255,255,0.4)",
-          }}>
-            Acesso ainda não liberado. Tente novamente mais tarde.
-          </div>
-        )}
-
-        <button
-          onClick={handleCheckAgain}
-          disabled={checking}
-          style={{
-            width: "100%", padding: "13px",
-            background: checking
-              ? "rgba(245,158,11,0.2)"
-              : "linear-gradient(135deg, #f59e0b, #fbbf24)",
-            border: "none", borderRadius: 12,
-            color: "#000", fontSize: 14, fontWeight: 800,
-            cursor: checking ? "not-allowed" : "pointer",
-            fontFamily: "inherit", marginBottom: 10, transition: "all .2s",
-          }}>
-          {checking ? "Verificando..." : "🔄 Verificar aprovação"}
-        </button>
-
-        <button
-          onClick={handleLogout}
-          style={{
-            width: "100%", padding: "13px",
-            background: "transparent",
-            border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: 12, color: "rgba(255,255,255,0.4)",
-            fontSize: 13, fontWeight: 600,
-            cursor: "pointer", fontFamily: "inherit",
-          }}>
-          Sair da conta
-        </button>
-
+          {[
+            "✅ Marcar e gerenciar figurinhas",
+            "✅ Registrar e trocar repetidas",
+            "✅ Trocas por link com outros usuários",
+            "✅ Acompanhar jogos da Copa",
+            "✅ Instalar como app no celular",
+          ].map((item) => (
+            <li key={item} style={{ color: C.t2, fontSize: 13 }}>{item}</li>
+          ))}
+        </ul>
       </div>
-    </AuthLayout>
+
+      <button
+        onClick={handlePayment}
+        disabled={loading}
+        style={{
+          width: "100%",
+          maxWidth: 320,
+          padding: "14px 20px",
+          background: loading ? C.border : C.amber,
+          color: loading ? C.t3 : "#0c0c1a",
+          border: "none",
+          borderRadius: 12,
+          fontSize: 16,
+          fontWeight: 800,
+          cursor: loading ? "default" : "pointer",
+          fontFamily: "inherit",
+          marginBottom: 12,
+          transition: "all .2s",
+        }}
+      >
+        {loading ? "Redirecionando..." : "Desbloquear por R$ 7,00"}
+      </button>
+
+      {error && (
+        <p style={{ color: "#ef4444", fontSize: 13, margin: "0 0 12px" }}>{error}</p>
+      )}
+
+      <button
+        onClick={() => auth.checkApproval(auth.user?.id)}
+        style={{
+          background: "transparent",
+          border: "none",
+          color: C.t3,
+          fontSize: 12,
+          cursor: "pointer",
+          fontFamily: "inherit",
+          textDecoration: "underline",
+          marginBottom: 24,
+        }}
+      >
+        Já paguei — verificar acesso
+      </button>
+
+      <button
+        onClick={async () => {
+          if (!confirm("Deseja sair da conta?")) return;
+          await auth.signOut();
+        }}
+        style={{
+          background: "transparent",
+          border: "none",
+          color: C.t4,
+          fontSize: 11,
+          cursor: "pointer",
+          fontFamily: "inherit",
+        }}
+      >
+        Sair da conta
+      </button>
+    </div>
   );
 }
