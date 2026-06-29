@@ -72,7 +72,7 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
     [stickers]
   );
 
-  const RARITY_PRIORITY = ["Ouro", "Prata", "Bronze", "Lilás", "Metalizado", "Comum", "Coca-Cola"];
+  const RARITY_PRIORITY = ["Ouro", "Prata", "Bronze", "Lilás", "Metalizado", "McDonalds", "Comum", "Coca-Cola"];
   const getRarestRarity = (breakdown) => {
     if (!breakdown || Object.keys(breakdown).length === 0) return "Comum";
     for (const r of RARITY_PRIORITY) {
@@ -83,16 +83,14 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
 
   const saveEdit = (updates) => {
     if (!editSticker) return;
-    const rarestRarity = updates.status === "Repetida"
-      ? getRarestRarity(editSticker.typeBreakdown)
-      : editSticker.rarity;
+    const finalRarity = editSticker.rarity;
     setStickers((prev) =>
       prev.map((s) =>
         s.id === editSticker.id
           ? {
               ...s,
               ...updates,
-              rarity: rarestRarity,
+              rarity: finalRarity,
               typeBreakdown: editSticker.typeBreakdown,
               addedAt:
                 updates.status !== "Faltando" ? s.addedAt || new Date().toISOString() : null,
