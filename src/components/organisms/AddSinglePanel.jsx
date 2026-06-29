@@ -74,10 +74,15 @@ export function AddSinglePanel({ stickers, setStickers, addToast }) {
             });
           }
 
-          const totalDuplicates =
+          const rawDuplicates =
             isES && typeBreakdown && Object.keys(typeBreakdown).length > 0
               ? Object.values(typeBreakdown).reduce((a, b) => a + b, 0)
               : qty;
+
+          const totalDuplicates =
+            !fixedType && s.status === "Faltando" && newStatus === "Repetida"
+              ? Math.max(0, rawDuplicates - 1)
+              : rawDuplicates;
 
           const rarestRarity =
             isES && Object.keys(addTypeBreakdown).length > 0
