@@ -110,7 +110,7 @@ export function AddBatchPanel({ stickers, setStickers, addToast }) {
       parsed.results.forEach(({ sticker, rarity }) => {
         const m = upd[sticker.id];
         if (!m) { notFound++; return; }
-        if (m.status === "Tenho") {
+        if (m.status !== "Faltando") {
           dups++;
           const breakdown = { ...(m.typeBreakdown ?? {}), [rarity]: (m.typeBreakdown?.[rarity] ?? 0) + 1 };
           const total = Object.values(breakdown).reduce((a, b) => a + b, 0);
