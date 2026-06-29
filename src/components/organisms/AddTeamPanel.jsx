@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { ALL_TEAMS } from "@/data/teams.js";
 import { Icon } from "@/components/atoms/Icon.jsx";
 import { C } from "@/styles/tokens.js";
@@ -38,6 +38,14 @@ export function AddTeamPanel({ stickers, setStickers }) {
   const [teamSearch, setTeamSearch] = useState("");
   const [result, setResult] = useState(null);
   const [adding, setAdding] = useState(false);
+  const [mcToggle, setMcToggle] = useState(false);
+  const [showList, setShowList] = useState(false);
+
+  const hasFotoEquipe = !["FWC", "CC"].includes(teamSel);
+  const teamStickers = useMemo(
+    () => stickers.filter((s) => s.team === teamSel).sort((a, b) => a.number - b.number),
+    [stickers, teamSel]
+  );
 
   const visibleTeams = ALL_TEAMS.filter(
     (t) => !teamSearch.trim() || t.name.toLowerCase().includes(teamSearch.toLowerCase()) || t.id.toLowerCase().includes(teamSearch.toLowerCase())
@@ -53,7 +61,8 @@ export function AddTeamPanel({ stickers, setStickers }) {
       nums.forEach(({ num, isMc }) => {
         const m = stickers.find((s) => s.code === `${teamSel}${num}`.toUpperCase());
         if (!m) { notFound++; return; }
-        const rarity = (isMc && m.position === "Foto Equipe") ? "McDonalds" : (m.rarity || "Comum");
+        const effectiveIsMc = isMc || (num === 13 && mcToggle);
+        const rarity = (effectiveIsMc && m.position === "Foto Equipe") ? "McDonalds" : (m.rarity || "Comum");
         if (m.status === "Tenho") {
           dups++;
           upd[m.id] = { ...upd[m.id], status: "Repetida", duplicates: (upd[m.id].duplicates||0)+1 };
@@ -106,7 +115,7 @@ export function AddTeamPanel({ stickers, setStickers }) {
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 200, overflowY: "auto", paddingBottom: 4, marginBottom: 14 }}>
         {visibleTeams.map((t) => (
-          <button key={t.id} onClick={() => setTeamSel(t.id)} className="fc-btn"
+          <button key={t.id} onClick={() => { setTeamSel(t.id); setMcToggle(false); setShowList(false); }} className="fc-btn"
             style={{ background: teamSel===t.id?`${t.color}33`:C.surface, border: `1px solid ${teamSel===t.id?t.color:C.border}`,
               borderRadius: 10, padding: "8px 12px", cursor: "pointer", fontFamily: "inherit", flexShrink: 0,
               display: "flex", alignItems: "center", gap: 8, transition: "all .18s ease", width: "100%", textAlign: "left" }}>
@@ -140,9 +149,47 @@ export function AddTeamPanel({ stickers, setStickers }) {
       <textarea value={teamNums} onChange={(e) => setTeamNums(e.target.value)} rows={4} placeholder={"Ex: 1, 2, 3, 5\nou intervalos: 7-12"}
         style={{ width: "100%", background: C.surfaceHi, border: `1px solid ${C.borderHi}`, borderRadius: 12,
           padding: "14px 16px", color: "#fff", fontSize: 16, outline: "none", boxSizing: "border-box", fontFamily: "monospace", resize: "vertical", lineHeight: 1.6 }} />
-      <div style={{ fontSize: 11, color: C.t3, margin: "6px 0 14px" }}>
+      <div style={{ fontSize: 11, color: C.t3, margin: "6px 0 12px" }}>
         {previewNums.length} figurinha(s): {previewNums.slice(0, 8).map(({ num, isMc }) => `${teamSel}${num}${isMc ? "-MC" : ""}`).join(", ")}{previewNums.length > 8 ? "..." : ""}
       </div>
+      {hasFotoEquipe && (
+        <button
+          type="button"
+          onClick={() => setMcToggle((t) => !t)}
+          style={{
+            display: "block", marginBottom: 12, padding: "6px 12px", borderRadius: 999,
+            fontSize: 12, fontWeight: 800,
+            border: `1px solid ${mcToggle ? C.amber : C.border}`,
+            background: mcToggle ? C.amber : "transparent",
+            color: mcToggle ? "#0c0c1a" : C.t2,
+            cursor: "pointer", fontFamily: "inherit",
+          }}
+        >
+          🍟 Foto de Equipe = McDonald's
+        </button>
+      )}
+      {teamStickers.length > 0 && (
+        <div style={{ marginBottom: 14 }}>
+          <button type="button" onClick={() => setShowList((s) => !s)}
+            style={{ fontSize: 12, color: C.t3, background: "transparent", border: "none",
+                     cursor: "pointer", fontFamily: "inherit", padding: 0 }}>
+            {showList ? "▲ Ocultar figurinhas" : `▼ Ver figurinhas (${teamStickers.length})`}
+          </button>
+          {showList && (
+            <div style={{ maxHeight: 200, overflowY: "auto", marginTop: 6,
+                          border: `1px solid ${C.border}`, borderRadius: 8, padding: 8 }}>
+              {teamStickers.map((s) => (
+                <div key={s.code} style={{ fontSize: 12, color: C.t2, padding: "2px 0",
+                                           display: "flex", gap: 8 }}>
+                  <span style={{ color: C.t3, minWidth: 28 }}>#{s.number}</span>
+                  <span style={{ flex: 1 }}>{s.name}</span>
+                  <span style={{ color: C.t3 }}>{s.rarity}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
       <button onClick={handleTeamBatch} disabled={!teamNums.trim() || adding}
         style={{ width: "100%", background: teamNums.trim()?`linear-gradient(135deg,${C.amber},${C.amberLt})`:C.surface,
           border: "none", borderRadius: 14, padding: "16px", fontSize: 15, fontWeight: 800,
