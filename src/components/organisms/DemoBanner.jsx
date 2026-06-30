@@ -1,8 +1,27 @@
-import { forwardRef, useImperativeHandle, useState } from "react";
+import { forwardRef, useImperativeHandle, useState, useEffect } from "react";
 import { C } from "@/styles/tokens.js";
+
+const MESSAGES = [
+  {
+    icon: "🔒",
+    title: "Seu álbum está congelado",
+    sub: "Libere agora e comece a colar suas figurinhas.",
+  },
+  {
+    icon: "⚽",
+    title: "A Copa não espera",
+    sub: "Cada jogo é uma figurinha nova pra registrar.",
+  },
+  {
+    icon: "✨",
+    title: "Menos que um café: R$ 7,00",
+    sub: "Pagamento único. Acesso pra sempre.",
+  },
+];
 
 const DemoBanner = forwardRef(function DemoBanner({ onClick }, ref) {
   const [shaking, setShaking] = useState(false);
+  const [msgIndex, setMsgIndex] = useState(0);
 
   useImperativeHandle(ref, () => ({
     shake: () => {
@@ -10,6 +29,15 @@ const DemoBanner = forwardRef(function DemoBanner({ onClick }, ref) {
       requestAnimationFrame(() => setShaking(true));
     },
   }));
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setMsgIndex((i) => (i + 1) % MESSAGES.length);
+    }, 8000);
+    return () => clearInterval(t);
+  }, []);
+
+  const msg = MESSAGES[msgIndex];
 
   return (
     <div
@@ -31,27 +59,39 @@ const DemoBanner = forwardRef(function DemoBanner({ onClick }, ref) {
       }}
     >
       <div style={{
-        background: "rgba(28,28,46,0.98)",
+        background: "linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(28,28,46,0.98) 60%)",
         backdropFilter: "blur(16px)",
         border: `1px solid ${C.amber}`,
         borderRadius: 14,
         padding: "12px 14px",
-        boxShadow: "0 8px 30px rgba(0,0,0,0.45)",
+        boxShadow: "0 8px 30px rgba(0,0,0,0.45), 0 0 0 1px rgba(245,158,11,0.1)",
         display: "flex",
         alignItems: "center",
         gap: 12,
       }}>
-        <span style={{ fontSize: 24 }}>🔒</span>
+        <span style={{ fontSize: 26, lineHeight: 1 }}>{msg.icon}</span>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 800, color: "#fff", fontSize: 14 }}>
-            Modo demonstração
+          <div style={{
+            fontWeight: 800, color: "#fff", fontSize: 14,
+            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+          }}>
+            {msg.title}
           </div>
-          <div style={{ fontSize: 12, color: C.t3 }}>
-            Finalize o pagamento para editar e salvar seu álbum.
+          <div style={{
+            fontSize: 12, color: C.t2,
+            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+          }}>
+            {msg.sub}
           </div>
         </div>
-        <span style={{ color: C.amber, fontWeight: 800, fontSize: 13, whiteSpace: "nowrap" }}>
-          Pagar →
+        <span style={{
+          background: C.amber, color: "#0c0c1a",
+          fontWeight: 800, fontSize: 13,
+          padding: "8px 12px", borderRadius: 8,
+          whiteSpace: "nowrap",
+          boxShadow: "0 2px 8px rgba(245,158,11,0.4)",
+        }}>
+          Liberar
         </span>
       </div>
     </div>
