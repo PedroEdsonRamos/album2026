@@ -9,7 +9,7 @@ import { StickerCard } from "@/components/molecules/StickerCard.jsx";
 import { StickerEditModal } from "@/components/organisms/StickerEditModal.jsx";
 import { C } from "@/styles/tokens.js";
 
-export function Stickers({ stickers, selectedTeam, setStickers, addToast, initialFilter }) {
+export function Stickers({ stickers, selectedTeam, setStickers, addToast, initialFilter, isDemo, onBlockedAction }) {
   const [search, setSearch] = useState("");
   const [fStatus, setFStatus] = usePersistedFilter("filter_album_status", "Todos");
   const [fFinish, setFFinish] = usePersistedFilter("filter_album_finish", "Todos");
@@ -66,10 +66,11 @@ export function Stickers({ stickers, selectedTeam, setStickers, addToast, initia
 
   const handleStickerClick = useCallback(
     (id) => {
+      if (isDemo) { onBlockedAction?.(); return; }
       const s = stickers.find((x) => x.id === id);
       if (s) setEditSticker({ ...s });
     },
-    [stickers]
+    [stickers, isDemo, onBlockedAction]
   );
 
   const RARITY_PRIORITY = ["Ouro", "Prata", "Bronze", "Lilás", "Metalizado", "McDonalds", "Comum", "Coca-Cola"];

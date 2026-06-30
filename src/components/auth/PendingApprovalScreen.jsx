@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { C } from "@/styles/tokens.js";
 
-export function PendingApprovalScreen({ auth }) {
+export function PendingApprovalScreen({ auth, onBack }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -45,7 +45,22 @@ export function PendingApprovalScreen({ auth }) {
       padding: 24,
       textAlign: "center",
       fontFamily: "'Sora','DM Sans',system-ui,sans-serif",
+      position: "relative",
     }}>
+      {onBack && (
+        <button
+          onClick={onBack}
+          aria-label="Voltar"
+          style={{
+            position: "absolute", top: 16, left: 16,
+            background: "transparent", border: "none",
+            color: C.t2, fontSize: 24, cursor: "pointer",
+            fontFamily: "inherit", lineHeight: 1,
+          }}
+        >
+          ←
+        </button>
+      )}
       <div style={{ fontSize: 56, marginBottom: 16 }}>🏆</div>
 
       <h1 style={{ color: "#fff", fontSize: 22, fontWeight: 800, margin: "0 0 8px" }}>

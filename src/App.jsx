@@ -24,6 +24,7 @@ const Help      = lazy(() => import("@/components/pages/Help.jsx").then(m => ({ 
 const Profile   = lazy(() => import("@/components/pages/Profile.jsx").then(m => ({ default: m.Profile })));
 const Jogos     = lazy(() => import("@/components/pages/Jogos.jsx").then(m => ({ default: m.Jogos })));
 import InstallGuide from "@/components/organisms/InstallGuide.jsx";
+import DemoBanner from "@/components/organisms/DemoBanner.jsx";
 import { LoginScreen } from "@/components/auth/LoginScreen.jsx";
 import { SignupScreen } from "@/components/auth/SignupScreen.jsx";
 import { ResetPasswordScreen } from "@/components/auth/ResetPasswordScreen.jsx";
@@ -266,6 +267,10 @@ function AppContent({ auth, isDemo }) {
   const [completion, setCompletion] = useState(null);
   const prevStickersRef = useRef(null);
   const mountedRef = useRef(false);
+  const demoBannerRef = useRef(null);
+  const [showPaymentScreen, setShowPaymentScreen] = useState(false);
+
+  const onBlockedAction = useCallback(() => demoBannerRef.current?.shake(), []);
 
   // Remove params de navegação da URL após leitura inicial.
   useEffect(() => {
@@ -444,7 +449,7 @@ function AppContent({ auth, isDemo }) {
             )}
             {page === "stickers" && (
               <PageSuspense>
-                <Stickers stickers={stickers} selectedTeam={selectedTeam} setStickers={setStickers} addToast={addToast} initialFilter={albumInitialFilter} isDemo={isDemo} />
+                <Stickers stickers={stickers} selectedTeam={selectedTeam} setStickers={setStickers} addToast={addToast} initialFilter={albumInitialFilter} isDemo={isDemo} onBlockedAction={onBlockedAction} />
               </PageSuspense>
             )}
             {page === "add" && (
@@ -471,7 +476,21 @@ function AppContent({ auth, isDemo }) {
       </div>
       <BottomNav page={page} onNav={handleNav} />
     </div>
+    {isDemo && !showPaymentScreen && (
+      <DemoBanner ref={demoBannerRef} onClick={() => setShowPaymentScreen(true)} />
+    )}
     {!isDemo && <InstallGuide />}
+    {showPaymentScreen && (
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 9000,
+        background: "#0c0c1a", overflowY: "auto",
+      }}>
+        <PendingApprovalScreen
+          auth={auth}
+          onBack={() => setShowPaymentScreen(false)}
+        />
+      </div>
+    )}
     </>
   );
 }
