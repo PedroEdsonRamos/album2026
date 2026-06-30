@@ -459,17 +459,17 @@ function AppContent({ auth, isDemo }) {
             )}
             {page === "trocas" && (
               <PageSuspense>
-                <TrocasHub stickers={stickers} addToast={addToast} applyTrade={applyTrade} goToAlbum={goToAlbum} setPage={handleNav} setTeamFilter={setSelectedTeam} initialView={incomingTrade ? "link" : undefined} incomingTrade={incomingTrade} isDemo={isDemo} />
+                <TrocasHub stickers={stickers} addToast={addToast} applyTrade={applyTrade} goToAlbum={goToAlbum} setPage={handleNav} setTeamFilter={setSelectedTeam} initialView={incomingTrade ? "link" : undefined} incomingTrade={incomingTrade} isDemo={isDemo} onBlockedAction={onBlockedAction} />
               </PageSuspense>
             )}
             {page === "status" && (
               <PageSuspense>
-                <Status stickers={stickers} setStickers={setStickers} addToast={addToast} setPage={setPage} onReset={resetCollection} onClearDuplicates={clearAllDuplicates} isDemo={isDemo} />
+                <Status stickers={stickers} setStickers={setStickers} addToast={addToast} setPage={setPage} onReset={resetCollection} onClearDuplicates={clearAllDuplicates} isDemo={isDemo} onBlockedAction={onBlockedAction} />
               </PageSuspense>
             )}
             {page === "ajuda" && <PageSuspense><Help setPage={setPage} /></PageSuspense>}
             {page === "jogos" && <PageSuspense><Jogos /></PageSuspense>}
-            {page === "profile" && <PageSuspense><Profile auth={auth} stickers={stickers} setPage={setPage} addToast={addToast} /></PageSuspense>}
+            {page === "profile" && <PageSuspense><Profile auth={auth} stickers={stickers} setPage={setPage} addToast={addToast} isDemo={isDemo} onBlockedAction={onBlockedAction} /></PageSuspense>}
           </PageTransition>
         </div>
         <Footer />

@@ -15,7 +15,7 @@ import { ResetModal } from "@/components/organisms/ResetModal.jsx";
 import { ConfirmDangerModal } from "@/components/organisms/ConfirmDangerModal.jsx";
 import { C } from "@/styles/tokens.js";
 
-export function Status({ stickers, setStickers, addToast, setPage, onReset, onClearDuplicates }) {
+export function Status({ stickers, setStickers, addToast, setPage, onReset, onClearDuplicates, isDemo, onBlockedAction }) {
   const [showReset, setShowReset] = useState(false);
   const [showClearDups, setShowClearDups] = useState(false);
   const [displayOwned, setDisplayOwned] = useState(null);
@@ -350,7 +350,7 @@ export function Status({ stickers, setStickers, addToast, setPage, onReset, onCl
         </div>
         <button
           type="button"
-          onClick={() => setShowClearDups(true)}
+          onClick={isDemo ? onBlockedAction : () => setShowClearDups(true)}
           style={{
             width: "100%",
             padding: "12px 0",
@@ -360,15 +360,16 @@ export function Status({ stickers, setStickers, addToast, setPage, onReset, onCl
             color: "#fbbf24",
             fontWeight: 700,
             fontSize: 14,
-            cursor: "pointer",
+            cursor: isDemo ? "default" : "pointer",
             fontFamily: "inherit",
             marginBottom: 10,
+            opacity: isDemo ? 0.4 : 1,
           }}
         >
           🧹 Limpar figurinhas repetidas
         </button>
         <button
-          onClick={() => setShowReset(true)}
+          onClick={isDemo ? onBlockedAction : () => setShowReset(true)}
           style={{
             width: "100%",
             background: "rgba(248,113,113,0.12)",
@@ -378,9 +379,10 @@ export function Status({ stickers, setStickers, addToast, setPage, onReset, onCl
             padding: "12px",
             fontSize: 13,
             fontWeight: 700,
-            cursor: "pointer",
+            cursor: isDemo ? "default" : "pointer",
             fontFamily: "inherit",
             transition: "all .2s",
+            opacity: isDemo ? 0.4 : 1,
           }}
         >
           🗑️ Resetar Álbum

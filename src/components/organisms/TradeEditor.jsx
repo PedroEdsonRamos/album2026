@@ -129,7 +129,7 @@ function SummaryLine({ s, rarity }) {
   );
 }
 
-export function TradeEditor({ poolEntregar = [], poolReceber = [], initialEntrego = [], initialRecebo = [], onConfirm, confirmLabel = "Confirmar troca" }) {
+export function TradeEditor({ poolEntregar = [], poolReceber = [], initialEntrego = [], initialRecebo = [], onConfirm, confirmLabel = "Confirmar troca", isDemo, onBlockedAction }) {
   const [entrego, setEntrego] = useState(() => new Set(initialEntrego));
   const [recebo, setRecebo] = useState(() => new Set(initialRecebo));
   const [rarityByCode, setRarityByCode] = useState({});
@@ -197,7 +197,7 @@ export function TradeEditor({ poolEntregar = [], poolReceber = [], initialEntreg
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button type="button" onClick={() => setReviewing(false)} style={{ flex: 1, padding: "12px 14px", borderRadius: 12, border: `1px solid ${C.border}`, background: "transparent", color: C.t2, fontWeight: 800, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>Voltar</button>
-          <button type="button" onClick={() => onConfirm && onConfirm({ entrego: give, recebo: rec })} style={{ flex: 2, padding: "12px 14px", borderRadius: 12, border: "none", background: C.amber, color: "#0c0c1a", fontWeight: 800, fontSize: 15, cursor: "pointer", fontFamily: "inherit" }}>{confirmLabel}</button>
+          <button type="button" onClick={isDemo ? onBlockedAction : () => onConfirm && onConfirm({ entrego: give, recebo: rec })} style={{ flex: 2, padding: "12px 14px", borderRadius: 12, border: "none", background: isDemo ? C.border : C.amber, color: isDemo ? C.t3 : "#0c0c1a", fontWeight: 800, fontSize: 15, cursor: isDemo ? "default" : "pointer", fontFamily: "inherit", opacity: isDemo ? 0.4 : 1 }}>{confirmLabel}</button>
         </div>
       </div>
     );

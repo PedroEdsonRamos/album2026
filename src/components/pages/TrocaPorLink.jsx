@@ -39,7 +39,7 @@ function buildTradeUrl(payload) {
 }
 
 /* ===== componente principal ===== */
-export function TrocaPorLink({ stickers = [], applyTrade, addToast, incomingLink }) {
+export function TrocaPorLink({ stickers = [], applyTrade, addToast, incomingLink, isDemo, onBlockedAction }) {
   const [myLink, setMyLink] = useState("");
   const [inText, setInText] = useState("");
   const [analysis, setAnalysis] = useState(null); // {kind,...} | {error}
@@ -230,6 +230,8 @@ export function TrocaPorLink({ stickers = [], applyTrade, addToast, incomingLink
                 initialRecebo={suggestedRecv}
                 confirmLabel="Confirmar e gerar link de volta"
                 onConfirm={handleConfirmFromLink}
+                isDemo={isDemo}
+                onBlockedAction={onBlockedAction}
               />
             </div>
           )
@@ -246,7 +248,7 @@ export function TrocaPorLink({ stickers = [], applyTrade, addToast, incomingLink
                   Você entrega <b style={{ color: C.amber }}>{analysis.iGive.length}</b> e recebe{" "}
                   <b style={{ color: C.green }}>{analysis.iReceive.length}</b>.
                 </div>
-                <button type="button" onClick={handleApplyConfirm} style={{ width: "100%", padding: "12px 14px", borderRadius: 12, border: "none", background: C.amber, color: "#0c0c1a", fontWeight: 800, fontSize: 15, cursor: "pointer", fontFamily: "inherit" }}>
+                <button type="button" onClick={isDemo ? onBlockedAction : handleApplyConfirm} style={{ width: "100%", padding: "12px 14px", borderRadius: 12, border: "none", background: isDemo ? C.border : C.amber, color: isDemo ? C.t3 : "#0c0c1a", fontWeight: 800, fontSize: 15, cursor: isDemo ? "default" : "pointer", fontFamily: "inherit", opacity: isDemo ? 0.4 : 1 }}>
                   Aplicar troca
                 </button>
               </>

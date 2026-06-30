@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { deleteUserAccount } from "@/services/syncService.js";
 
-export function DeleteAccountSection({ auth }) {
+export function DeleteAccountSection({ auth, isDemo, onBlockedAction }) {
   const [step, setStep]         = useState(0);
   const [password, setPassword] = useState("");
   const [deleting, setDeleting] = useState(false);
@@ -75,13 +75,15 @@ export function DeleteAccountSection({ auth }) {
             incluindo sua coleção de figurinhas, serão apagados.
           </div>
           <button
-            onClick={() => setStep(1)}
+            onClick={isDemo ? onBlockedAction : () => setStep(1)}
             style={{
               ...btnBase,
               width: "100%",
               background: "rgba(248,113,113,0.1)",
               border: "1px solid rgba(248,113,113,0.35)",
               color: "#f87171",
+              cursor: isDemo ? "default" : "pointer",
+              opacity: isDemo ? 0.4 : 1,
             }}
           >
             Excluir minha conta

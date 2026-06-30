@@ -6,7 +6,7 @@ import { ChangePasswordSection } from "@/components/auth/ChangePasswordSection.j
 import { ExportDataSection } from "@/components/pages/ExportDataSection.jsx";
 import { DeleteAccountSection } from "@/components/pages/DeleteAccountSection.jsx";
 
-export function Profile({ auth, stickers, setPage, addToast }) {
+export function Profile({ auth, stickers, setPage, addToast, isDemo, onBlockedAction }) {
   const [displayName, setDisplayName] = useState(
     auth.user?.user_metadata?.full_name ?? ""
   );
@@ -258,7 +258,7 @@ export function Profile({ auth, stickers, setPage, addToast }) {
 
       <ExportDataSection auth={auth} stickers={stickers} addToast={addToast} />
 
-      <DeleteAccountSection auth={auth} />
+      <DeleteAccountSection auth={auth} isDemo={isDemo} onBlockedAction={onBlockedAction} />
 
       <div
         style={{

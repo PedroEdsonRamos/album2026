@@ -6,7 +6,7 @@ import {
 import { C } from "@/styles/tokens.js";
 import { TradeEditor } from "@/components/organisms/TradeEditor.jsx";
 
-export function Trocador({ stickers, addToast, applyTrade }) {
+export function Trocador({ stickers, addToast, applyTrade, isDemo, onBlockedAction }) {
   const [raw, setRaw] = useState("");
   const [result, setResult] = useState(null);
   const [parseInfo, setParseInfo] = useState(null);
@@ -143,6 +143,8 @@ export function Trocador({ stickers, addToast, applyTrade }) {
                 initialRecebo={sugRecv}
                 confirmLabel="Confirmar troca no meu álbum"
                 onConfirm={handleEditorConfirm}
+                isDemo={isDemo}
+                onBlockedAction={onBlockedAction}
               />
             </div>
           )}

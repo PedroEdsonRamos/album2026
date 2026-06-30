@@ -10,7 +10,7 @@ const VIEWS = [
   { id: "repetidas", label: "Repetidas" },
 ];
 
-export function TrocasHub({ stickers, addToast, applyTrade, goToAlbum, setPage, setTeamFilter, initialView, incomingTrade }) {
+export function TrocasHub({ stickers, addToast, applyTrade, goToAlbum, setPage, setTeamFilter, initialView, incomingTrade, isDemo, onBlockedAction }) {
   const [view, setView] = useState(initialView || "link");
 
   return (
@@ -28,10 +28,10 @@ export function TrocasHub({ stickers, addToast, applyTrade, goToAlbum, setPage, 
         />
       </div>
       <div style={{ display: view === "trocador" ? "block" : "none" }}>
-        <Trocador stickers={stickers} addToast={addToast} applyTrade={applyTrade} />
+        <Trocador stickers={stickers} addToast={addToast} applyTrade={applyTrade} isDemo={isDemo} onBlockedAction={onBlockedAction} />
       </div>
       <div style={{ display: view === "link" ? "block" : "none" }}>
-        <TrocaPorLink stickers={stickers} applyTrade={applyTrade} addToast={addToast} incomingLink={incomingTrade} />
+        <TrocaPorLink stickers={stickers} applyTrade={applyTrade} addToast={addToast} incomingLink={incomingTrade} isDemo={isDemo} onBlockedAction={onBlockedAction} />
       </div>
     </div>
   );
