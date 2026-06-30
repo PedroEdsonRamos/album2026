@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { buildDatabase } from "@/data/database";
+import { buildDatabase, buildDemoDatabase } from "@/data/database";
 import { TEAMS } from "@/data/teams";
 import { isFixedType } from "@/utils/stickerTypes";
 import {
@@ -103,7 +103,7 @@ function decrementBreakdown(tb, targetRarity) {
   return Object.keys(next).length ? next : undefined;
 }
 
-export function useStickers(userId, addToast) {
+export function useStickers(userId, addToast, isDemo = false) {
   const [stickers, setStickers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [syncStatus, setSyncStatus] = useState("idle");
@@ -115,6 +115,11 @@ export function useStickers(userId, addToast) {
 
   useEffect(() => {
     if (!userId) return;
+    if (isDemo) {
+      setStickers(buildDemoDatabase());
+      setLoading(false);
+      return;
+    }
     loadCollection();
 
     return () => {
@@ -213,25 +218,27 @@ export function useStickers(userId, addToast) {
         const next =
           typeof updater === "function" ? updater(prev) : updater;
 
-        next.forEach((s, i) => {
-          if (
-            prev[i] &&
-            (s.status !== prev[i].status ||
-              s.duplicates !== prev[i].duplicates ||
-              s.rarity !== prev[i].rarity ||
-              JSON.stringify(s.typeBreakdown) !==
-                JSON.stringify(prev[i].typeBreakdown))
-          ) {
-            scheduleSave(s);
-          }
-        });
+        if (!isDemo) {
+          next.forEach((s, i) => {
+            if (
+              prev[i] &&
+              (s.status !== prev[i].status ||
+                s.duplicates !== prev[i].duplicates ||
+                s.rarity !== prev[i].rarity ||
+                JSON.stringify(s.typeBreakdown) !==
+                  JSON.stringify(prev[i].typeBreakdown))
+            ) {
+              scheduleSave(s);
+            }
+          });
 
-        setTimeout(() => checkAchievements(next, userId), 500);
+          setTimeout(() => checkAchievements(next, userId), 500);
+        }
 
         return next;
       });
     },
-    [scheduleSave, userId]
+    [scheduleSave, userId, isDemo]
   );
 
   const resetCollection = async () => {

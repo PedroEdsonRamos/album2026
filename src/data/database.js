@@ -140,3 +140,14 @@ export function buildEmptyDatabase() {
     obs: undefined,
   }));
 }
+
+// Dataset fictício para modo demo: Brasil parcialmente preenchido, resto Faltando
+export function buildDemoDatabase() {
+  return buildEmptyDatabase().map((s) => {
+    if (s.team === "BRA") {
+      if (s.number <= 5) return { ...s, status: "Repetida", duplicates: 1 };
+      return { ...s, status: "Tenho" };
+    }
+    return s;
+  });
+}
