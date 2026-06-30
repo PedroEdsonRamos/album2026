@@ -239,14 +239,12 @@ function NormalApp() {
     );
   }
 
-  if (auth.user && auth.approved === false) {
-    return <PendingApprovalScreen auth={auth} />;
-  }
+  const isDemo = auth.user && auth.approved === false;
 
-  return <AppContent auth={auth} />;
+  return <AppContent auth={auth} isDemo={isDemo} />;
 }
 
-function AppContent({ auth }) {
+function AppContent({ auth, isDemo }) {
   const online = useOnlineStatus();
   const forceUpdate = useForceUpdate();
   useAppVisibility(useCallback(() => { forceUpdate(); }, [forceUpdate]));
@@ -293,7 +291,7 @@ function AppContent({ auth }) {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { stickers, setStickers, loading, syncStatus, resetCollection, applyTrade, clearAllDuplicates } =
-    useStickers(auth.user.id, addToast);
+    useStickers(auth.user.id, addToast, isDemo);
 
   const handleLogout = async () => {
     if (!confirm("Deseja sair da sua conta?")) return;
@@ -446,22 +444,22 @@ function AppContent({ auth }) {
             )}
             {page === "stickers" && (
               <PageSuspense>
-                <Stickers stickers={stickers} selectedTeam={selectedTeam} setStickers={setStickers} addToast={addToast} initialFilter={albumInitialFilter} />
+                <Stickers stickers={stickers} selectedTeam={selectedTeam} setStickers={setStickers} addToast={addToast} initialFilter={albumInitialFilter} isDemo={isDemo} />
               </PageSuspense>
             )}
             {page === "add" && (
               <PageSuspense>
-                <AddPage stickers={stickers} setStickers={setStickers} addToast={addToast} />
+                <AddPage stickers={stickers} setStickers={setStickers} addToast={addToast} isDemo={isDemo} />
               </PageSuspense>
             )}
             {page === "trocas" && (
               <PageSuspense>
-                <TrocasHub stickers={stickers} addToast={addToast} applyTrade={applyTrade} goToAlbum={goToAlbum} setPage={handleNav} setTeamFilter={setSelectedTeam} initialView={incomingTrade ? "link" : undefined} incomingTrade={incomingTrade} />
+                <TrocasHub stickers={stickers} addToast={addToast} applyTrade={applyTrade} goToAlbum={goToAlbum} setPage={handleNav} setTeamFilter={setSelectedTeam} initialView={incomingTrade ? "link" : undefined} incomingTrade={incomingTrade} isDemo={isDemo} />
               </PageSuspense>
             )}
             {page === "status" && (
               <PageSuspense>
-                <Status stickers={stickers} setStickers={setStickers} addToast={addToast} setPage={setPage} onReset={resetCollection} onClearDuplicates={clearAllDuplicates} />
+                <Status stickers={stickers} setStickers={setStickers} addToast={addToast} setPage={setPage} onReset={resetCollection} onClearDuplicates={clearAllDuplicates} isDemo={isDemo} />
               </PageSuspense>
             )}
             {page === "ajuda" && <PageSuspense><Help setPage={setPage} /></PageSuspense>}
@@ -473,7 +471,7 @@ function AppContent({ auth }) {
       </div>
       <BottomNav page={page} onNav={handleNav} />
     </div>
-    <InstallGuide />
+    {!isDemo && <InstallGuide />}
     </>
   );
 }
