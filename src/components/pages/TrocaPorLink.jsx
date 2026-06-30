@@ -155,9 +155,37 @@ export function TrocaPorLink({ stickers = [], applyTrade, addToast, incomingLink
         ) : (
           <>
             <div style={codeBox}>{myLink}</div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button type="button" style={{ ...primaryBtn, flex: 1 }} onClick={() => copyText(myLink, () => addToast?.("Link copiado!"))}>Copiar link</button>
-              <a href={`https://wa.me/?text=${encodeURIComponent("Bora trocar figurinhas? Abre meu link no app:\n" + myLink)}`} target="_blank" rel="noreferrer" style={{ padding: "10px 14px", borderRadius: 9, border: `1px solid ${C.border}`, background: "transparent", color: C.amber, fontWeight: 700, fontSize: 13, textDecoration: "none", display: "flex", alignItems: "center", fontFamily: "inherit" }}>WhatsApp</a>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button
+                type="button"
+                style={{ ...primaryBtn, flex: 1 }}
+                onClick={() => {
+                  const msg = `🏆 *Troca de Álbum Copa 2026!*\n\nTenho uma proposta de troca com ${counts.rep} figurinhas pra você.\nConfere aqui:\n\n${myLink}\n\n(O app é gratuito pra explorar — você só paga R$ 7 quando quiser começar a marcar.)`;
+                  copyText(msg, () => addToast?.("Mensagem copiada! Cole no WhatsApp."));
+                }}
+              >
+                Copiar mensagem
+              </button>
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(`🏆 *Troca de Álbum Copa 2026!*\n\nTenho uma proposta de troca com ${counts.rep} figurinhas pra você.\nConfere aqui:\n\n${myLink}\n\n(O app é gratuito pra explorar — você só paga R$ 7 quando quiser começar a marcar.)`)}`}
+                target="_blank"
+                rel="noreferrer"
+                style={{ padding: "10px 14px", borderRadius: 9, border: `1px solid ${C.border}`, background: "transparent", color: C.amber, fontWeight: 700, fontSize: 13, textDecoration: "none", display: "flex", alignItems: "center", fontFamily: "inherit" }}
+              >
+                WhatsApp
+              </a>
+              {typeof navigator !== "undefined" && navigator.share && (
+                <button
+                  type="button"
+                  style={{ padding: "10px 14px", borderRadius: 9, border: `1px solid ${C.border}`, background: "transparent", color: C.t2, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", gap: 4 }}
+                  onClick={() => {
+                    const msg = `🏆 *Troca de Álbum Copa 2026!*\n\nTenho uma proposta de troca com ${counts.rep} figurinhas pra você.\nConfere aqui:\n\n${myLink}\n\n(O app é gratuito pra explorar — você só paga R$ 7 quando quiser começar a marcar.)`;
+                    navigator.share({ title: "Troca Álbum Copa 2026", text: msg }).catch(() => {});
+                  }}
+                >
+                  📱 Compartilhar
+                </button>
+              )}
             </div>
           </>
         )}
