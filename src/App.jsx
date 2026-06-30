@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, lazy, Suspense } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo, lazy, Suspense } from "react";
 import { useAppVisibility } from "@/hooks/useAppVisibility.js";
 import { useForceUpdate } from "@/hooks/useForceUpdate.js";
 import { supabase } from "@/lib/supabase";
@@ -25,6 +25,7 @@ const Profile   = lazy(() => import("@/components/pages/Profile.jsx").then(m => 
 const Jogos     = lazy(() => import("@/components/pages/Jogos.jsx").then(m => ({ default: m.Jogos })));
 import InstallGuide from "@/components/organisms/InstallGuide.jsx";
 import DemoBanner from "@/components/organisms/DemoBanner.jsx";
+import TradePreview from "@/components/organisms/TradePreview.jsx";
 import { LoginScreen } from "@/components/auth/LoginScreen.jsx";
 import { SignupScreen } from "@/components/auth/SignupScreen.jsx";
 import { ResetPasswordScreen } from "@/components/auth/ResetPasswordScreen.jsx";
@@ -180,6 +181,11 @@ function NormalApp() {
   const [authScreen, setAuthScreen] = useState("login");
   const [pendingEmail, setPendingEmail] = useState("");
   const [resetEmail, setResetEmail] = useState("");
+  const incomingTrade = useMemo(
+    () => new URLSearchParams(window.location.search).get("troca"),
+    []
+  );
+  const [previewDismissed, setPreviewDismissed] = useState(false);
 
   // Detecta tipo de callback (hash = implicit flow, search = PKCE flow)
   const hash = window.location.hash;
@@ -199,6 +205,15 @@ function NormalApp() {
 
   if (auth.loading || (auth.user && auth.approved === null)) {
     return <LoadingScreen />;
+  }
+
+  if (!auth.user && incomingTrade && !previewDismissed) {
+    return (
+      <TradePreview
+        tradeParam={incomingTrade}
+        onContinue={() => setPreviewDismissed(true)}
+      />
+    );
   }
 
   if (!auth.user) {
