@@ -12,7 +12,7 @@ const determineStatus = (currentStatus, qty) => {
   return "Repetida";
 };
 
-export function AddSinglePanel({ stickers, setStickers, addToast }) {
+export function AddSinglePanel({ stickers, setStickers, addToast, isDemo, onBlockedAction }) {
   const [code, setCode] = useState("");
   const [qty, setQty] = useState(1);
   const [userFinish, setUserFinish] = useState("Comum");
@@ -302,15 +302,16 @@ export function AddSinglePanel({ stickers, setStickers, addToast }) {
       />
 
       <button
-        onClick={handleSingle}
-        disabled={!canAdd || adding}
+        onClick={isDemo ? onBlockedAction : handleSingle}
+        disabled={!isDemo && (!canAdd || adding)}
         style={{
           width: "100%",
           background: canAdd ? `linear-gradient(135deg,${C.amber},${C.amberLt})` : C.surface,
           border: "none", borderRadius: 14, padding: "16px", fontSize: 15, fontWeight: 800,
-          color: canAdd ? "#000" : C.t4, cursor: canAdd ? "pointer" : "default",
+          color: canAdd ? "#000" : C.t4, cursor: isDemo ? "default" : (canAdd ? "pointer" : "default"),
           fontFamily: "inherit", boxShadow: canAdd ? `0 8px 24px ${C.amberGlow}` : "none",
           transition: "all .3s",
+          opacity: isDemo ? 0.4 : 1,
         }}
       >
         {adding ? "Adicionando..." : "Confirmar Adição"}

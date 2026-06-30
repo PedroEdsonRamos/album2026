@@ -454,7 +454,7 @@ function AppContent({ auth, isDemo }) {
             )}
             {page === "add" && (
               <PageSuspense>
-                <AddPage stickers={stickers} setStickers={setStickers} addToast={addToast} isDemo={isDemo} />
+                <AddPage stickers={stickers} setStickers={setStickers} addToast={addToast} isDemo={isDemo} onBlockedAction={onBlockedAction} />
               </PageSuspense>
             )}
             {page === "trocas" && (

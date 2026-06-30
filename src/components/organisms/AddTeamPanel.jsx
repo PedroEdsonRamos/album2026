@@ -32,7 +32,7 @@ function ResultBox({ result }) {
   );
 }
 
-export function AddTeamPanel({ stickers, setStickers }) {
+export function AddTeamPanel({ stickers, setStickers, isDemo, onBlockedAction }) {
   const [teamSel, setTeamSel] = useState("BRA");
   const [teamNums, setTeamNums] = useState("");
   const [teamSearch, setTeamSearch] = useState("");
@@ -190,11 +190,11 @@ export function AddTeamPanel({ stickers, setStickers }) {
           )}
         </div>
       )}
-      <button onClick={handleTeamBatch} disabled={!teamNums.trim() || adding}
+      <button onClick={isDemo ? onBlockedAction : handleTeamBatch} disabled={!isDemo && (!teamNums.trim() || adding)}
         style={{ width: "100%", background: teamNums.trim()?`linear-gradient(135deg,${C.amber},${C.amberLt})`:C.surface,
           border: "none", borderRadius: 14, padding: "16px", fontSize: 15, fontWeight: 800,
-          color: teamNums.trim()?"#000":C.t4, cursor: teamNums.trim()?"pointer":"default",
-          fontFamily: "inherit", boxShadow: teamNums.trim()?`0 8px 24px ${C.amberGlow}`:"none" }}>
+          color: teamNums.trim()?"#000":C.t4, cursor: isDemo ? "default" : (teamNums.trim()?"pointer":"default"),
+          fontFamily: "inherit", boxShadow: teamNums.trim()?`0 8px 24px ${C.amberGlow}`:"none", opacity: isDemo ? 0.4 : 1 }}>
         {adding ? "Processando..." : `Adicionar à ${selectedName}`}
       </button>
       <ResultBox result={result} />

@@ -91,7 +91,7 @@ function ResultBox({ result }) {
   );
 }
 
-export function AddBatchPanel({ stickers, setStickers, addToast }) {
+export function AddBatchPanel({ stickers, setStickers, addToast, isDemo, onBlockedAction }) {
   const [batch, setBatch] = useState("");
   const [result, setResult] = useState(null);
   const [adding, setAdding] = useState(false);
@@ -190,13 +190,13 @@ export function AddBatchPanel({ stickers, setStickers, addToast }) {
       )}
 
       <button
-        onClick={handleBatch}
-        disabled={!canSubmit || adding}
+        onClick={isDemo ? onBlockedAction : handleBatch}
+        disabled={!isDemo && (!canSubmit || adding)}
         style={{ width: "100%", background: canSubmit ? `linear-gradient(135deg,${C.amber},${C.amberLt})` : C.surface,
           border: "none", borderRadius: 14, padding: "16px", fontSize: 15, fontWeight: 800,
-          color: canSubmit ? "#000" : C.t4, cursor: canSubmit ? "pointer" : "default",
+          color: canSubmit ? "#000" : C.t4, cursor: isDemo ? "default" : (canSubmit ? "pointer" : "default"),
           fontFamily: "inherit", boxShadow: canSubmit ? `0 8px 24px ${C.amberGlow}` : "none",
-          marginBottom: 0 }}
+          marginBottom: 0, opacity: isDemo ? 0.4 : 1 }}
       >
         {adding ? "Processando..." : "Importar Lote"}
       </button>

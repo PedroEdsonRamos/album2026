@@ -11,7 +11,7 @@ const MODES = [
   { id: "batch", label: "Lote Livre" },
 ];
 
-export function AddPage({ stickers, setStickers, addToast }) {
+export function AddPage({ stickers, setStickers, addToast, isDemo, onBlockedAction }) {
   const [mode, setMode] = usePersistedFilter("filter_add_mode", "single");
 
   return (
@@ -24,9 +24,9 @@ export function AddPage({ stickers, setStickers, addToast }) {
       </div>
       <SegmentedTabs items={MODES} value={mode} onChange={setMode} />
 
-      {mode === "single" && <AddSinglePanel stickers={stickers} setStickers={setStickers} addToast={addToast} />}
-      {mode === "team"   && <AddTeamPanel   stickers={stickers} setStickers={setStickers} />}
-      {mode === "batch"  && <AddBatchPanel  stickers={stickers} setStickers={setStickers} addToast={addToast} />}
+      {mode === "single" && <AddSinglePanel stickers={stickers} setStickers={setStickers} addToast={addToast} isDemo={isDemo} onBlockedAction={onBlockedAction} />}
+      {mode === "team"   && <AddTeamPanel   stickers={stickers} setStickers={setStickers} isDemo={isDemo} onBlockedAction={onBlockedAction} />}
+      {mode === "batch"  && <AddBatchPanel  stickers={stickers} setStickers={setStickers} addToast={addToast} isDemo={isDemo} onBlockedAction={onBlockedAction} />}
     </div>
   );
 }
