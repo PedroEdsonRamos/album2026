@@ -126,7 +126,7 @@ export function useStickers(userId, addToast, isDemo = false) {
       if (saveTimer.current) clearTimeout(saveTimer.current);
       pendingSave.current.clear();
     };
-  }, [userId]);
+  }, [userId, isDemo]);
 
   const loadCollection = async () => {
     setLoading(true);
