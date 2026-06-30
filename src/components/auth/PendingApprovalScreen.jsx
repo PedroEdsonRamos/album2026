@@ -118,6 +118,11 @@ export function PendingApprovalScreen({ auth }) {
         <p style={{ color: "#ef4444", fontSize: 13, margin: "0 0 12px" }}>{error}</p>
       )}
 
+      <p style={{ color: C.t3, fontSize: 11, margin: "8px 0 0", maxWidth: 320, lineHeight: 1.4 }}>
+        💳 Cartão: acesso liberado na hora.<br/>
+        🧾 Boleto: acesso liberado após a compensação (até 3 dias úteis).
+      </p>
+
       <button
         onClick={() => auth.checkApproval(auth.user?.id)}
         style={{
